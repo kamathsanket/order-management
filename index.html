@@ -16,8 +16,8 @@
   body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
   header{background:linear-gradient(135deg,#2b6cb0,#3182ce);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px}
   header h1{font-size:1.3rem;font-weight:700}
-  .tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 24px}
-  .tab{padding:12px 20px;cursor:pointer;font-weight:600;font-size:.9rem;border-bottom:3px solid transparent;color:#718096;transition:.2s}
+  .tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 24px;overflow-x:auto}
+  .tab{padding:12px 20px;cursor:pointer;font-weight:600;font-size:.9rem;border-bottom:3px solid transparent;color:#718096;transition:.2s;white-space:nowrap}
   .tab.active{border-bottom-color:#3182ce;color:#3182ce}
   .content{padding:24px;max-width:1100px;margin:0 auto}
   .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:20px}
@@ -25,7 +25,6 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
   input,select,textarea{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;width:100%;background:#fff;outline:none;transition:.2s}
   input:focus,select:focus,textarea:focus{border-color:#3182ce}
-  textarea{resize:vertical;min-height:60px}
   .fg{display:flex;flex-direction:column;gap:4px}
   .fg label{font-size:.78rem;font-weight:600;color:#718096;text-transform:uppercase}
   .btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;transition:.2s;white-space:nowrap}
@@ -34,7 +33,6 @@
   .btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
   .btn-outline{background:#fff;border:1.5px solid #e2e8f0;color:#4a5568}.btn-outline:hover{background:#f7fafc}
   .btn-pdf{background:#805ad5;color:#fff}.btn-pdf:hover{background:#6b46c1}
-  .tag{display:inline-block;background:#ebf8ff;color:#2b6cb0;border-radius:6px;padding:2px 8px;font-size:.8rem;font-weight:600;margin:2px}
   table{width:100%;border-collapse:collapse;font-size:.88rem}
   th{background:#f7fafc;padding:10px 12px;text-align:left;font-weight:700;color:#4a5568;border-bottom:2px solid #e2e8f0}
   td{padding:10px 12px;border-bottom:1px solid #f0f4f8;vertical-align:top}
@@ -66,7 +64,6 @@
   .sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748}
   .sd-trigger.placeholder-style{color:#a0aec0}
   .sd-trigger:focus{border-color:#3182ce;outline:none}
-  .loading{text-align:center;padding:40px;color:#a0aec0}
   @media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}}
 </style>
 </head>
@@ -94,7 +91,7 @@
         <div class="fg" style="flex:1;min-width:200px">
           <label>Retailer</label>
           <div class="searchable-wrap" id="retailer-sd-wrap">
-            <button type="button" class="sd-trigger placeholder-style" id="retailer-sd-trigger" onclick="toggleSD('retailer-sd')">-- Select Retailer -- <span>▾</span></button>
+            <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('retailer-sd')">-- Select Retailer -- <span>▾</span></button>
             <div class="searchable-dropdown" id="retailer-sd">
               <div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('retailer-sd',this.value)" onclick="event.stopPropagation()"/></div>
               <div class="sd-options" id="retailer-sd-options"></div>
@@ -108,13 +105,11 @@
         </div>
       </div>
     </div>
-
     <div class="card">
       <h2>Add SKU Lines</h2>
       <div id="sku-lines"></div>
       <button class="btn btn-outline" onclick="addSkuLine()">+ Add SKU Line</button>
     </div>
-
     <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
       <div class="total" id="running-total">Order Total: ₹0.00</div>
       <button class="btn btn-success" onclick="saveOrder()">✅ Save Order</button>
@@ -167,208 +162,206 @@
   </div>
 
 </div>
-
 <div id="toast"></div>
 
 <script>
 const { jsPDF } = window.jspdf;
 
-// STATE
-let skus = [];
-let retailers = [];
-let orders = [];
-let lineCount = 0;
+// ── STATE ────────────────────────────────────────────────────
+let skus = [], retailers = [], orders = [], lineCount = 0;
 
-// ── STORAGE HELPERS ──────────────────────────────────────────
-async function persist(){
+// ── LOCALSTORAGE ─────────────────────────────────────────────
+const STORE_KEY = 'retailer_order_app_v1';
+
+function persist() {
   try {
-    await window.storage.set('app-data', JSON.stringify({skus, retailers, orders}));
-  } catch(e){ console.error('Save failed',e); }
+    localStorage.setItem(STORE_KEY, JSON.stringify({ skus, retailers, orders }));
+  } catch(e) { console.error('Save error', e); }
 }
 
-async function loadData(){
+function loadData() {
   try {
-    const res = await window.storage.get('app-data');
-    if(res && res.value){
-      const d = JSON.parse(res.value);
-      skus = d.skus || [];
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) {
+      const d = JSON.parse(raw);
+      skus      = d.skus      || [];
       retailers = d.retailers || [];
-      orders = d.orders || [];
+      orders    = d.orders    || [];
     } else {
-      // Default seed data on first load
+      // Seed defaults on very first launch
       skus = [
-        {id:'s1',code:'SKU-001',name:'Product Alpha',price:120},
-        {id:'s2',code:'SKU-002',name:'Product Beta',price:250},
-        {id:'s3',code:'SKU-003',name:'Product Gamma',price:85},
+        {id:'s1', code:'SKU-001', name:'Product Alpha', price:120},
+        {id:'s2', code:'SKU-002', name:'Product Beta',  price:250},
+        {id:'s3', code:'SKU-003', name:'Product Gamma', price:85 },
       ];
       retailers = [
-        {id:'r1',name:'SuperMart',contact:'Mumbai'},
-        {id:'r2',name:'QuickShop',contact:'Delhi'},
+        {id:'r1', name:'SuperMart', contact:'Mumbai'},
+        {id:'r2', name:'QuickShop', contact:'Delhi' },
       ];
-      await persist();
+      persist();
     }
-  } catch(e){
-    // First time — no data yet
-    skus = [
-      {id:'s1',code:'SKU-001',name:'Product Alpha',price:120},
-      {id:'s2',code:'SKU-002',name:'Product Beta',price:250},
-      {id:'s3',code:'SKU-003',name:'Product Gamma',price:85},
-    ];
-    retailers = [
-      {id:'r1',name:'SuperMart',contact:'Mumbai'},
-      {id:'r2',name:'QuickShop',contact:'Delhi'},
-    ];
-    await persist();
-  }
+  } catch(e) { console.error('Load error', e); }
 }
 
 // ── UTILS ────────────────────────────────────────────────────
-function uid(){ return '_'+Math.random().toString(36).substr(2,9); }
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+function uid()  { return '_' + Math.random().toString(36).substr(2,9); }
+function fmt(n) { return '₹' + parseFloat(n||0).toFixed(2); }
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
 }
-function fmt(n){ return '₹'+parseFloat(n||0).toFixed(2); }
 
 // ── SEARCHABLE DROPDOWN ──────────────────────────────────────
-function toggleSD(sdId){
-  const dd=document.getElementById(sdId);
-  const isOpen=dd.classList.contains('open');
+function toggleSD(sdId) {
+  const dd = document.getElementById(sdId);
+  const open = dd.classList.contains('open');
   closeAllSD();
-  if(!isOpen){ dd.classList.add('open'); dd.querySelector('input')?.focus(); }
+  if (!open) { dd.classList.add('open'); dd.querySelector('input')?.focus(); }
 }
-function closeAllSD(){
-  document.querySelectorAll('.searchable-dropdown').forEach(d=>d.classList.remove('open'));
+function closeAllSD() {
+  document.querySelectorAll('.searchable-dropdown').forEach(d => d.classList.remove('open'));
 }
-function filterSD(sdId,q){
-  const opts=document.getElementById(sdId).querySelector('.sd-options');
-  const items=opts.querySelectorAll('.sd-option:not(.placeholder)');
-  let vis=0;
-  items.forEach(el=>{
-    const match=el.dataset.label.toLowerCase().includes(q.toLowerCase());
-    el.style.display=match?'':'none';
-    if(match) vis++;
+function filterSD(sdId, q) {
+  const opts  = document.getElementById(sdId).querySelector('.sd-options');
+  const items = opts.querySelectorAll('.sd-option:not(.placeholder)');
+  let vis = 0;
+  items.forEach(el => {
+    const m = el.dataset.label.toLowerCase().includes(q.toLowerCase());
+    el.style.display = m ? '' : 'none';
+    if (m) vis++;
   });
-  let empty=opts.querySelector('.sd-empty');
-  if(!empty){empty=document.createElement('div');empty.className='sd-empty';empty.textContent='No results found';opts.appendChild(empty);}
-  empty.style.display=vis?'none':'block';
+  let empty = opts.querySelector('.sd-empty');
+  if (!empty) { empty = document.createElement('div'); empty.className='sd-empty'; empty.textContent='No results found'; opts.appendChild(empty); }
+  empty.style.display = vis ? 'none' : 'block';
 }
-function selectSDOption(sdId,value,label,inputId){
-  const wrap=document.getElementById(sdId+'-wrap')||document.querySelector(`[id="${sdId}-wrap"]`);
-  const trigger=wrap?.querySelector('.sd-trigger');
-  if(trigger){ trigger.innerHTML=label+' <span>▾</span>'; trigger.classList.remove('placeholder-style'); }
-  document.getElementById(inputId).value=value;
+function selectSDOption(sdId, value, label, inputId) {
+  const wrap    = document.getElementById(sdId + '-wrap');
+  const trigger = wrap?.querySelector('.sd-trigger');
+  if (trigger) { trigger.innerHTML = label + ' <span>▾</span>'; trigger.classList.remove('placeholder-style'); }
+  document.getElementById(inputId).value = value;
   closeAllSD();
 }
-document.addEventListener('click',e=>{
-  if(!e.target.closest('.searchable-wrap')) closeAllSD();
-});
+document.addEventListener('click', e => { if (!e.target.closest('.searchable-wrap')) closeAllSD(); });
 
-function buildRetailerSD(){
-  const opts=document.getElementById('retailer-sd-options');
-  opts.innerHTML=`<div class="sd-option placeholder" onclick="selectSDOption('retailer-sd','','-- Select Retailer --','order-retailer')">-- Select Retailer --</div>`+
-    retailers.map(r=>`<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('retailer-sd','${r.id}','${r.name}','order-retailer')">${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>`:''}</div>`).join('');
+function buildRetailerSD() {
+  const opts = document.getElementById('retailer-sd-options');
+  opts.innerHTML =
+    `<div class="sd-option placeholder" onclick="selectSDOption('retailer-sd','','-- Select Retailer --','order-retailer')">-- Select Retailer --</div>` +
+    retailers.map(r =>
+      `<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('retailer-sd','${r.id}','${r.name}','order-retailer')">
+        ${r.name}${r.contact ? ` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>` : ''}
+      </div>`
+    ).join('');
 }
-
-function buildSkuSD(lineId){
-  const sdId=`sku-sd-${lineId}`;
-  const opts=document.getElementById(`${sdId}-options`);
-  if(!opts) return;
-  opts.innerHTML=`<div class="sd-option placeholder" onclick="selectSkuSD('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
-    skus.map(s=>`<div class="sd-option" data-label="${s.code} ${s.name}" onclick="selectSkuSD('${lineId}','${s.id}','${s.code} — ${s.name}')">`+
-      `<span class="badge badge-blue" style="margin-right:4px">${s.code}</span>${s.name} <span style="color:#38a169;font-size:.8rem">${fmt(s.price)}</span></div>`).join('');
+function buildSkuSD(lineId) {
+  const sdId = `sku-sd-${lineId}`;
+  const opts = document.getElementById(`${sdId}-options`);
+  if (!opts) return;
+  opts.innerHTML =
+    `<div class="sd-option placeholder" onclick="selectSkuSD('${lineId}','','-- Select SKU --')">-- Select SKU --</div>` +
+    skus.map(s =>
+      `<div class="sd-option" data-label="${s.code} ${s.name}" onclick="selectSkuSD('${lineId}','${s.id}','${s.code} — ${s.name}')">
+        <span class="badge badge-blue" style="margin-right:4px">${s.code}</span>${s.name}
+        <span style="color:#38a169;font-size:.8rem">${fmt(s.price)}</span>
+      </div>`
+    ).join('');
 }
-function selectSkuSD(lineId,skuId,label){
-  const sdId=`sku-sd-${lineId}`;
-  const trigger=document.querySelector(`#${sdId}-wrap .sd-trigger`);
-  if(trigger){ trigger.innerHTML=label+' <span>▾</span>'; trigger.classList.remove('placeholder-style'); }
-  document.getElementById(`${sdId}-val`).value=skuId;
+function selectSkuSD(lineId, skuId, label) {
+  const sdId    = `sku-sd-${lineId}`;
+  const trigger = document.querySelector(`#${sdId}-wrap .sd-trigger`);
+  if (trigger) { trigger.innerHTML = label + ' <span>▾</span>'; trigger.classList.remove('placeholder-style'); }
+  document.getElementById(`${sdId}-val`).value = skuId;
   closeAllSD();
-  if(skuId){
-    const sku=skus.find(s=>s.id===skuId);
-    if(sku){ document.querySelector(`#${lineId} .line-price`).value=sku.price; updateTotal(); }
+  if (skuId) {
+    const sku = skus.find(s => s.id === skuId);
+    if (sku) { document.querySelector(`#${lineId} .line-price`).value = sku.price; updateTotal(); }
   }
 }
 
 // ── TABS ─────────────────────────────────────────────────────
-function switchTab(t){
-  ['orders','history','skus','retailers'].forEach(x=>{
-    document.getElementById('tab-'+x).style.display=x===t?'block':'none';
-    document.querySelectorAll('.tab')[['orders','history','skus','retailers'].indexOf(x)].classList.toggle('active',x===t);
+function switchTab(t) {
+  ['orders','history','skus','retailers'].forEach((x,i) => {
+    document.getElementById('tab-'+x).style.display = x===t ? 'block' : 'none';
+    document.querySelectorAll('.tab')[i].classList.toggle('active', x===t);
   });
-  if(t==='history') renderHistory();
-  if(t==='skus') renderSkuTable();
-  if(t==='retailers') renderRetailerTable();
+  if (t==='history')   renderHistory();
+  if (t==='skus')      renderSkuTable();
+  if (t==='retailers') renderRetailerTable();
 }
 
 // ── SKU MANAGEMENT ───────────────────────────────────────────
-async function addSku(){
-  const code=document.getElementById('sku-code').value.trim();
-  const name=document.getElementById('sku-name').value.trim();
-  const price=parseFloat(document.getElementById('sku-price').value)||0;
-  if(!code||!name){toast('Enter SKU code and name');return;}
-  skus.push({id:uid(),code,name,price});
-  await persist();
-  document.getElementById('sku-code').value='';
-  document.getElementById('sku-name').value='';
-  document.getElementById('sku-price').value='';
+function addSku() {
+  const code  = document.getElementById('sku-code').value.trim();
+  const name  = document.getElementById('sku-name').value.trim();
+  const price = parseFloat(document.getElementById('sku-price').value) || 0;
+  if (!code || !name) { toast('Enter SKU code and name'); return; }
+  skus.push({ id:uid(), code, name, price });
+  persist();
+  document.getElementById('sku-code').value  = '';
+  document.getElementById('sku-name').value  = '';
+  document.getElementById('sku-price').value = '';
   renderSkuTable();
-  document.querySelectorAll('.sku-line').forEach(line=>buildSkuSD(line.id));
+  document.querySelectorAll('.sku-line').forEach(l => buildSkuSD(l.id));
   toast('SKU saved! ✅');
 }
-async function deleteSku(id){
-  skus=skus.filter(s=>s.id!==id);
-  await persist();
+function deleteSku(id) {
+  skus = skus.filter(s => s.id !== id);
+  persist();
   renderSkuTable();
-  document.querySelectorAll('.sku-line').forEach(line=>buildSkuSD(line.id));
+  document.querySelectorAll('.sku-line').forEach(l => buildSkuSD(l.id));
   toast('SKU deleted');
 }
-function renderSkuTable(){
-  const wrap=document.getElementById('sku-table-wrap');
-  const q=(document.getElementById('sku-search')?.value||'').toLowerCase().trim();
-  const filtered=skus.filter(s=>!q||s.code.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
-  if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet. Add one above.</div>';return;}
-  if(!filtered.length){wrap.innerHTML='<div class="empty">No SKUs match your search.</div>';return;}
-  wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Default Price</th><th>Action</th></tr></thead><tbody>`+
-    filtered.map(s=>`<tr><td><span class="badge badge-blue">${s.code}</span></td><td>${s.name}</td><td>${fmt(s.price)}</td>
-    <td><button class="btn btn-danger" onclick="deleteSku('${s.id}')">Delete</button></td></tr>`).join('')+
-  `</tbody></table><div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${filtered.length} of ${skus.length} SKUs</div>`;
+function renderSkuTable() {
+  const wrap = document.getElementById('sku-table-wrap');
+  const q    = (document.getElementById('sku-search')?.value || '').toLowerCase().trim();
+  const f    = skus.filter(s => !q || s.code.toLowerCase().includes(q) || s.name.toLowerCase().includes(q));
+  if (!skus.length) { wrap.innerHTML='<div class="empty">No SKUs yet. Add one above.</div>'; return; }
+  if (!f.length)    { wrap.innerHTML='<div class="empty">No SKUs match your search.</div>'; return; }
+  wrap.innerHTML =
+    `<table><thead><tr><th>Code</th><th>Name</th><th>Default Price</th><th>Action</th></tr></thead><tbody>` +
+    f.map(s =>
+      `<tr><td><span class="badge badge-blue">${s.code}</span></td><td>${s.name}</td><td>${fmt(s.price)}</td>
+       <td><button class="btn btn-danger" onclick="deleteSku('${s.id}')">Delete</button></td></tr>`
+    ).join('') +
+    `</tbody></table><div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${f.length} of ${skus.length} SKUs</div>`;
 }
 
 // ── RETAILER MANAGEMENT ──────────────────────────────────────
-async function addRetailer(){
-  const name=document.getElementById('ret-name').value.trim();
-  const contact=document.getElementById('ret-contact').value.trim();
-  if(!name){toast('Enter retailer name');return;}
-  retailers.push({id:uid(),name,contact});
-  await persist();
-  document.getElementById('ret-name').value='';
-  document.getElementById('ret-contact').value='';
+function addRetailer() {
+  const name    = document.getElementById('ret-name').value.trim();
+  const contact = document.getElementById('ret-contact').value.trim();
+  if (!name) { toast('Enter retailer name'); return; }
+  retailers.push({ id:uid(), name, contact });
+  persist();
+  document.getElementById('ret-name').value    = '';
+  document.getElementById('ret-contact').value = '';
   renderRetailerTable(); buildRetailerSD(); toast('Retailer saved! ✅');
 }
-async function deleteRetailer(id){
-  retailers=retailers.filter(r=>r.id!==id);
-  await persist();
+function deleteRetailer(id) {
+  retailers = retailers.filter(r => r.id !== id);
+  persist();
   renderRetailerTable(); buildRetailerSD(); toast('Retailer deleted');
 }
-function renderRetailerTable(){
-  const wrap=document.getElementById('ret-table-wrap');
-  if(!retailers.length){wrap.innerHTML='<div class="empty">No retailers yet.</div>';return;}
-  wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Contact/Location</th><th>Action</th></tr></thead><tbody>`+
-    retailers.map(r=>`<tr><td><b>${r.name}</b></td><td>${r.contact||'—'}</td>
-    <td><button class="btn btn-danger" onclick="deleteRetailer('${r.id}')">Delete</button></td></tr>`).join('')+
-  `</tbody></table>`;
+function renderRetailerTable() {
+  const wrap = document.getElementById('ret-table-wrap');
+  if (!retailers.length) { wrap.innerHTML='<div class="empty">No retailers yet.</div>'; return; }
+  wrap.innerHTML =
+    `<table><thead><tr><th>Name</th><th>Contact/Location</th><th>Action</th></tr></thead><tbody>` +
+    retailers.map(r =>
+      `<tr><td><b>${r.name}</b></td><td>${r.contact||'—'}</td>
+       <td><button class="btn btn-danger" onclick="deleteRetailer('${r.id}')">Delete</button></td></tr>`
+    ).join('') + `</tbody></table>`;
 }
 
 // ── ORDER LINES ──────────────────────────────────────────────
-function addSkuLine(){
+function addSkuLine() {
   lineCount++;
-  const id='line-'+lineCount;
-  const sdId=`sku-sd-${id}`;
-  const div=document.createElement('div');
-  div.className='sku-line'; div.id=id;
-  div.innerHTML=`
+  const id   = 'line-' + lineCount;
+  const sdId = `sku-sd-${id}`;
+  const div  = document.createElement('div');
+  div.className = 'sku-line'; div.id = id;
+  div.innerHTML = `
     <div class="fg" style="flex:3;min-width:200px">
       <label>SKU</label>
       <div class="searchable-wrap" id="${sdId}-wrap">
@@ -388,73 +381,73 @@ function addSkuLine(){
   buildSkuSD(id);
   updateTotal();
 }
-function removeLine(id){ document.getElementById(id).remove(); updateTotal(); }
-function updateTotal(){
-  let total=0;
-  document.querySelectorAll('.sku-line').forEach(line=>{
-    const qty=parseFloat(line.querySelector('.line-qty').value)||0;
-    const price=parseFloat(line.querySelector('.line-price').value)||0;
-    total+=qty*price;
+function removeLine(id) { document.getElementById(id).remove(); updateTotal(); }
+function updateTotal() {
+  let t = 0;
+  document.querySelectorAll('.sku-line').forEach(line => {
+    t += (parseFloat(line.querySelector('.line-qty').value)||0) *
+         (parseFloat(line.querySelector('.line-price').value)||0);
   });
-  document.getElementById('running-total').textContent='Order Total: '+fmt(total);
+  document.getElementById('running-total').textContent = 'Order Total: ' + fmt(t);
 }
 
 // ── SAVE ORDER ───────────────────────────────────────────────
-async function saveOrder(){
-  const retId=document.getElementById('order-retailer').value;
-  const date=document.getElementById('order-date').value;
-  if(!retId){toast('Please select a retailer');return;}
-  const lines=[];
-  let valid=true;
-  document.querySelectorAll('.sku-line').forEach(line=>{
-    const skuId=line.querySelector('.line-sku-val').value;
-    if(!skuId){valid=false;return;}
-    const qty=parseFloat(line.querySelector('.line-qty').value)||1;
-    const price=parseFloat(line.querySelector('.line-price').value)||0;
-    const notes=line.querySelector('.line-notes').value.trim();
-    const sku=skus.find(s=>s.id===skuId);
-    lines.push({skuId,skuCode:sku.code,skuName:sku.name,qty,price,notes,subtotal:qty*price});
+function saveOrder() {
+  const retId = document.getElementById('order-retailer').value;
+  const date  = document.getElementById('order-date').value;
+  if (!retId) { toast('Please select a retailer'); return; }
+  const lines = []; let valid = true;
+  document.querySelectorAll('.sku-line').forEach(line => {
+    const skuId = line.querySelector('.line-sku-val').value;
+    if (!skuId) { valid = false; return; }
+    const qty   = parseFloat(line.querySelector('.line-qty').value)   || 1;
+    const price = parseFloat(line.querySelector('.line-price').value) || 0;
+    const notes = line.querySelector('.line-notes').value.trim();
+    const sku   = skus.find(s => s.id === skuId);
+    lines.push({ skuId, skuCode:sku.code, skuName:sku.name, qty, price, notes, subtotal:qty*price });
   });
-  if(!valid){toast('Please select a SKU for each line');return;}
-  if(!lines.length){toast('Add at least one SKU line');return;}
-  const retailer=retailers.find(r=>r.id===retId);
-  const total=lines.reduce((s,l)=>s+l.subtotal,0);
-  orders.push({id:uid(),retailerId:retId,retailerName:retailer.name,date:date||new Date().toISOString().split('T')[0],lines,total,createdAt:new Date().toLocaleString()});
-  await persist();
-  // reset form
-  document.getElementById('order-retailer').value='';
-  const trigger=document.querySelector('#retailer-sd-wrap .sd-trigger');
-  if(trigger){trigger.innerHTML='-- Select Retailer -- ▾';trigger.classList.add('placeholder-style');}
-  document.getElementById('sku-lines').innerHTML='';
-  lineCount=0; updateTotal();
+  if (!valid)        { toast('Please select a SKU for each line'); return; }
+  if (!lines.length) { toast('Add at least one SKU line'); return; }
+  const retailer = retailers.find(r => r.id === retId);
+  const total    = lines.reduce((s,l) => s+l.subtotal, 0);
+  orders.push({ id:uid(), retailerId:retId, retailerName:retailer.name,
+    date: date || new Date().toISOString().split('T')[0],
+    lines, total, createdAt: new Date().toLocaleString() });
+  persist();
+  // Reset form
+  document.getElementById('order-retailer').value = '';
+  const tr = document.querySelector('#retailer-sd-wrap .sd-trigger');
+  if (tr) { tr.innerHTML='-- Select Retailer -- ▾'; tr.classList.add('placeholder-style'); }
+  document.getElementById('sku-lines').innerHTML = '';
+  lineCount = 0; updateTotal();
   toast('Order saved! ✅');
 }
 
 // ── HISTORY ──────────────────────────────────────────────────
-function renderHistory(){
-  const wrap=document.getElementById('orders-list');
-  const stats=document.getElementById('summary-stats');
-  if(!orders.length){
+function renderHistory() {
+  const wrap  = document.getElementById('orders-list');
+  const stats = document.getElementById('summary-stats');
+  if (!orders.length) {
     wrap.innerHTML='<div class="card"><div class="empty">No orders yet. Create one from the New Order tab.</div></div>';
     stats.innerHTML=''; return;
   }
-  const totalAmt=orders.reduce((s,o)=>s+o.total,0);
-  const rSet=[...new Set(orders.map(o=>o.retailerName))];
-  stats.innerHTML=`
+  const totalAmt = orders.reduce((s,o) => s+o.total, 0);
+  const rSet     = [...new Set(orders.map(o => o.retailerName))];
+  stats.innerHTML = `
     <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Total Orders</div></div>
     <div class="stat"><div class="stat-val">${rSet.length}</div><div class="stat-lbl">Retailers</div></div>
     <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Total Value</div></div>`;
-  const grouped={};
-  orders.forEach(o=>{ if(!grouped[o.retailerName]) grouped[o.retailerName]=[]; grouped[o.retailerName].push(o); });
-  wrap.innerHTML='';
-  Object.entries(grouped).forEach(([rName,rOrders])=>{
-    const sec=document.createElement('div');
-    sec.className='retailer-section';
-    sec.innerHTML=`<div class="retailer-title">🏪 ${rName} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
-    rOrders.forEach(o=>{
-      const card=document.createElement('div');
-      card.className='card';
-      card.innerHTML=`
+  const grouped = {};
+  orders.forEach(o => { if (!grouped[o.retailerName]) grouped[o.retailerName]=[]; grouped[o.retailerName].push(o); });
+  wrap.innerHTML = '';
+  Object.entries(grouped).forEach(([rName, rOrders]) => {
+    const sec = document.createElement('div');
+    sec.className = 'retailer-section';
+    sec.innerHTML = `<div class="retailer-title">🏪 ${rName} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
+    rOrders.forEach(o => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
         <div class="order-header">
           <div>
             <b>Order #${o.id.substr(1,6).toUpperCase()}</b>
@@ -478,38 +471,37 @@ function renderHistory(){
     wrap.appendChild(sec);
   });
 }
-async function deleteOrder(id){
-  orders=orders.filter(o=>o.id!==id);
-  await persist();
+function deleteOrder(id) {
+  orders = orders.filter(o => o.id !== id);
+  persist();
   renderHistory(); toast('Order deleted');
 }
 
 // ── PDF EXPORT ───────────────────────────────────────────────
-function exportPDF(orderId){
-  const o=orders.find(x=>x.id===orderId);
-  if(!o) return;
-  const doc=new jsPDF();
-  const margin=15,pageW=210;
+function exportPDF(orderId) {
+  const o = orders.find(x => x.id === orderId);
+  if (!o) return;
+  const doc = new jsPDF(), margin = 15, pageW = 210;
   doc.setFillColor(43,108,176); doc.rect(0,0,pageW,28,'F');
   doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
-  doc.text('ORDER INVOICE',margin,12);
+  doc.text('ORDER INVOICE', margin, 12);
   doc.setFontSize(9); doc.setFont('helvetica','normal');
-  doc.text('Retailer Order Management System',margin,20);
-  doc.setTextColor(44,62,80); doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text('Retailer:',margin,38); doc.setFont('helvetica','normal'); doc.text(o.retailerName,55,38);
-  doc.setFont('helvetica','bold'); doc.text('Order ID:',margin,46); doc.setFont('helvetica','normal'); doc.text('#'+o.id.substr(1,6).toUpperCase(),55,46);
-  doc.setFont('helvetica','bold'); doc.text('Date:',margin,54); doc.setFont('helvetica','normal'); doc.text(o.date,55,54);
-  doc.setFont('helvetica','bold'); doc.text('Created:',margin,62); doc.setFont('helvetica','normal'); doc.text(o.createdAt,55,62);
+  doc.text('Retailer Order Management System', margin, 20);
+  doc.setTextColor(44,62,80); doc.setFontSize(10);
+  [['Retailer:',o.retailerName],['Order ID:','#'+o.id.substr(1,6).toUpperCase()],['Date:',o.date],['Created:',o.createdAt]]
+    .forEach(([k,v],i) => {
+      doc.setFont('helvetica','bold'); doc.text(k,margin,38+i*8);
+      doc.setFont('helvetica','normal'); doc.text(v,55,38+i*8);
+    });
   doc.setDrawColor(200,200,200); doc.line(margin,68,pageW-margin,68);
   let y=76;
   doc.setFillColor(240,244,248); doc.rect(margin,y-5,pageW-2*margin,10,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9);
   const cols=[margin,55,100,130,155,175];
-  doc.text('SKU Code',cols[0],y); doc.text('Product Name',cols[1],y); doc.text('Qty',cols[2],y);
-  doc.text('Price',cols[3],y); doc.text('Subtotal',cols[4],y); doc.text('Notes',cols[5],y);
+  ['SKU Code','Product Name','Qty','Price','Subtotal','Notes'].forEach((h,i)=>doc.text(h,cols[i],y));
   y+=8; doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
-  o.lines.forEach((l,i)=>{
-    if(i%2===0){doc.setFillColor(252,252,255);doc.rect(margin,y-4,pageW-2*margin,9,'F');}
+  o.lines.forEach((l,i) => {
+    if (i%2===0) { doc.setFillColor(252,252,255); doc.rect(margin,y-4,pageW-2*margin,9,'F'); }
     doc.setTextColor(44,62,80);
     doc.text(l.skuCode,cols[0],y);
     doc.text(doc.splitTextToSize(l.skuName,40),cols[1],y);
@@ -520,29 +512,22 @@ function exportPDF(orderId){
     y+=10;
   });
   doc.line(margin,y,pageW-margin,y); y+=8;
-  doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.setTextColor(43,108,176);
-  doc.text('TOTAL: '+fmt(o.total),pageW-margin,y,{align:'right'});
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(43,108,176);
+  doc.text('TOTAL: '+fmt(o.total), pageW-margin, y, {align:'right'});
   doc.setFontSize(8); doc.setTextColor(150,150,150); doc.setFont('helvetica','normal');
-  doc.text('Generated by Retailer Order Management App',pageW/2,290,{align:'center'});
+  doc.text('Generated by Retailer Order Management App', pageW/2, 290, {align:'center'});
   doc.save(`Order_${o.retailerName}_${o.date}.pdf`);
   toast('PDF downloaded!');
 }
 
 // ── INIT ─────────────────────────────────────────────────────
-async function init(){
-  await loadData();
-  document.getElementById('order-date').value=new Date().toISOString().split('T')[0];
-  buildRetailerSD();
-  addSkuLine();
-}
+loadData();
+document.getElementById('order-date').value = new Date().toISOString().split('T')[0];
+buildRetailerSD();
+addSkuLine();
 
-init();
-
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js')
-    .then(()=>console.log('SW registered'))
-    .catch(e=>console.log('SW error',e));
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(e => console.log('SW error', e));
 }
 </script>
 </body>
