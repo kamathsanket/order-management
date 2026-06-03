@@ -25,18 +25,6 @@
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
   input,select,textarea{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;width:100%;background:#fff;outline:none;transition:.2s}
   input:focus,select:focus,textarea:focus{border-color:#3182ce}
-  .searchable-wrap{position:relative;width:100%}
-  .searchable-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none}
-  .searchable-dropdown.open{display:block}
-  .sd-search{padding:8px 10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff}
-  .sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%}
-  .sd-option{padding:8px 12px;cursor:pointer;font-size:.88rem;transition:.15s}
-  .sd-option:hover,.sd-option.selected{background:#ebf8ff;color:#2b6cb0}
-  .sd-option.placeholder{color:#a0aec0;font-style:italic}
-  .sd-empty{padding:10px 12px;color:#a0aec0;font-size:.85rem;text-align:center}
-  .sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748}
-  .sd-trigger.placeholder-style{color:#a0aec0}
-  .sd-trigger:focus{border-color:#3182ce;outline:none}
   textarea{resize:vertical;min-height:60px}
   .fg{display:flex;flex-direction:column;gap:4px}
   .fg label{font-size:.78rem;font-weight:600;color:#718096;text-transform:uppercase}
@@ -66,6 +54,19 @@
   .stat-lbl{font-size:.78rem;color:#718096;margin-top:2px}
   #toast{position:fixed;bottom:24px;right:24px;background:#2d3748;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;transition:.3s;pointer-events:none;z-index:999}
   #toast.show{opacity:1}
+  .searchable-wrap{position:relative;width:100%}
+  .searchable-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none}
+  .searchable-dropdown.open{display:block}
+  .sd-search{padding:8px 10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff}
+  .sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%}
+  .sd-option{padding:8px 12px;cursor:pointer;font-size:.88rem;transition:.15s}
+  .sd-option:hover,.sd-option.selected{background:#ebf8ff;color:#2b6cb0}
+  .sd-option.placeholder{color:#a0aec0;font-style:italic}
+  .sd-empty{padding:10px 12px;color:#a0aec0;font-size:.85rem;text-align:center}
+  .sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748}
+  .sd-trigger.placeholder-style{color:#a0aec0}
+  .sd-trigger:focus{border-color:#3182ce;outline:none}
+  .loading{text-align:center;padding:40px;color:#a0aec0}
   @media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}}
 </style>
 </head>
@@ -173,19 +174,55 @@
 const { jsPDF } = window.jspdf;
 
 // STATE
-let skus = [
-  {id:'s1', code:'SKU-001', name:'Product Alpha', price:120},
-  {id:'s2', code:'SKU-002', name:'Product Beta', price:250},
-  {id:'s3', code:'SKU-003', name:'Product Gamma', price:85},
-];
-let retailers = [
-  {id:'r1', name:'SuperMart', contact:'Mumbai'},
-  {id:'r2', name:'QuickShop', contact:'Delhi'},
-];
+let skus = [];
+let retailers = [];
 let orders = [];
 let lineCount = 0;
 
-// UTILS
+// ── STORAGE HELPERS ──────────────────────────────────────────
+async function persist(){
+  try {
+    await window.storage.set('app-data', JSON.stringify({skus, retailers, orders}));
+  } catch(e){ console.error('Save failed',e); }
+}
+
+async function loadData(){
+  try {
+    const res = await window.storage.get('app-data');
+    if(res && res.value){
+      const d = JSON.parse(res.value);
+      skus = d.skus || [];
+      retailers = d.retailers || [];
+      orders = d.orders || [];
+    } else {
+      // Default seed data on first load
+      skus = [
+        {id:'s1',code:'SKU-001',name:'Product Alpha',price:120},
+        {id:'s2',code:'SKU-002',name:'Product Beta',price:250},
+        {id:'s3',code:'SKU-003',name:'Product Gamma',price:85},
+      ];
+      retailers = [
+        {id:'r1',name:'SuperMart',contact:'Mumbai'},
+        {id:'r2',name:'QuickShop',contact:'Delhi'},
+      ];
+      await persist();
+    }
+  } catch(e){
+    // First time — no data yet
+    skus = [
+      {id:'s1',code:'SKU-001',name:'Product Alpha',price:120},
+      {id:'s2',code:'SKU-002',name:'Product Beta',price:250},
+      {id:'s3',code:'SKU-003',name:'Product Gamma',price:85},
+    ];
+    retailers = [
+      {id:'r1',name:'SuperMart',contact:'Mumbai'},
+      {id:'r2',name:'QuickShop',contact:'Delhi'},
+    ];
+    await persist();
+  }
+}
+
+// ── UTILS ────────────────────────────────────────────────────
 function uid(){ return '_'+Math.random().toString(36).substr(2,9); }
 function toast(msg){
   const t=document.getElementById('toast');
@@ -194,7 +231,7 @@ function toast(msg){
 }
 function fmt(n){ return '₹'+parseFloat(n||0).toFixed(2); }
 
-// SEARCHABLE DROPDOWN ENGINE
+// ── SEARCHABLE DROPDOWN ──────────────────────────────────────
 function toggleSD(sdId){
   const dd=document.getElementById(sdId);
   const isOpen=dd.classList.contains('open');
@@ -217,26 +254,23 @@ function filterSD(sdId,q){
   if(!empty){empty=document.createElement('div');empty.className='sd-empty';empty.textContent='No results found';opts.appendChild(empty);}
   empty.style.display=vis?'none':'block';
 }
-function selectSDOption(sdId, value, label, inputId, callback){
-  const trigger=document.querySelector(`#${sdId}-wrap .sd-trigger`)||document.querySelector(`[data-sd="${sdId}"] .sd-trigger`);
-  if(trigger){ trigger.textContent=label+' ▾'; trigger.classList.remove('placeholder-style'); }
+function selectSDOption(sdId,value,label,inputId){
+  const wrap=document.getElementById(sdId+'-wrap')||document.querySelector(`[id="${sdId}-wrap"]`);
+  const trigger=wrap?.querySelector('.sd-trigger');
+  if(trigger){ trigger.innerHTML=label+' <span>▾</span>'; trigger.classList.remove('placeholder-style'); }
   document.getElementById(inputId).value=value;
   closeAllSD();
-  if(callback) callback(value);
 }
 document.addEventListener('click',e=>{
-  if(!e.target.closest('.searchable-wrap')&&!e.target.closest('[data-sd]')) closeAllSD();
+  if(!e.target.closest('.searchable-wrap')) closeAllSD();
 });
 
-// Build retailer SD options
 function buildRetailerSD(){
   const opts=document.getElementById('retailer-sd-options');
-  const cur=document.getElementById('order-retailer').value;
   opts.innerHTML=`<div class="sd-option placeholder" onclick="selectSDOption('retailer-sd','','-- Select Retailer --','order-retailer')">-- Select Retailer --</div>`+
-    retailers.map(r=>`<div class="sd-option${cur===r.id?' selected':''}" data-label="${r.name}" onclick="selectSDOption('retailer-sd','${r.id}','${r.name}','order-retailer')">${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>`:''}</div>`).join('');
+    retailers.map(r=>`<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('retailer-sd','${r.id}','${r.name}','order-retailer')">${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>`:''}</div>`).join('');
 }
 
-// Build SKU SD for a line
 function buildSkuSD(lineId){
   const sdId=`sku-sd-${lineId}`;
   const opts=document.getElementById(`${sdId}-options`);
@@ -245,7 +279,7 @@ function buildSkuSD(lineId){
     skus.map(s=>`<div class="sd-option" data-label="${s.code} ${s.name}" onclick="selectSkuSD('${lineId}','${s.id}','${s.code} — ${s.name}')">`+
       `<span class="badge badge-blue" style="margin-right:4px">${s.code}</span>${s.name} <span style="color:#38a169;font-size:.8rem">${fmt(s.price)}</span></div>`).join('');
 }
-function selectSkuSD(lineId, skuId, label){
+function selectSkuSD(lineId,skuId,label){
   const sdId=`sku-sd-${lineId}`;
   const trigger=document.querySelector(`#${sdId}-wrap .sd-trigger`);
   if(trigger){ trigger.innerHTML=label+' <span>▾</span>'; trigger.classList.remove('placeholder-style'); }
@@ -257,10 +291,10 @@ function selectSkuSD(lineId, skuId, label){
   }
 }
 
-// TABS
+// ── TABS ─────────────────────────────────────────────────────
 function switchTab(t){
   ['orders','history','skus','retailers'].forEach(x=>{
-    document.getElementById('tab-'+x).style.display = x===t?'block':'none';
+    document.getElementById('tab-'+x).style.display=x===t?'block':'none';
     document.querySelectorAll('.tab')[['orders','history','skus','retailers'].indexOf(x)].classList.toggle('active',x===t);
   });
   if(t==='history') renderHistory();
@@ -268,24 +302,27 @@ function switchTab(t){
   if(t==='retailers') renderRetailerTable();
 }
 
-// SKU MANAGEMENT
-function addSku(){
+// ── SKU MANAGEMENT ───────────────────────────────────────────
+async function addSku(){
   const code=document.getElementById('sku-code').value.trim();
   const name=document.getElementById('sku-name').value.trim();
   const price=parseFloat(document.getElementById('sku-price').value)||0;
   if(!code||!name){toast('Enter SKU code and name');return;}
   skus.push({id:uid(),code,name,price});
+  await persist();
   document.getElementById('sku-code').value='';
   document.getElementById('sku-name').value='';
   document.getElementById('sku-price').value='';
   renderSkuTable();
-  document.querySelectorAll('.sku-line').forEach(line=>{ const id=line.id; buildSkuSD(id); });
-  toast('SKU added!');
+  document.querySelectorAll('.sku-line').forEach(line=>buildSkuSD(line.id));
+  toast('SKU saved! ✅');
 }
-function deleteSku(id){
+async function deleteSku(id){
   skus=skus.filter(s=>s.id!==id);
+  await persist();
   renderSkuTable();
   document.querySelectorAll('.sku-line').forEach(line=>buildSkuSD(line.id));
+  toast('SKU deleted');
 }
 function renderSkuTable(){
   const wrap=document.getElementById('sku-table-wrap');
@@ -299,19 +336,21 @@ function renderSkuTable(){
   `</tbody></table><div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${filtered.length} of ${skus.length} SKUs</div>`;
 }
 
-// RETAILER MANAGEMENT
-function addRetailer(){
+// ── RETAILER MANAGEMENT ──────────────────────────────────────
+async function addRetailer(){
   const name=document.getElementById('ret-name').value.trim();
   const contact=document.getElementById('ret-contact').value.trim();
   if(!name){toast('Enter retailer name');return;}
   retailers.push({id:uid(),name,contact});
+  await persist();
   document.getElementById('ret-name').value='';
   document.getElementById('ret-contact').value='';
-  renderRetailerTable(); refreshRetailerDropdown(); toast('Retailer added!');
+  renderRetailerTable(); buildRetailerSD(); toast('Retailer saved! ✅');
 }
-function deleteRetailer(id){
+async function deleteRetailer(id){
   retailers=retailers.filter(r=>r.id!==id);
-  renderRetailerTable(); refreshRetailerDropdown();
+  await persist();
+  renderRetailerTable(); buildRetailerSD(); toast('Retailer deleted');
 }
 function renderRetailerTable(){
   const wrap=document.getElementById('ret-table-wrap');
@@ -321,11 +360,8 @@ function renderRetailerTable(){
     <td><button class="btn btn-danger" onclick="deleteRetailer('${r.id}')">Delete</button></td></tr>`).join('')+
   `</tbody></table>`;
 }
-function refreshRetailerDropdown(){
-  buildRetailerSD();
-}
 
-// ORDER LINES
+// ── ORDER LINES ──────────────────────────────────────────────
 function addSkuLine(){
   lineCount++;
   const id='line-'+lineCount;
@@ -335,7 +371,7 @@ function addSkuLine(){
   div.innerHTML=`
     <div class="fg" style="flex:3;min-width:200px">
       <label>SKU</label>
-      <div class="searchable-wrap" id="${sdId}-wrap" data-sd="${sdId}">
+      <div class="searchable-wrap" id="${sdId}-wrap">
         <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('${sdId}')">-- Select SKU -- <span>▾</span></button>
         <div class="searchable-dropdown" id="${sdId}">
           <div class="sd-search"><input placeholder="Search SKU or name..." oninput="filterSD('${sdId}',this.value)" onclick="event.stopPropagation()"/></div>
@@ -363,8 +399,8 @@ function updateTotal(){
   document.getElementById('running-total').textContent='Order Total: '+fmt(total);
 }
 
-// SAVE ORDER
-function saveOrder(){
+// ── SAVE ORDER ───────────────────────────────────────────────
+async function saveOrder(){
   const retId=document.getElementById('order-retailer').value;
   const date=document.getElementById('order-date').value;
   if(!retId){toast('Please select a retailer');return;}
@@ -384,16 +420,17 @@ function saveOrder(){
   const retailer=retailers.find(r=>r.id===retId);
   const total=lines.reduce((s,l)=>s+l.subtotal,0);
   orders.push({id:uid(),retailerId:retId,retailerName:retailer.name,date:date||new Date().toISOString().split('T')[0],lines,total,createdAt:new Date().toLocaleString()});
-  // reset
+  await persist();
+  // reset form
   document.getElementById('order-retailer').value='';
   const trigger=document.querySelector('#retailer-sd-wrap .sd-trigger');
   if(trigger){trigger.innerHTML='-- Select Retailer -- ▾';trigger.classList.add('placeholder-style');}
   document.getElementById('sku-lines').innerHTML='';
   lineCount=0; updateTotal();
-  toast('Order saved!');
+  toast('Order saved! ✅');
 }
 
-// HISTORY
+// ── HISTORY ──────────────────────────────────────────────────
 function renderHistory(){
   const wrap=document.getElementById('orders-list');
   const stats=document.getElementById('summary-stats');
@@ -402,16 +439,13 @@ function renderHistory(){
     stats.innerHTML=''; return;
   }
   const totalAmt=orders.reduce((s,o)=>s+o.total,0);
-  const retailers_set=[...new Set(orders.map(o=>o.retailerName))];
+  const rSet=[...new Set(orders.map(o=>o.retailerName))];
   stats.innerHTML=`
     <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Total Orders</div></div>
-    <div class="stat"><div class="stat-val">${retailers_set.length}</div><div class="stat-lbl">Retailers</div></div>
+    <div class="stat"><div class="stat-val">${rSet.length}</div><div class="stat-lbl">Retailers</div></div>
     <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Total Value</div></div>`;
-
-  // group by retailer
   const grouped={};
   orders.forEach(o=>{ if(!grouped[o.retailerName]) grouped[o.retailerName]=[]; grouped[o.retailerName].push(o); });
-
   wrap.innerHTML='';
   Object.entries(grouped).forEach(([rName,rOrders])=>{
     const sec=document.createElement('div');
@@ -433,16 +467,10 @@ function renderHistory(){
         </div>
         <table>
           <thead><tr><th>SKU Code</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
-          <tbody>
-            ${o.lines.map(l=>`<tr>
-              <td><span class="badge badge-blue">${l.skuCode}</span></td>
-              <td>${l.skuName}</td>
-              <td>${l.qty}</td>
-              <td>${fmt(l.price)}</td>
-              <td>${fmt(l.subtotal)}</td>
-              <td>${l.notes||'—'}</td>
-            </tr>`).join('')}
-          </tbody>
+          <tbody>${o.lines.map(l=>`<tr>
+            <td><span class="badge badge-blue">${l.skuCode}</span></td>
+            <td>${l.skuName}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${l.notes||'—'}</td>
+          </tr>`).join('')}</tbody>
         </table>
         <div style="text-align:right;margin-top:10px" class="total">Total: ${fmt(o.total)}</div>`;
       sec.appendChild(card);
@@ -450,53 +478,36 @@ function renderHistory(){
     wrap.appendChild(sec);
   });
 }
-function deleteOrder(id){
+async function deleteOrder(id){
   orders=orders.filter(o=>o.id!==id);
+  await persist();
   renderHistory(); toast('Order deleted');
 }
 
-// PDF EXPORT
+// ── PDF EXPORT ───────────────────────────────────────────────
 function exportPDF(orderId){
   const o=orders.find(x=>x.id===orderId);
   if(!o) return;
   const doc=new jsPDF();
-  const margin=15, pageW=210;
-
-  // Header
-  doc.setFillColor(43,108,176);
-  doc.rect(0,0,pageW,28,'F');
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(16); doc.setFont('helvetica','bold');
+  const margin=15,pageW=210;
+  doc.setFillColor(43,108,176); doc.rect(0,0,pageW,28,'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(16); doc.setFont('helvetica','bold');
   doc.text('ORDER INVOICE',margin,12);
   doc.setFontSize(9); doc.setFont('helvetica','normal');
   doc.text('Retailer Order Management System',margin,20);
-
-  // Order meta
-  doc.setTextColor(44,62,80);
-  doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.setTextColor(44,62,80); doc.setFontSize(10); doc.setFont('helvetica','bold');
   doc.text('Retailer:',margin,38); doc.setFont('helvetica','normal'); doc.text(o.retailerName,55,38);
   doc.setFont('helvetica','bold'); doc.text('Order ID:',margin,46); doc.setFont('helvetica','normal'); doc.text('#'+o.id.substr(1,6).toUpperCase(),55,46);
   doc.setFont('helvetica','bold'); doc.text('Date:',margin,54); doc.setFont('helvetica','normal'); doc.text(o.date,55,54);
   doc.setFont('helvetica','bold'); doc.text('Created:',margin,62); doc.setFont('helvetica','normal'); doc.text(o.createdAt,55,62);
-
-  // Line
   doc.setDrawColor(200,200,200); doc.line(margin,68,pageW-margin,68);
-
-  // Table header
   let y=76;
-  doc.setFillColor(240,244,248);
-  doc.rect(margin,y-5,pageW-2*margin,10,'F');
+  doc.setFillColor(240,244,248); doc.rect(margin,y-5,pageW-2*margin,10,'F');
   doc.setFont('helvetica','bold'); doc.setFontSize(9);
   const cols=[margin,55,100,130,155,175];
-  doc.text('SKU Code',cols[0],y);
-  doc.text('Product Name',cols[1],y);
-  doc.text('Qty',cols[2],y);
-  doc.text('Price',cols[3],y);
-  doc.text('Subtotal',cols[4],y);
-  doc.text('Notes',cols[5],y);
-
-  y+=8;
-  doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
+  doc.text('SKU Code',cols[0],y); doc.text('Product Name',cols[1],y); doc.text('Qty',cols[2],y);
+  doc.text('Price',cols[3],y); doc.text('Subtotal',cols[4],y); doc.text('Notes',cols[5],y);
+  y+=8; doc.setFont('helvetica','normal'); doc.setFontSize(8.5);
   o.lines.forEach((l,i)=>{
     if(i%2===0){doc.setFillColor(252,252,255);doc.rect(margin,y-4,pageW-2*margin,9,'F');}
     doc.setTextColor(44,62,80);
@@ -508,27 +519,26 @@ function exportPDF(orderId){
     doc.text(doc.splitTextToSize(l.notes||'—',28),cols[5],y);
     y+=10;
   });
-
-  // Total
   doc.line(margin,y,pageW-margin,y); y+=8;
   doc.setFont('helvetica','bold'); doc.setFontSize(11);
-  doc.setFillColor(43,108,176); doc.setTextColor(43,108,176);
+  doc.setTextColor(43,108,176);
   doc.text('TOTAL: '+fmt(o.total),pageW-margin,y,{align:'right'});
-
-  // Footer
   doc.setFontSize(8); doc.setTextColor(150,150,150); doc.setFont('helvetica','normal');
   doc.text('Generated by Retailer Order Management App',pageW/2,290,{align:'center'});
-
   doc.save(`Order_${o.retailerName}_${o.date}.pdf`);
   toast('PDF downloaded!');
 }
 
-// INIT
-document.getElementById('order-date').value=new Date().toISOString().split('T')[0];
-buildRetailerSD();
-addSkuLine();
+// ── INIT ─────────────────────────────────────────────────────
+async function init(){
+  await loadData();
+  document.getElementById('order-date').value=new Date().toISOString().split('T')[0];
+  buildRetailerSD();
+  addSkuLine();
+}
 
-// Register Service Worker
+init();
+
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('sw.js')
     .then(()=>console.log('SW registered'))
