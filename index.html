@@ -14,8 +14,8 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
   getFirestore, collection, doc,
-  addDoc, setDoc, deleteDoc,
-  onSnapshot, query, orderBy
+  addDoc, setDoc, updateDoc, deleteDoc,
+  onSnapshot, query, orderBy, where
 } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -31,7 +31,41 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
-let skus = [], retailers = [], orders = [], lineCount = 0;
+let skus=[], retailers=[], orders=[], routes=[], archivedOrders=[];
+let lineCount=0, dragSrcIdx=null;
+
+// ── IST DATE ──────────────────────────────────────────────────
+function getISTDateStr(){
+  const now=new Date();
+  const ist=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  return ist.toISOString().split('T')[0];
+}
+function getISTMidnight(){
+  const now=new Date();
+  const ist=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const midnight=new Date(ist);
+  midnight.setHours(24,0,0,0);
+  const diff=midnight-ist;
+  return diff;
+}
+
+// ── MIDNIGHT RESET ────────────────────────────────────────────
+function scheduleMidnightReset(){
+  const ms=getISTMidnight();
+  setTimeout(async()=>{
+    await archiveTodayOrders();
+    toast('🌙 Midnight reset — orders archived!');
+    scheduleMidnightReset();
+  },ms);
+}
+async function archiveTodayOrders(){
+  const today=getISTDateStr();
+  const toArchive=orders.filter(o=>o.date===today&&!o.archived);
+  for(const o of toArchive){
+    try{ await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()}); }
+    catch(e){ console.error(e); }
+  }
+}
 
 // ── UTILS ─────────────────────────────────────────────────────
 function fmt(n){ return '₹'+parseFloat(n||0).toFixed(2); }
@@ -46,25 +80,35 @@ function showLoader(msg='Loading...'){
 }
 function hideLoader(){ document.getElementById('global-loader').style.display='none'; }
 
-// ── REAL-TIME LISTENERS ───────────────────────────────────────
+// ── LISTENERS ─────────────────────────────────────────────────
+let listenersReady=0;
+function checkReady(){ listenersReady++; if(listenersReady>=3) hideLoader(); }
+
 function initListeners(){
-  // SKUs
-  onSnapshot(query(collection(db,'skus'), orderBy('code')), snap=>{
-    skus = snap.docs.map(d=>({id:d.id,...d.data()}));
+  onSnapshot(query(collection(db,'skus'),orderBy('code')),snap=>{
+    skus=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderSkuTable();
     document.querySelectorAll('.sku-line').forEach(l=>buildSkuSD(l.id));
-    hideLoader();
+    checkReady();
   });
-  // Retailers
-  onSnapshot(query(collection(db,'retailers'), orderBy('name')), snap=>{
-    retailers = snap.docs.map(d=>({id:d.id,...d.data()}));
-    buildRetailerSD();
-    renderRetailerTable();
+  onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
+    retailers=snap.docs.map(d=>({id:d.id,...d.data()}));
+    buildRetailerSD(); renderRetailerTable();
+    checkReady();
   });
-  // Orders
-  onSnapshot(query(collection(db,'orders'), orderBy('createdAt','desc')), snap=>{
-    orders = snap.docs.map(d=>({id:d.id,...d.data()}));
-    if(document.getElementById('tab-history').style.display!=='none') renderHistory();
+  onSnapshot(query(collection(db,'routes'),orderBy('name')),snap=>{
+    routes=snap.docs.map(d=>({id:d.id,...d.data()}));
+    buildRouteSD(); renderRoutesTab();
+    checkReady();
+  });
+  onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),snap=>{
+    const all=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const today=getISTDateStr();
+    orders=all.filter(o=>!o.archived&&o.date===today);
+    archivedOrders=all.filter(o=>o.archived);
+    const activeTab=document.querySelector('.tab.active')?.dataset?.tab;
+    if(activeTab==='history') renderHistory();
+    if(activeTab==='archives') renderArchives();
   });
 }
 
@@ -85,29 +129,59 @@ function filterSD(sdId,q){
     el.style.display=m?'':'none'; if(m)vis++;
   });
   let empty=opts.querySelector('.sd-empty');
-  if(!empty){empty=document.createElement('div');empty.className='sd-empty';empty.textContent='No results found';opts.appendChild(empty);}
+  if(!empty){empty=document.createElement('div');empty.className='sd-empty';empty.textContent='No results';opts.appendChild(empty);}
   empty.style.display=vis?'none':'block';
 }
-function selectSDOption(sdId,value,label,inputId){
+function selectSDOption(sdId,value,label,inputId,cb){
   const wrap=document.getElementById(sdId+'-wrap');
   const trigger=wrap?.querySelector('.sd-trigger');
   if(trigger){trigger.innerHTML=label+' <span>▾</span>';trigger.classList.remove('placeholder-style');}
   document.getElementById(inputId).value=value;
   closeAllSD();
+  if(cb) cb(value);
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.searchable-wrap'))closeAllSD();});
 
-function buildRetailerSD(){
-  const opts=document.getElementById('retailer-sd-options');
+// Route SD
+function buildRouteSD(){
+  const opts=document.getElementById('order-route-options');
   if(!opts)return;
   opts.innerHTML=
+    `<div class="sd-option placeholder" onclick="selectSDOption('order-route-sd','','All Routes','order-route',onRouteSelect)">All Routes (show all retailers)</div>`+
+    routes.map(r=>
+      `<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('order-route-sd','${r.id}','${r.name}','order-route',onRouteSelect)">${r.name}
+       <span style="color:#a0aec0;font-size:.8rem">· ${(r.retailers||[]).length} retailers</span></div>`
+    ).join('');
+}
+function onRouteSelect(routeId){
+  buildRetailerSD(routeId);
+  // reset retailer selection
+  document.getElementById('order-retailer').value='';
+  const tr=document.querySelector('#retailer-sd-wrap .sd-trigger');
+  if(tr){tr.innerHTML='-- Select Retailer -- <span>▾</span>';tr.classList.add('placeholder-style');}
+}
+
+// Retailer SD (filtered by route)
+function buildRetailerSD(routeId){
+  const opts=document.getElementById('retailer-sd-options');
+  if(!opts)return;
+  let list=retailers;
+  if(routeId){
+    const route=routes.find(r=>r.id===routeId);
+    const ids=(route?.retailers||[]).map(r=>r.id);
+    // sort by route order
+    list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);
+  }
+  opts.innerHTML=
     `<div class="sd-option placeholder" onclick="selectSDOption('retailer-sd','','-- Select Retailer --','order-retailer')">-- Select Retailer --</div>`+
-    retailers.map(r=>
+    list.map(r=>
       `<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('retailer-sd','${r.id}','${r.name}','order-retailer')">
         ${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>`:''}
       </div>`
     ).join('');
 }
+
+// SKU SD per line
 function buildSkuSD(lineId){
   const sdId=`sku-sd-${lineId}`;
   const opts=document.getElementById(`${sdId}-options`);
@@ -133,15 +207,35 @@ function selectSkuSD(lineId,skuId,label){
   }
 }
 
+// Route retailer picker SD
+function buildRouteRetailerPicker(routeId){
+  const opts=document.getElementById('route-retailer-picker-options');
+  if(!opts)return;
+  const route=routes.find(r=>r.id===routeId);
+  const assignedIds=(route?.retailers||[]).map(r=>r.id);
+  const available=retailers.filter(r=>!assignedIds.includes(r.id));
+  opts.innerHTML= available.length
+    ? available.map(r=>
+        `<div class="sd-option" data-label="${r.name}" onclick="addRetailerToRoute('${routeId}','${r.id}','${r.name}')">
+          ${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>`:''}
+        </div>`
+      ).join('')
+    : '<div class="sd-empty">All retailers already added</div>';
+}
+
 // ── TABS ──────────────────────────────────────────────────────
+const TABS=['orders','history','archives','routes','skus','retailers'];
 function switchTab(t){
-  ['orders','history','skus','retailers'].forEach((x,i)=>{
+  TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
-    document.querySelectorAll('.tab')[i].classList.toggle('active',x===t);
+    const el=document.querySelectorAll('.tab')[i];
+    if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
   });
   if(t==='history')   renderHistory();
+  if(t==='archives')  renderArchives();
   if(t==='skus')      renderSkuTable();
   if(t==='retailers') renderRetailerTable();
+  if(t==='routes')    renderRoutesTab();
 }
 window.switchTab=switchTab;
 
@@ -157,28 +251,26 @@ window.addSku=async function(){
     document.getElementById('sku-name').value='';
     document.getElementById('sku-price').value='';
     toast('SKU saved! ✅');
-  }catch(e){toast('Error saving SKU: '+e.message);}
+  }catch(e){toast('Error: '+e.message);}
 };
 window.deleteSku=async function(id){
   if(!confirm('Delete this SKU?'))return;
-  try{ await deleteDoc(doc(db,'skus',id)); toast('SKU deleted'); }
-  catch(e){ toast('Error: '+e.message); }
+  try{await deleteDoc(doc(db,'skus',id));toast('SKU deleted');}
+  catch(e){toast('Error: '+e.message);}
 };
 function renderSkuTable(){
-  const wrap=document.getElementById('sku-table-wrap');
-  if(!wrap)return;
+  const wrap=document.getElementById('sku-table-wrap'); if(!wrap)return;
   const q=(document.getElementById('sku-search')?.value||'').toLowerCase().trim();
   const f=skus.filter(s=>!q||s.code.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
-  if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet. Add one above.</div>';return;}
-  if(!f.length){wrap.innerHTML='<div class="empty">No SKUs match your search.</div>';return;}
+  if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet.</div>';return;}
+  if(!f.length){wrap.innerHTML='<div class="empty">No SKUs match search.</div>';return;}
   wrap.innerHTML=
-    `<table><thead><tr><th>Code</th><th>Name</th><th>Default Price</th><th>Action</th></tr></thead><tbody>`+
-    f.map(s=>
-      `<tr><td><span class="badge badge-blue">${s.code}</span></td><td>${s.name}</td><td>${fmt(s.price)}</td>
-       <td><button class="btn btn-danger" onclick="deleteSku('${s.id}')">Delete</button></td></tr>`
-    ).join('')+
+    `<table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Action</th></tr></thead><tbody>`+
+    f.map(s=>`<tr><td><span class="badge badge-blue">${s.code}</span></td><td>${s.name}</td><td>${fmt(s.price)}</td>
+      <td><button class="btn btn-danger" onclick="deleteSku('${s.id}')">Delete</button></td></tr>`).join('')+
     `</tbody></table><div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${f.length} of ${skus.length} SKUs</div>`;
 }
+window.renderSkuTable=renderSkuTable;
 
 // ── RETAILER MANAGEMENT ───────────────────────────────────────
 window.addRetailer=async function(){
@@ -194,20 +286,133 @@ window.addRetailer=async function(){
 };
 window.deleteRetailer=async function(id){
   if(!confirm('Delete this retailer?'))return;
-  try{ await deleteDoc(doc(db,'retailers',id)); toast('Retailer deleted'); }
-  catch(e){ toast('Error: '+e.message); }
+  try{await deleteDoc(doc(db,'retailers',id));toast('Retailer deleted');}
+  catch(e){toast('Error: '+e.message);}
 };
 function renderRetailerTable(){
-  const wrap=document.getElementById('ret-table-wrap');
-  if(!wrap)return;
+  const wrap=document.getElementById('ret-table-wrap'); if(!wrap)return;
   if(!retailers.length){wrap.innerHTML='<div class="empty">No retailers yet.</div>';return;}
   wrap.innerHTML=
     `<table><thead><tr><th>Name</th><th>Contact/Location</th><th>Action</th></tr></thead><tbody>`+
-    retailers.map(r=>
-      `<tr><td><b>${r.name}</b></td><td>${r.contact||'—'}</td>
-       <td><button class="btn btn-danger" onclick="deleteRetailer('${r.id}')">Delete</button></td></tr>`
-    ).join('')+`</tbody></table>`;
+    retailers.map(r=>`<tr><td><b>${r.name}</b></td><td>${r.contact||'—'}</td>
+      <td><button class="btn btn-danger" onclick="deleteRetailer('${r.id}')">Delete</button></td></tr>`).join('')+
+    `</tbody></table>`;
 }
+
+// ── ROUTES ────────────────────────────────────────────────────
+window.addRoute=async function(){
+  const name=document.getElementById('route-name').value.trim();
+  if(!name){toast('Enter route name');return;}
+  try{
+    await addDoc(collection(db,'routes'),{name,retailers:[]});
+    document.getElementById('route-name').value='';
+    toast('Route created! ✅');
+  }catch(e){toast('Error: '+e.message);}
+};
+window.deleteRoute=async function(id){
+  if(!confirm('Delete this route?'))return;
+  try{await deleteDoc(doc(db,'routes',id));toast('Route deleted');}
+  catch(e){toast('Error: '+e.message);}
+};
+window.addRetailerToRoute=async function(routeId,retId,retName){
+  const route=routes.find(r=>r.id===routeId);
+  const list=[...(route?.retailers||[]),{id:retId,name:retName}];
+  try{
+    await updateDoc(doc(db,'routes',routeId),{retailers:list});
+    closeAllSD();
+    toast(`${retName} added to route ✅`);
+    setTimeout(()=>buildRouteRetailerPicker(routeId),300);
+  }catch(e){toast('Error: '+e.message);}
+};
+window.removeRetailerFromRoute=async function(routeId,retId){
+  const route=routes.find(r=>r.id===routeId);
+  const list=(route?.retailers||[]).filter(r=>r.id!==retId);
+  try{
+    await updateDoc(doc(db,'routes',routeId),{retailers:list});
+    toast('Retailer removed');
+  }catch(e){toast('Error: '+e.message);}
+};
+window.onDragStart=function(e,routeId,idx){
+  dragSrcIdx=idx;
+  e.dataTransfer.effectAllowed='move';
+};
+window.onDragOver=function(e){ e.preventDefault(); e.dataTransfer.dropEffect='move'; };
+window.onDrop=async function(e,routeId,dropIdx){
+  e.preventDefault();
+  if(dragSrcIdx===null||dragSrcIdx===dropIdx)return;
+  const route=routes.find(r=>r.id===routeId);
+  const list=[...(route?.retailers||[])];
+  const [moved]=list.splice(dragSrcIdx,1);
+  list.splice(dropIdx,0,moved);
+  dragSrcIdx=null;
+  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});}
+  catch(e){toast('Error: '+e.message);}
+};
+
+function renderRoutesTab(){
+  const wrap=document.getElementById('routes-list'); if(!wrap)return;
+  if(!routes.length){wrap.innerHTML='<div class="card"><div class="empty">No routes yet. Create one above.</div></div>';return;}
+  wrap.innerHTML='';
+  routes.forEach(route=>{
+    const retList=route.retailers||[];
+    const card=document.createElement('div'); card.className='card';
+    card.innerHTML=`
+      <div class="order-header">
+        <div><b>🗺️ ${route.name}</b> <span class="badge badge-blue">${retList.length} retailers</span></div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="searchable-wrap" style="width:220px" id="rrp-${route.id}-wrap">
+            <button type="button" class="sd-trigger placeholder-style" style="font-size:.8rem;padding:6px 10px"
+              onclick="openRouteRetailerPicker('${route.id}')">+ Add Retailer <span>▾</span></button>
+            <div class="searchable-dropdown" id="rrp-${route.id}">
+              <div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('rrp-${route.id}',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="route-retailer-picker-options-${route.id}"></div>
+            </div>
+          </div>
+          <button class="btn btn-danger" onclick="deleteRoute('${route.id}')">Delete Route</button>
+        </div>
+      </div>
+      <div class="route-retailer-list" id="rrl-${route.id}">
+        ${retList.length
+          ? retList.map((r,i)=>`
+            <div class="route-ret-item" draggable="true"
+              ondragstart="onDragStart(event,'${route.id}',${i})"
+              ondragover="onDragOver(event)"
+              ondrop="onDrop(event,'${route.id}',${i})">
+              <span class="drag-handle">⠿</span>
+              <span class="seq-badge">${i+1}</span>
+              <span style="flex:1">${r.name}</span>
+              <button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem" onclick="removeRetailerFromRoute('${route.id}','${r.id}')">✕</button>
+            </div>`).join('')
+          : '<div style="color:#a0aec0;font-size:.88rem;padding:8px 0">No retailers added yet. Use the button above to add.</div>'
+        }
+      </div>`;
+    wrap.appendChild(card);
+  });
+}
+window.openRouteRetailerPicker=function(routeId){
+  // remap picker options id for this route
+  window._currentPickerRoute=routeId;
+  const sdId=`rrp-${routeId}`;
+  const dd=document.getElementById(sdId);
+  const open=dd.classList.contains('open');
+  closeAllSD();
+  if(!open){
+    // build options
+    const route=routes.find(r=>r.id===routeId);
+    const assignedIds=(route?.retailers||[]).map(r=>r.id);
+    const available=retailers.filter(r=>!assignedIds.includes(r.id));
+    const opts=document.getElementById(`route-retailer-picker-options-${routeId}`);
+    opts.innerHTML=available.length
+      ? available.map(r=>
+          `<div class="sd-option" data-label="${r.name}" onclick="addRetailerToRoute('${routeId}','${r.id}','${r.name}')">
+            ${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.8rem">· ${r.contact}</span>`:''}
+          </div>`
+        ).join('')
+      : '<div class="sd-empty">All retailers already added</div>';
+    dd.classList.add('open');
+    dd.querySelector('input')?.focus();
+  }
+};
 
 // ── ORDER LINES ───────────────────────────────────────────────
 window.addSkuLine=function(){
@@ -221,7 +426,7 @@ window.addSkuLine=function(){
       <div class="searchable-wrap" id="${sdId}-wrap">
         <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('${sdId}')">-- Select SKU -- <span>▾</span></button>
         <div class="searchable-dropdown" id="${sdId}">
-          <div class="sd-search"><input placeholder="Search SKU or name..." oninput="filterSD('${sdId}',this.value)" onclick="event.stopPropagation()"/></div>
+          <div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD('${sdId}',this.value)" onclick="event.stopPropagation()"/></div>
           <div class="sd-options" id="${sdId}-options"></div>
         </div>
       </div>
@@ -237,21 +442,19 @@ window.addSkuLine=function(){
 window.removeLine=function(id){ document.getElementById(id).remove(); updateTotal(); };
 window.updateTotal=function(){
   let t=0;
-  document.querySelectorAll('.sku-line').forEach(line=>{
-    t+=(parseFloat(line.querySelector('.line-qty').value)||0)*
-       (parseFloat(line.querySelector('.line-price').value)||0);
+  document.querySelectorAll('.sku-line').forEach(l=>{
+    t+=(parseFloat(l.querySelector('.line-qty').value)||0)*(parseFloat(l.querySelector('.line-price').value)||0);
   });
   document.getElementById('running-total').textContent='Order Total: '+fmt(t);
 };
-window.toggleSD=toggleSD;
-window.filterSD=filterSD;
-window.selectSDOption=selectSDOption;
-window.selectSkuSD=selectSkuSD;
+window.toggleSD=toggleSD; window.filterSD=filterSD;
+window.selectSDOption=selectSDOption; window.selectSkuSD=selectSkuSD;
 
 // ── SAVE ORDER ────────────────────────────────────────────────
 window.saveOrder=async function(){
   const retId=document.getElementById('order-retailer').value;
-  const date=document.getElementById('order-date').value;
+  const routeId=document.getElementById('order-route').value;
+  const date=document.getElementById('order-date').value||getISTDateStr();
   if(!retId){toast('Please select a retailer');return;}
   const lines=[]; let valid=true;
   document.querySelectorAll('.sku-line').forEach(line=>{
@@ -266,21 +469,28 @@ window.saveOrder=async function(){
   if(!valid){toast('Please select a SKU for each line');return;}
   if(!lines.length){toast('Add at least one SKU line');return;}
   const retailer=retailers.find(r=>r.id===retId);
+  const route=routes.find(r=>r.id===routeId);
   const total=lines.reduce((s,l)=>s+l.subtotal,0);
   try{
     await addDoc(collection(db,'orders'),{
       retailerId:retId, retailerName:retailer.name,
-      date: date||new Date().toISOString().split('T')[0],
-      lines, total, createdAt: new Date().toISOString()
+      routeId:routeId||'', routeName:route?.name||'',
+      date, lines, total,
+      archived:false,
+      createdAt:new Date().toISOString()
     });
     // Reset
     document.getElementById('order-retailer').value='';
-    const tr=document.querySelector('#retailer-sd-wrap .sd-trigger');
-    if(tr){tr.innerHTML='-- Select Retailer -- ▾';tr.classList.add('placeholder-style');}
+    document.getElementById('order-route').value='';
+    ['#retailer-sd-wrap .sd-trigger','#order-route-sd-wrap .sd-trigger'].forEach(sel=>{
+      const tr=document.querySelector(sel);
+      if(tr){tr.innerHTML=(sel.includes('retailer')?'-- Select Retailer --':'-- Select Route --')+' <span>▾</span>';tr.classList.add('placeholder-style');}
+    });
     document.getElementById('sku-lines').innerHTML='';
     lineCount=0; updateTotal();
+    buildRetailerSD('');
     toast('Order saved! ✅');
-  }catch(e){toast('Error saving order: '+e.message);}
+  }catch(e){toast('Error: '+e.message);}
 };
 
 // ── HISTORY ───────────────────────────────────────────────────
@@ -288,106 +498,191 @@ function renderHistory(){
   const wrap=document.getElementById('orders-list');
   const stats=document.getElementById('summary-stats');
   if(!orders.length){
-    wrap.innerHTML='<div class="card"><div class="empty">No orders yet. Create one from the New Order tab.</div></div>';
+    wrap.innerHTML='<div class="card"><div class="empty">No orders today yet.</div></div>';
     stats.innerHTML=''; return;
   }
   const totalAmt=orders.reduce((s,o)=>s+o.total,0);
   const rSet=[...new Set(orders.map(o=>o.retailerName))];
   stats.innerHTML=`
-    <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Total Orders</div></div>
+    <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Today's Orders</div></div>
     <div class="stat"><div class="stat-val">${rSet.length}</div><div class="stat-lbl">Retailers</div></div>
-    <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Total Value</div></div>`;
+    <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Today's Total</div></div>`;
+  wrap.innerHTML='';
+  const exportBtn=document.createElement('div');
+  exportBtn.style.cssText='display:flex;justify-content:flex-end;margin-bottom:16px';
+  exportBtn.innerHTML=`<button class="btn btn-pdf" onclick="exportAllPDF()">📄 Export All Orders PDF</button>`;
+  wrap.appendChild(exportBtn);
   const grouped={};
   orders.forEach(o=>{if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);});
-  wrap.innerHTML='';
   Object.entries(grouped).forEach(([rName,rOrders])=>{
     const sec=document.createElement('div'); sec.className='retailer-section';
     sec.innerHTML=`<div class="retailer-title">🏪 ${rName} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
-    rOrders.forEach(o=>{
-      const card=document.createElement('div'); card.className='card';
-      const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-      card.innerHTML=`
-        <div class="order-header">
-          <div>
-            <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
-            <div class="order-meta">📅 ${o.date} &nbsp;|&nbsp; Created: ${dateDisplay}</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn btn-pdf" onclick="exportPDF('${o.id}')">📄 PDF</button>
-            <button class="btn btn-danger" onclick="deleteOrder('${o.id}')">Delete</button>
-          </div>
-        </div>
-        <table>
-          <thead><tr><th>SKU Code</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
-          <tbody>${o.lines.map(l=>`<tr>
-            <td><span class="badge badge-blue">${l.skuCode}</span></td>
-            <td>${l.skuName}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${l.notes||'—'}</td>
-          </tr>`).join('')}</tbody>
-        </table>
-        <div style="text-align:right;margin-top:10px" class="total">Total: ${fmt(o.total)}</div>`;
-      sec.appendChild(card);
-    });
+    rOrders.forEach(o=>{ sec.appendChild(buildOrderCard(o,false)); });
     wrap.appendChild(sec);
   });
 }
+
+// ── ARCHIVES ──────────────────────────────────────────────────
+function renderArchives(){
+  const wrap=document.getElementById('archives-list'); if(!wrap)return;
+  if(!archivedOrders.length){
+    wrap.innerHTML='<div class="card"><div class="empty">No archived orders yet.</div></div>';return;
+  }
+  // group by date
+  const byDate={};
+  archivedOrders.forEach(o=>{
+    if(!byDate[o.date])byDate[o.date]=[];
+    byDate[o.date].push(o);
+  });
+  // sort dates desc
+  const sorted=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  wrap.innerHTML='';
+  sorted.forEach(date=>{
+    const dayOrders=byDate[date];
+    const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
+    const sec=document.createElement('div'); sec.className='retailer-section';
+    sec.innerHTML=`<div class="retailer-title">📅 ${date}
+      <span class="badge badge-blue">${dayOrders.length} orders</span>
+      <span style="font-size:.85rem;color:#38a169;font-weight:600">${fmt(dayTotal)}</span>
+    </div>`;
+    dayOrders.forEach(o=>{ sec.appendChild(buildOrderCard(o,true)); });
+    wrap.appendChild(sec);
+  });
+}
+
+function buildOrderCard(o,isArchive){
+  const card=document.createElement('div'); card.className='card';
+  const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
+  card.innerHTML=`
+    <div class="order-header">
+      <div>
+        <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
+        ${o.routeName?`<span class="badge" style="background:#faf5ff;color:#805ad5;margin-left:6px">🗺️ ${o.routeName}</span>`:''}
+        <div class="order-meta">📅 ${o.date} &nbsp;|&nbsp; ${dateDisplay}</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-pdf" onclick="exportPDF('${o.id}',${isArchive})">📄 PDF</button>
+        ${!isArchive?`<button class="btn btn-danger" onclick="deleteOrder('${o.id}')">Delete</button>`:''}
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>SKU Code</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
+      <tbody>${o.lines.map(l=>`<tr>
+        <td><span class="badge badge-blue">${l.skuCode}</span></td>
+        <td>${l.skuName}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${l.notes||'—'}</td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div style="text-align:right;margin-top:10px" class="total">Total: ${fmt(o.total)}</div>`;
+  return card;
+}
+
 window.deleteOrder=async function(id){
   if(!confirm('Delete this order?'))return;
-  try{ await deleteDoc(doc(db,'orders',id)); toast('Order deleted'); }
-  catch(e){ toast('Error: '+e.message); }
+  try{await deleteDoc(doc(db,'orders',id));toast('Order deleted');}
+  catch(e){toast('Error: '+e.message);}
 };
 
-// ── PDF EXPORT ────────────────────────────────────────────────
-window.exportPDF=function(orderId){
-  const o=orders.find(x=>x.id===orderId); if(!o)return;
-  const doc2=new jsPDF(), margin=15, pageW=210;
-  doc2.setFillColor(43,108,176); doc2.rect(0,0,pageW,28,'F');
-  doc2.setTextColor(255,255,255); doc2.setFontSize(16); doc2.setFont('helvetica','bold');
-  doc2.text('ORDER INVOICE',margin,12);
-  doc2.setFontSize(9); doc2.setFont('helvetica','normal');
-  doc2.text('Retailer Order Management System',margin,20);
-  doc2.setTextColor(44,62,80); doc2.setFontSize(10);
+// ── PDF SINGLE ────────────────────────────────────────────────
+window.exportPDF=function(orderId,isArchive){
+  const src=isArchive?archivedOrders:orders;
+  const o=src.find(x=>x.id===orderId); if(!o)return;
+  const doc2=new jsPDF(), m=15, pw=210;
+  pdfHeader(doc2,m,pw,'ORDER INVOICE');
   const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-  [['Retailer:',o.retailerName],['Order ID:','#'+o.id.substr(0,6).toUpperCase()],['Date:',o.date],['Created:',dateDisplay]]
+  [['Retailer:',o.retailerName],['Route:',o.routeName||'—'],['Order ID:','#'+o.id.substr(0,6).toUpperCase()],['Date:',o.date],['Created:',dateDisplay]]
     .forEach(([k,v],i)=>{
-      doc2.setFont('helvetica','bold'); doc2.text(k,margin,38+i*8);
-      doc2.setFont('helvetica','normal'); doc2.text(String(v),55,38+i*8);
+      doc2.setFont('helvetica','bold');doc2.text(k,m,38+i*8);
+      doc2.setFont('helvetica','normal');doc2.text(String(v),55,38+i*8);
     });
-  doc2.setDrawColor(200,200,200); doc2.line(margin,68,pageW-margin,68);
-  let y=76;
-  doc2.setFillColor(240,244,248); doc2.rect(margin,y-5,pageW-2*margin,10,'F');
-  doc2.setFont('helvetica','bold'); doc2.setFontSize(9);
-  const cols=[margin,55,100,130,155,175];
-  ['SKU Code','Product Name','Qty','Price','Subtotal','Notes'].forEach((h,i)=>doc2.text(h,cols[i],y));
-  y+=8; doc2.setFont('helvetica','normal'); doc2.setFontSize(8.5);
-  o.lines.forEach((l,i)=>{
-    if(i%2===0){doc2.setFillColor(252,252,255);doc2.rect(margin,y-4,pageW-2*margin,9,'F');}
-    doc2.setTextColor(44,62,80);
-    doc2.text(l.skuCode,cols[0],y);
-    doc2.text(doc2.splitTextToSize(l.skuName,40),cols[1],y);
-    doc2.text(String(l.qty),cols[2],y);
-    doc2.text(fmt(l.price),cols[3],y);
-    doc2.text(fmt(l.subtotal),cols[4],y);
-    doc2.text(doc2.splitTextToSize(l.notes||'—',28),cols[5],y);
-    y+=10;
-  });
-  doc2.line(margin,y,pageW-margin,y); y+=8;
-  doc2.setFont('helvetica','bold'); doc2.setFontSize(11); doc2.setTextColor(43,108,176);
-  doc2.text('TOTAL: '+fmt(o.total),pageW-margin,y,{align:'right'});
-  doc2.setFontSize(8); doc2.setTextColor(150,150,150); doc2.setFont('helvetica','normal');
-  doc2.text('Generated by Retailer Order Management App',pageW/2,290,{align:'center'});
+  doc2.setDrawColor(200,200,200);doc2.line(m,78,pw-m,78);
+  let y=pdfTable(doc2,m,pw,86,o.lines);
+  doc2.line(m,y,pw-m,y);y+=8;
+  doc2.setFont('helvetica','bold');doc2.setFontSize(11);doc2.setTextColor(43,108,176);
+  doc2.text('TOTAL: '+fmt(o.total),pw-m,y,{align:'right'});
+  pdfFooter(doc2,pw);
   doc2.save(`Order_${o.retailerName}_${o.date}.pdf`);
   toast('PDF downloaded!');
 };
 
+// ── PDF ALL ───────────────────────────────────────────────────
+window.exportAllPDF=function(){
+  if(!orders.length){toast('No orders to export');return;}
+  const doc2=new jsPDF(), m=15, pw=210;
+  const sorted=[...orders].sort((a,b)=>a.createdAt?.localeCompare(b.createdAt));
+  pdfHeader(doc2,m,pw,'ALL ORDERS — '+getISTDateStr());
+  // summary
+  const grandTotal=sorted.reduce((s,o)=>s+o.total,0);
+  doc2.setFontSize(9);doc2.setTextColor(44,62,80);doc2.setFont('helvetica','normal');
+  doc2.text(`Total Orders: ${sorted.length}   |   Grand Total: ${fmt(grandTotal)}`,m,38);
+  doc2.setDrawColor(200,200,200);doc2.line(m,44,pw-m,44);
+  let y=52;
+  sorted.forEach((o,idx)=>{
+    // check page space
+    if(y>240){doc2.addPage();y=20;}
+    doc2.setFont('helvetica','bold');doc2.setFontSize(10);doc2.setTextColor(43,108,176);
+    doc2.text(`${idx+1}. ${o.retailerName}${o.routeName?' ['+o.routeName+']':''}`,m,y);
+    doc2.setFont('helvetica','normal');doc2.setFontSize(8);doc2.setTextColor(120,120,120);
+    doc2.text(`Order #${o.id.substr(0,6).toUpperCase()}  |  ${o.date}  |  ${o.createdAt?new Date(o.createdAt).toLocaleString():''}`,m,y+5);
+    y+=12;
+    y=pdfTable(doc2,m,pw,y,o.lines);
+    doc2.setFont('helvetica','bold');doc2.setFontSize(9);doc2.setTextColor(43,108,176);
+    doc2.text('Order Total: '+fmt(o.total),pw-m,y,{align:'right'});
+    y+=10;
+    if(idx<sorted.length-1){
+      doc2.setDrawColor(220,220,220);doc2.line(m,y,pw-m,y);
+      y+=8;
+    }
+  });
+  // grand total
+  if(y>260){doc2.addPage();y=20;}
+  doc2.setFillColor(43,108,176);doc2.rect(m,y,pw-2*m,10,'F');
+  doc2.setFont('helvetica','bold');doc2.setFontSize(11);doc2.setTextColor(255,255,255);
+  doc2.text('GRAND TOTAL: '+fmt(grandTotal),pw-m-2,y+7,{align:'right'});
+  pdfFooter(doc2,pw);
+  doc2.save(`All_Orders_${getISTDateStr()}.pdf`);
+  toast('All orders PDF downloaded!');
+};
+
+// ── PDF HELPERS ───────────────────────────────────────────────
+function pdfHeader(doc2,m,pw,title){
+  doc2.setFillColor(43,108,176);doc2.rect(0,0,pw,28,'F');
+  doc2.setTextColor(255,255,255);doc2.setFontSize(14);doc2.setFont('helvetica','bold');
+  doc2.text(title,m,12);
+  doc2.setFontSize(8);doc2.setFont('helvetica','normal');
+  doc2.text('Retailer Order Management System',m,20);
+  doc2.setTextColor(44,62,80);doc2.setFontSize(10);
+}
+function pdfTable(doc2,m,pw,y,lines){
+  doc2.setFillColor(240,244,248);doc2.rect(m,y-4,pw-2*m,9,'F');
+  doc2.setFont('helvetica','bold');doc2.setFontSize(8);doc2.setTextColor(44,62,80);
+  const cols=[m,48,100,125,150,172];
+  ['SKU','Product','Qty','Price','Subtotal','Notes'].forEach((h,i)=>doc2.text(h,cols[i],y));
+  y+=7;doc2.setFont('helvetica','normal');doc2.setFontSize(7.5);
+  lines.forEach((l,i)=>{
+    if(i%2===0){doc2.setFillColor(252,252,255);doc2.rect(m,y-3,pw-2*m,8,'F');}
+    doc2.setTextColor(44,62,80);
+    doc2.text(l.skuCode,cols[0],y);
+    doc2.text(doc2.splitTextToSize(l.skuName,48),cols[1],y);
+    doc2.text(String(l.qty),cols[2],y);
+    doc2.text(fmt(l.price),cols[3],y);
+    doc2.text(fmt(l.subtotal),cols[4],y);
+    doc2.text(doc2.splitTextToSize(l.notes||'—',24),cols[5],y);
+    y+=8;
+  });
+  return y;
+}
+function pdfFooter(doc2,pw){
+  doc2.setFontSize(7);doc2.setTextColor(180,180,180);doc2.setFont('helvetica','normal');
+  doc2.text('Generated by Retailer Order Management App',pw/2,290,{align:'center'});
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 showLoader('Connecting to cloud...');
-document.getElementById('order-date').value=new Date().toISOString().split('T')[0];
+document.getElementById('order-date').value=getISTDateStr();
 addSkuLine();
 initListeners();
-
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW',e));
-}
+scheduleMidnightReset();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -396,59 +691,63 @@ if('serviceWorker' in navigator){
   header h1{font-size:1.3rem;font-weight:700}
   .sync-dot{width:10px;height:10px;border-radius:50%;background:#68d391;margin-left:auto;box-shadow:0 0 6px #68d391;animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-  .tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 24px;overflow-x:auto}
-  .tab{padding:12px 20px;cursor:pointer;font-weight:600;font-size:.9rem;border-bottom:3px solid transparent;color:#718096;transition:.2s;white-space:nowrap}
+  .tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 12px;overflow-x:auto}
+  .tab{padding:12px 16px;cursor:pointer;font-weight:600;font-size:.85rem;border-bottom:3px solid transparent;color:#718096;transition:.2s;white-space:nowrap}
   .tab.active{border-bottom-color:#3182ce;color:#3182ce}
-  .content{padding:24px;max-width:1100px;margin:0 auto}
+  .content{padding:20px;max-width:1100px;margin:0 auto}
   .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:20px}
   .card h2{font-size:1rem;font-weight:700;margin-bottom:16px;color:#2d3748}
   .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
-  input,select,textarea{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;width:100%;background:#fff;outline:none;transition:.2s}
-  input:focus,select:focus{border-color:#3182ce}
+  input,select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;width:100%;background:#fff;outline:none;transition:.2s}
+  input:focus{border-color:#3182ce}
   .fg{display:flex;flex-direction:column;gap:4px}
-  .fg label{font-size:.78rem;font-weight:600;color:#718096;text-transform:uppercase}
+  .fg label{font-size:.75rem;font-weight:600;color:#718096;text-transform:uppercase}
   .btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.85rem;transition:.2s;white-space:nowrap}
   .btn-primary{background:#3182ce;color:#fff}.btn-primary:hover{background:#2b6cb0}
   .btn-success{background:#38a169;color:#fff}.btn-success:hover{background:#276749}
   .btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
   .btn-outline{background:#fff;border:1.5px solid #e2e8f0;color:#4a5568}.btn-outline:hover{background:#f7fafc}
   .btn-pdf{background:#805ad5;color:#fff}.btn-pdf:hover{background:#6b46c1}
-  table{width:100%;border-collapse:collapse;font-size:.88rem}
-  th{background:#f7fafc;padding:10px 12px;text-align:left;font-weight:700;color:#4a5568;border-bottom:2px solid #e2e8f0}
-  td{padding:10px 12px;border-bottom:1px solid #f0f4f8;vertical-align:top}
+  table{width:100%;border-collapse:collapse;font-size:.85rem}
+  th{background:#f7fafc;padding:9px 12px;text-align:left;font-weight:700;color:#4a5568;border-bottom:2px solid #e2e8f0}
+  td{padding:9px 12px;border-bottom:1px solid #f0f4f8;vertical-align:top}
   tr:last-child td{border-bottom:none}
   .badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700}
   .badge-blue{background:#ebf8ff;color:#2b6cb0}
   .empty{text-align:center;padding:40px;color:#a0aec0;font-size:.95rem}
   .sku-line{display:flex;gap:8px;align-items:flex-end;background:#f7fafc;border-radius:8px;padding:10px;margin-bottom:8px;flex-wrap:wrap}
-  .order-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-  .order-meta{font-size:.8rem;color:#718096}
+  .order-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .order-meta{font-size:.78rem;color:#718096;margin-top:2px}
   .total{font-weight:700;color:#2d3748;font-size:1rem}
-  .retailer-section{margin-bottom:28px}
-  .retailer-title{font-size:1.1rem;font-weight:700;color:#2b6cb0;margin-bottom:12px;display:flex;align-items:center;gap:8px}
-  .summary-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:20px}
-  .stat{background:#fff;border-radius:10px;padding:14px 20px;flex:1;min-width:140px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
-  .stat-val{font-size:1.6rem;font-weight:700;color:#3182ce}
-  .stat-lbl{font-size:.78rem;color:#718096;margin-top:2px}
-  #toast{position:fixed;bottom:24px;right:24px;background:#2d3748;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;transition:.3s;pointer-events:none;z-index:999}
+  .retailer-section{margin-bottom:24px}
+  .retailer-title{font-size:1rem;font-weight:700;color:#2b6cb0;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+  .stat{background:#fff;border-radius:10px;padding:14px 18px;flex:1;min-width:130px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
+  .stat-val{font-size:1.5rem;font-weight:700;color:#3182ce}
+  .stat-lbl{font-size:.75rem;color:#718096;margin-top:2px}
+  #toast{position:fixed;bottom:24px;right:24px;background:#2d3748;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;transition:.3s;pointer-events:none;z-index:9999}
   #toast.show{opacity:1}
-  #global-loader{position:fixed;inset:0;background:rgba(240,244,248,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px}
+  #global-loader{position:fixed;inset:0;background:rgba(240,244,248,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px}
   .spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#3182ce;border-radius:50%;animation:spin .8s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
   #loader-msg{color:#4a5568;font-weight:600;font-size:.95rem}
   .searchable-wrap{position:relative;width:100%}
-  .searchable-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:100;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.1);display:none}
+  .searchable-dropdown{position:absolute;top:100%;left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:200;max-height:200px;overflow-y:auto;box-shadow:0 4px 12px rgba(0,0,0,.12);display:none}
   .searchable-dropdown.open{display:block}
-  .sd-search{padding:8px 10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff}
+  .sd-search{padding:8px 10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff;z-index:1}
   .sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%}
-  .sd-option{padding:8px 12px;cursor:pointer;font-size:.88rem;transition:.15s}
-  .sd-option:hover,.sd-option.selected{background:#ebf8ff;color:#2b6cb0}
+  .sd-option{padding:8px 12px;cursor:pointer;font-size:.85rem;transition:.15s}
+  .sd-option:hover{background:#ebf8ff;color:#2b6cb0}
   .sd-option.placeholder{color:#a0aec0;font-style:italic}
   .sd-empty{padding:10px 12px;color:#a0aec0;font-size:.85rem;text-align:center}
-  .sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748}
+  .sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748;gap:6px}
   .sd-trigger.placeholder-style{color:#a0aec0}
-  .sd-trigger:focus{border-color:#3182ce;outline:none}
-  @media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}}
+  .route-retailer-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+  .route-ret-item{display:flex;align-items:center;gap:10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 12px;cursor:grab;transition:.15s}
+  .route-ret-item:hover{border-color:#bee3f8;background:#ebf8ff}
+  .drag-handle{color:#cbd5e0;font-size:1.1rem;cursor:grab}
+  .seq-badge{background:#3182ce;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+  @media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}.tabs{padding:0 4px}.tab{padding:10px 10px;font-size:.78rem}}
 </style>
 </head>
 <body>
@@ -461,23 +760,37 @@ if('serviceWorker' in navigator){
 <header>
   <span style="font-size:1.5rem">📦</span>
   <h1>Retailer Order Management</h1>
-  <div class="sync-dot" title="Live sync active"></div>
+  <div class="sync-dot" title="Live sync"></div>
 </header>
 
 <div class="tabs">
-  <div class="tab active" onclick="switchTab('orders')">🛒 New Order</div>
-  <div class="tab" onclick="switchTab('history')">📋 Order History</div>
-  <div class="tab" onclick="switchTab('skus')">🏷️ Manage SKUs</div>
-  <div class="tab" onclick="switchTab('retailers')">🏪 Manage Retailers</div>
+  <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 New Order</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">📋 History</div>
+  <div class="tab" data-tab="archives" onclick="switchTab('archives')">🗂️ Archives</div>
+  <div class="tab" data-tab="routes" onclick="switchTab('routes')">🗺️ Routes</div>
+  <div class="tab" data-tab="skus" onclick="switchTab('skus')">🏷️ SKUs</div>
+  <div class="tab" data-tab="retailers" onclick="switchTab('retailers')">🏪 Retailers</div>
 </div>
 
 <div class="content">
+
   <!-- NEW ORDER -->
   <div id="tab-orders">
     <div class="card">
       <h2>Create New Order</h2>
       <div class="row">
-        <div class="fg" style="flex:1;min-width:200px">
+        <div class="fg" style="flex:1;min-width:180px">
+          <label>Route (optional)</label>
+          <div class="searchable-wrap" id="order-route-sd-wrap">
+            <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('order-route-sd')">-- Select Route -- <span>▾</span></button>
+            <div class="searchable-dropdown" id="order-route-sd">
+              <div class="sd-search"><input placeholder="Search route..." oninput="filterSD('order-route-sd',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="order-route-options"></div>
+            </div>
+          </div>
+          <input type="hidden" id="order-route" value=""/>
+        </div>
+        <div class="fg" style="flex:1;min-width:180px">
           <label>Retailer</label>
           <div class="searchable-wrap" id="retailer-sd-wrap">
             <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('retailer-sd')">-- Select Retailer -- <span>▾</span></button>
@@ -488,7 +801,7 @@ if('serviceWorker' in navigator){
           </div>
           <input type="hidden" id="order-retailer" value=""/>
         </div>
-        <div class="fg" style="flex:1;min-width:180px">
+        <div class="fg" style="flex:1;min-width:150px">
           <label>Order Date</label>
           <input type="date" id="order-date"/>
         </div>
@@ -511,22 +824,42 @@ if('serviceWorker' in navigator){
     <div id="orders-list"></div>
   </div>
 
+  <!-- ARCHIVES -->
+  <div id="tab-archives" style="display:none">
+    <div class="card" style="background:linear-gradient(135deg,#faf5ff,#fff);border-left:4px solid #805ad5">
+      <b style="color:#805ad5">🗂️ Archives</b>
+      <p style="font-size:.85rem;color:#718096;margin-top:4px">Past orders archived at midnight IST. Read-only.</p>
+    </div>
+    <div id="archives-list"></div>
+  </div>
+
+  <!-- ROUTES -->
+  <div id="tab-routes" style="display:none">
+    <div class="card">
+      <h2>Create New Route</h2>
+      <div class="row">
+        <div class="fg" style="flex:3;min-width:200px"><label>Route Name</label><input id="route-name" placeholder="e.g. North Zone, Monday Route"/></div>
+        <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addRoute()">Create Route</button></div>
+      </div>
+    </div>
+    <div id="routes-list"></div>
+  </div>
+
   <!-- SKUs -->
   <div id="tab-skus" style="display:none">
     <div class="card">
       <h2>Add New SKU</h2>
       <div class="row">
-        <div class="fg" style="flex:2;min-width:160px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. SKU-001"/></div>
-        <div class="fg" style="flex:3;min-width:200px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Blue Widget 500ml"/></div>
-        <div class="fg" style="flex:1;min-width:120px"><label>Default Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
+        <div class="fg" style="flex:2;min-width:140px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. SKU-001"/></div>
+        <div class="fg" style="flex:3;min-width:180px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Blue Widget 500ml"/></div>
+        <div class="fg" style="flex:1;min-width:110px"><label>Default Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addSku()">Add SKU</button></div>
       </div>
     </div>
     <div class="card">
       <h2>SKU List</h2>
       <div class="row" style="margin-bottom:12px">
-        <div class="fg" style="flex:1;min-width:200px">
-          <label>🔍 Search SKUs</label>
+        <div class="fg" style="flex:1"><label>🔍 Search</label>
           <input id="sku-search" placeholder="Search by code or name..." oninput="renderSkuTable()"/>
         </div>
       </div>
@@ -539,8 +872,8 @@ if('serviceWorker' in navigator){
     <div class="card">
       <h2>Add New Retailer</h2>
       <div class="row">
-        <div class="fg" style="flex:2;min-width:180px"><label>Retailer Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div>
-        <div class="fg" style="flex:2;min-width:180px"><label>Contact / Location (optional)</label><input id="ret-contact" placeholder="e.g. Mumbai, 9876543210"/></div>
+        <div class="fg" style="flex:2;min-width:160px"><label>Retailer Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div>
+        <div class="fg" style="flex:2;min-width:160px"><label>Contact / Location</label><input id="ret-contact" placeholder="e.g. Mumbai, 9876543210"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addRetailer()">Add Retailer</button></div>
       </div>
     </div>
@@ -549,8 +882,8 @@ if('serviceWorker' in navigator){
       <div id="ret-table-wrap"></div>
     </div>
   </div>
-</div>
 
+</div>
 <div id="toast"></div>
 </body>
 </html>
