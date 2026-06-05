@@ -9,7 +9,6 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Order Mgmt"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
@@ -36,7 +35,7 @@ input:focus{border-color:#3182ce}
 .btn-pdf{background:#805ad5;color:#fff}.btn-pdf:hover{background:#6b46c1}
 .btn-edit{background:#ed8936;color:#fff}.btn-edit:hover{background:#c05621}
 .btn-save{background:#38a169;color:#fff;padding:5px 12px;font-size:.78rem}.btn-save:hover{background:#276749}
-.btn-cancel{background:#e2e8f0;color:#4a5568;padding:5px 12px;font-size:.78rem}.btn-cancel:hover{background:#cbd5e0}
+.btn-cancel{background:#e2e8f0;color:#4a5568;padding:5px 12px;font-size:.78rem}
 table{width:100%;border-collapse:collapse;font-size:.85rem}
 th{background:#f7fafc;padding:9px 12px;text-align:left;font-weight:700;color:#4a5568;border-bottom:2px solid #e2e8f0}
 td{padding:9px 12px;border-bottom:1px solid #f0f4f8;vertical-align:middle}
@@ -59,43 +58,38 @@ tr:last-child td{border-bottom:none}
 #global-loader{position:fixed;inset:0;background:rgba(240,244,248,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px}
 .spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#3182ce;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#loader-msg{color:#4a5568;font-weight:600;font-size:.95rem}
-/* Searchable dropdown */
+#loader-msg{color:#4a5568;font-weight:600}
 .searchable-wrap{position:relative;width:100%}
 .searchable-dropdown{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:500;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.13);display:none}
 .searchable-dropdown.open{display:block}
 .sd-search{padding:8px 10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff;z-index:1}
 .sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%}
-.sd-option{padding:8px 12px;cursor:pointer;font-size:.85rem;transition:.15s;display:flex;align-items:center;gap:8px}
+.sd-option{padding:9px 12px;cursor:pointer;font-size:.85rem;transition:.15s}
 .sd-option:hover{background:#ebf8ff;color:#2b6cb0}
-.sd-option.placeholder{color:#a0aec0;font-style:italic}
+.sd-option.placeholder-opt{color:#a0aec0;font-style:italic}
 .sd-empty{padding:10px 12px;color:#a0aec0;font-size:.85rem;text-align:center}
 .sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748;gap:6px}
 .sd-trigger.placeholder-style{color:#a0aec0}
-/* Route lock bar */
-.route-lock-bar{background:#ebf8ff;border:1.5px solid #bee3f8;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.route-lock-bar{background:#ebf8ff;border:1.5px solid #bee3f8;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
 .route-lock-bar label{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.9rem;color:#2b6cb0}
-.route-lock-bar input[type=checkbox]{width:18px;height:18px;cursor:pointer;accent-color:#3182ce}
+.route-lock-bar input[type=checkbox]{width:18px;height:18px;accent-color:#3182ce;cursor:pointer}
 .lock-info{font-size:.8rem;color:#4299e1;flex:1}
-/* Route list */
 .route-retailer-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
 .route-ret-item{display:flex;align-items:center;gap:10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 12px;cursor:grab;transition:.15s}
 .route-ret-item:hover{border-color:#bee3f8;background:#ebf8ff}
-.drag-handle{color:#cbd5e0;font-size:1.1rem;cursor:grab}
+.drag-handle{color:#cbd5e0;font-size:1.1rem}
 .seq-badge{background:#3182ce;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
-/* inline edit */
 .edit-input{padding:5px 8px;border:1.5px solid #3182ce;border-radius:6px;font-size:.85rem;width:100%}
 @media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}.tab{padding:10px 8px;font-size:.75rem}}
 </style>
 </head>
 <body>
-
 <div id="global-loader"><div class="spinner"></div><div id="loader-msg">Connecting to cloud...</div></div>
 
 <header>
   <span style="font-size:1.5rem">📦</span>
   <h1>Retailer Order Management</h1>
-  <div class="sync-dot" title="Live sync"></div>
+  <div class="sync-dot"></div>
 </header>
 
 <div class="tabs">
@@ -108,41 +102,36 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <div class="content">
-
   <!-- NEW ORDER -->
   <div id="tab-orders">
     <div class="card">
       <h2>Create New Order</h2>
-      <!-- Route lock bar -->
-      <div class="route-lock-bar" id="route-lock-bar">
-        <label>
-          <input type="checkbox" id="route-lock-chk" onchange="onRouteLockChange()"/>
-          Lock Route for today
-        </label>
-        <span class="lock-info" id="route-lock-info">Select a route below, then tick to lock it till midnight.</span>
+      <div class="route-lock-bar">
+        <label><input type="checkbox" id="route-lock-chk" onchange="onRouteLockChange()"/> Lock Route for today</label>
+        <span class="lock-info" id="route-lock-info">Select a route below, then tick to lock till midnight.</span>
       </div>
       <div class="row">
         <div class="fg" style="flex:1;min-width:180px">
           <label>Route (optional)</label>
-          <div class="searchable-wrap" id="order-route-sd-wrap">
-            <button type="button" class="sd-trigger placeholder-style" id="order-route-trigger" onclick="toggleSD('order-route-sd')">-- Select Route -- <span>▾</span></button>
-            <div class="searchable-dropdown" id="order-route-sd">
-              <div class="sd-search"><input placeholder="Search route..." oninput="filterSD('order-route-sd',this.value)" onclick="event.stopPropagation()"/></div>
-              <div class="sd-options" id="order-route-options"></div>
+          <div class="searchable-wrap" id="sd-wrap-order-route">
+            <button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-route" onclick="toggleSD('order-route')">-- Select Route -- <span>▾</span></button>
+            <div class="searchable-dropdown" id="sd-dd-order-route">
+              <div class="sd-search"><input placeholder="Search route..." oninput="filterSD('order-route',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="sd-opts-order-route"></div>
             </div>
           </div>
-          <input type="hidden" id="order-route" value=""/>
+          <input type="hidden" id="val-order-route" value=""/>
         </div>
         <div class="fg" style="flex:1;min-width:180px">
           <label>Retailer</label>
-          <div class="searchable-wrap" id="retailer-sd-wrap">
-            <button type="button" class="sd-trigger placeholder-style" id="retailer-sd-trigger" onclick="toggleSD('retailer-sd')">-- Select Retailer -- <span>▾</span></button>
-            <div class="searchable-dropdown" id="retailer-sd">
-              <div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('retailer-sd',this.value)" onclick="event.stopPropagation()"/></div>
-              <div class="sd-options" id="retailer-sd-options"></div>
+          <div class="searchable-wrap" id="sd-wrap-order-retailer">
+            <button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-retailer" onclick="toggleSD('order-retailer')">-- Select Retailer -- <span>▾</span></button>
+            <div class="searchable-dropdown" id="sd-dd-order-retailer">
+              <div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('order-retailer',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="sd-opts-order-retailer"></div>
             </div>
           </div>
-          <input type="hidden" id="order-retailer" value=""/>
+          <input type="hidden" id="val-order-retailer" value=""/>
         </div>
         <div class="fg" style="flex:1;min-width:150px">
           <label>Order Date</label>
@@ -155,7 +144,7 @@ tr:last-child td{border-bottom:none}
       <div id="sku-lines"></div>
       <button class="btn btn-outline" onclick="addSkuLine()">+ Add SKU Line</button>
     </div>
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
       <div class="total" id="running-total">Order Total: ₹0.00</div>
       <button class="btn btn-success" onclick="saveOrder()">✅ Save Order</button>
     </div>
@@ -181,7 +170,7 @@ tr:last-child td{border-bottom:none}
     <div class="card">
       <h2>Create New Route</h2>
       <div class="row">
-        <div class="fg" style="flex:3;min-width:200px"><label>Route Name</label><input id="route-name" placeholder="e.g. North Zone, Monday Route"/></div>
+        <div class="fg" style="flex:3;min-width:200px"><label>Route Name</label><input id="route-name" placeholder="e.g. North Zone"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addRoute()">Create Route</button></div>
       </div>
     </div>
@@ -193,18 +182,16 @@ tr:last-child td{border-bottom:none}
     <div class="card">
       <h2>Add New SKU</h2>
       <div class="row">
-        <div class="fg" style="flex:2;min-width:140px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. SKU-001"/></div>
-        <div class="fg" style="flex:3;min-width:180px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Blue Widget 500ml"/></div>
-        <div class="fg" style="flex:1;min-width:110px"><label>Default Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
+        <div class="fg" style="flex:2;min-width:130px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. SKU-001"/></div>
+        <div class="fg" style="flex:3;min-width:170px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Widget 500ml"/></div>
+        <div class="fg" style="flex:1;min-width:100px"><label>Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addSku()">Add SKU</button></div>
       </div>
     </div>
     <div class="card">
       <h2>SKU List</h2>
       <div class="row" style="margin-bottom:12px">
-        <div class="fg" style="flex:1"><label>🔍 Search</label>
-          <input id="sku-search" placeholder="Search by code or name..." oninput="renderSkuTable()"/>
-        </div>
+        <div class="fg" style="flex:1"><label>🔍 Search</label><input id="sku-search" placeholder="Search by code or name..." oninput="renderSkuTable()"/></div>
       </div>
       <div id="sku-table-wrap"></div>
     </div>
@@ -216,7 +203,7 @@ tr:last-child td{border-bottom:none}
       <h2>Add New Retailer</h2>
       <div class="row">
         <div class="fg" style="flex:2;min-width:160px"><label>Retailer Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div>
-        <div class="fg" style="flex:2;min-width:160px"><label>Contact / Location</label><input id="ret-contact" placeholder="e.g. Mumbai, 9876543210"/></div>
+        <div class="fg" style="flex:2;min-width:160px"><label>Contact / Location</label><input id="ret-contact" placeholder="e.g. Mumbai"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addRetailer()">Add Retailer</button></div>
       </div>
     </div>
@@ -225,17 +212,14 @@ tr:last-child td{border-bottom:none}
       <div id="ret-table-wrap"></div>
     </div>
   </div>
-
 </div>
 <div id="toast"></div>
 
+<!-- Load jsPDF first, then Firebase as module -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import {
-  getFirestore, collection, doc,
-  addDoc, updateDoc, deleteDoc,
-  onSnapshot, query, orderBy
-} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCg5jegmaB8-DVY5i2HYCNpk7oBs-8fjWc",
@@ -250,33 +234,38 @@ const db  = getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
 let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[];
-let lineCount=0, dragSrcIdx=null;
-const LOCK_KEY='routeLock_v1';
+let lineCount=0, dragSrc=null;
+const LOCK_KEY='routeLock_v2';
 
 // ── IST HELPERS ───────────────────────────────────────────────
 function getISTDateStr(){
   return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
 }
-function getISTMidnightMs(){
+function msToISTMidnight(){
   const now=new Date();
-  const istStr=now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'});
-  const ist=new Date(istStr);
-  const midnight=new Date(ist); midnight.setHours(24,0,0,0);
-  return midnight-ist;
+  const istNow=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
+  const mdn=new Date(istNow); mdn.setHours(24,0,0,0);
+  return mdn - istNow;
 }
 
-// ── ROUTE LOCK ────────────────────────────────────────────────
-function saveLock(routeId,routeName){
-  const today=getISTDateStr();
-  localStorage.setItem(LOCK_KEY,JSON.stringify({routeId,routeName,date:today}));
+// ── UTILS ─────────────────────────────────────────────────────
+const fmt=n=>'₹'+parseFloat(n||0).toFixed(2);
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2800);
 }
+function showLoader(m){document.getElementById('loader-msg').textContent=m;document.getElementById('global-loader').style.display='flex';}
+function hideLoader(){document.getElementById('global-loader').style.display='none';}
+
+// ── ROUTE LOCK ────────────────────────────────────────────────
+const LOCK_KEY_DATE = LOCK_KEY+'_date';
+function saveLock(id,name){ localStorage.setItem(LOCK_KEY,JSON.stringify({id,name,date:getISTDateStr()})); }
 function clearLock(){ localStorage.removeItem(LOCK_KEY); }
 function getLock(){
   try{
-    const raw=localStorage.getItem(LOCK_KEY);
-    if(!raw)return null;
-    const d=JSON.parse(raw);
-    if(d.date!==getISTDateStr()){clearLock();return null;}
+    const d=JSON.parse(localStorage.getItem(LOCK_KEY)||'null');
+    if(!d||d.date!==getISTDateStr()){clearLock();return null;}
     return d;
   }catch{return null;}
 }
@@ -284,82 +273,198 @@ function applyLockUI(){
   const lock=getLock();
   const chk=document.getElementById('route-lock-chk');
   const info=document.getElementById('route-lock-info');
-  const trigger=document.getElementById('order-route-trigger');
+  const btn=document.getElementById('sd-btn-order-route');
   if(lock){
     chk.checked=true;
-    document.getElementById('order-route').value=lock.routeId;
-    trigger.innerHTML=lock.routeName+' <span>▾</span>';
-    trigger.classList.remove('placeholder-style');
-    trigger.disabled=true; trigger.style.opacity='.7';
-    info.textContent='🔒 Route locked till midnight. Uncheck to change.';
-    buildRetailerSD(lock.routeId);
+    document.getElementById('val-order-route').value=lock.id;
+    btn.innerHTML=escHtml(lock.name)+' <span>▾</span>';
+    btn.classList.remove('placeholder-style');
+    btn.style.opacity='.65'; btn.style.pointerEvents='none';
+    info.textContent='🔒 Locked till midnight. Uncheck to change.';
+    buildRetailerOpts(lock.id);
   } else {
     chk.checked=false;
-    trigger.disabled=false; trigger.style.opacity='1';
+    btn.style.opacity='1'; btn.style.pointerEvents='';
     info.textContent='Select a route below, then tick to lock it till midnight.';
   }
 }
 window.onRouteLockChange=function(){
   const chk=document.getElementById('route-lock-chk');
-  const routeId=document.getElementById('order-route').value;
-  const routeName=document.getElementById('order-route-trigger').textContent.replace('▾','').trim();
+  const id=document.getElementById('val-order-route').value;
+  const name=document.getElementById('sd-btn-order-route').textContent.replace('▾','').trim();
   if(chk.checked){
-    if(!routeId){chk.checked=false;toast('Please select a route first');return;}
-    saveLock(routeId,routeName);
-  } else {
-    clearLock();
-  }
+    if(!id){chk.checked=false;toast('Select a route first');return;}
+    saveLock(id,name);
+  } else { clearLock(); }
   applyLockUI();
 };
-// Schedule midnight lock clear
-function scheduleLockReset(){
-  const ms=getISTMidnightMs();
-  setTimeout(()=>{ clearLock(); applyLockUI(); toast('🌙 Midnight — route lock cleared'); scheduleLockReset(); },ms);
-}
-
-// ── MIDNIGHT ARCHIVE ──────────────────────────────────────────
+function scheduleLockReset(){ setTimeout(()=>{clearLock();applyLockUI();toast('🌙 Route lock cleared');scheduleLockReset();},msToISTMidnight()); }
 function scheduleMidnightArchive(){
-  const ms=getISTMidnightMs();
   setTimeout(async()=>{
-    const today=getISTDateStr();
-    for(const o of orders.filter(x=>x.date===today&&!x.archived)){
-      try{await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()});}catch(e){console.error(e);}
+    for(const o of orders){
+      try{await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()});}catch{}
     }
-    toast('🌙 Midnight — orders archived!');
+    toast('🌙 Orders archived');
     scheduleMidnightArchive();
-  },ms);
+  },msToISTMidnight());
 }
 
-// ── UTILS ─────────────────────────────────────────────────────
-function fmt(n){return '₹'+parseFloat(n||0).toFixed(2);}
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
+// ── SEARCHABLE DROPDOWN ───────────────────────────────────────
+// Naming convention: sd-wrap-{key}, sd-btn-{key}, sd-dd-{key}, sd-opts-{key}, val-{key}
+function toggleSD(key){
+  const lock=getLock();
+  if(key==='order-route'&&lock) return;
+  const dd=document.getElementById('sd-dd-'+key);
+  const isOpen=dd.classList.contains('open');
+  closeAllSD();
+  if(!isOpen){ dd.classList.add('open'); dd.querySelector('input')?.focus(); }
 }
-function showLoader(m){document.getElementById('loader-msg').textContent=m;document.getElementById('global-loader').style.display='flex';}
-function hideLoader(){document.getElementById('global-loader').style.display='none';}
+function closeAllSD(){ document.querySelectorAll('.searchable-dropdown').forEach(d=>d.classList.remove('open')); }
+function filterSD(key,q){
+  const opts=document.getElementById('sd-opts-'+key);
+  opts.querySelectorAll('.sd-option:not(.placeholder-opt)').forEach(el=>{
+    el.style.display=el.dataset.label.toLowerCase().includes(q.toLowerCase())?'':'none';
+  });
+}
+// Generic select for any SD
+function selectSD(key,value,label,cb){
+  const btn=document.getElementById('sd-btn-'+key);
+  if(btn){ btn.innerHTML=escHtml(label)+' <span>▾</span>'; btn.classList.remove('placeholder-style'); }
+  document.getElementById('val-'+key).value=value;
+  closeAllSD();
+  if(cb) cb(value);
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+document.addEventListener('click',e=>{ if(!e.target.closest('.searchable-wrap')) closeAllSD(); });
 
-// ── LISTENERS ─────────────────────────────────────────────────
-let ready=0;
-function checkReady(){ready++;if(ready>=3)hideLoader();}
+// Expose to inline onclick
+window.toggleSD=toggleSD; window.filterSD=filterSD;
+
+// ── ROUTE DROPDOWN ────────────────────────────────────────────
+function buildRouteOpts(){
+  const opts=document.getElementById('sd-opts-order-route'); if(!opts) return;
+  opts.innerHTML=
+    `<div class="sd-option placeholder-opt" onclick="selectSD('order-route','','-- No Route --',onRouteSelect)">No Route (show all retailers)</div>`+
+    routes.map(r=>
+      `<div class="sd-option" data-label="${escHtml(r.name)}"
+        onclick="selectSD('order-route','${r.id}','${escHtml(r.name)}',onRouteSelect)">
+        ${escHtml(r.name)} <span style="color:#a0aec0;font-size:.78rem">· ${(r.retailers||[]).length} retailers</span>
+      </div>`
+    ).join('');
+}
+function onRouteSelect(routeId){
+  buildRetailerOpts(routeId);
+  // reset retailer
+  const rb=document.getElementById('sd-btn-order-retailer');
+  if(rb){rb.innerHTML='-- Select Retailer -- <span>▾</span>';rb.classList.add('placeholder-style');}
+  document.getElementById('val-order-retailer').value='';
+}
+window.onRouteSelect=onRouteSelect;
+
+// ── RETAILER DROPDOWN ─────────────────────────────────────────
+function buildRetailerOpts(routeId){
+  const opts=document.getElementById('sd-opts-order-retailer'); if(!opts) return;
+  let list=retailers;
+  if(routeId){
+    const route=routes.find(r=>r.id===routeId);
+    const ids=(route?.retailers||[]).map(r=>r.id);
+    list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);
+  }
+  opts.innerHTML=
+    `<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --')">-- Select Retailer --</div>`+
+    list.map(r=>
+      `<div class="sd-option" data-label="${escHtml(r.name)}"
+        onclick="selectSD('order-retailer','${r.id}','${escHtml(r.name)}')">
+        ${escHtml(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.78rem">· ${escHtml(r.contact)}</span>`:''}
+      </div>`
+    ).join('');
+}
+
+// ── SKU LINE DROPDOWN ─────────────────────────────────────────
+function buildSkuOpts(lineId){
+  const key='sku-'+lineId;
+  const opts=document.getElementById('sd-opts-'+key); if(!opts) return;
+  opts.innerHTML=
+    `<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
+    skus.map(s=>
+      `<div class="sd-option" data-label="${escHtml(s.code)} ${escHtml(s.name)}"
+        onclick="selectSkuOpt('${lineId}','${s.id}','${escHtml(s.code)} — ${escHtml(s.name)}')">
+        <span class="badge badge-blue" style="margin-right:4px">${escHtml(s.code)}</span>${escHtml(s.name)}
+        <span style="color:#38a169;font-size:.78rem;margin-left:auto">${fmt(s.price)}</span>
+      </div>`
+    ).join('');
+}
+function selectSkuOpt(lineId,skuId,label){
+  const key='sku-'+lineId;
+  selectSD(key,skuId,label);
+  if(skuId){
+    const sku=skus.find(s=>s.id===skuId);
+    if(sku){ document.querySelector('#line-'+lineId+' .line-price').value=sku.price; updateTotal(); }
+  }
+}
+window.selectSkuOpt=selectSkuOpt;
+window.selectSD=selectSD;
+
+// ── ROUTE PICKER FOR ROUTE TAB ────────────────────────────────
+function buildRouteRetailerPicker(routeId){
+  const opts=document.getElementById('rrp-opts-'+routeId); if(!opts) return;
+  const route=routes.find(r=>r.id===routeId);
+  const used=new Set((route?.retailers||[]).map(r=>r.id));
+  const avail=retailers.filter(r=>!used.has(r.id));
+  opts.innerHTML=avail.length
+    ? avail.map(r=>
+        `<div class="sd-option" data-label="${escHtml(r.name)}"
+          onclick="addRetailerToRoute('${routeId}','${r.id}','${escHtml(r.name)}')">
+          ${escHtml(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.78rem">· ${escHtml(r.contact)}</span>`:''}
+        </div>`
+      ).join('')
+    : '<div class="sd-empty">All retailers already added</div>';
+}
+window.openRouteRetailerPicker=function(routeId){
+  const ddId='rrp-dd-'+routeId;
+  const dd=document.getElementById(ddId);
+  const isOpen=dd?.classList.contains('open');
+  closeAllSD();
+  if(!isOpen&&dd){ buildRouteRetailerPicker(routeId); dd.classList.add('open'); dd.querySelector('input')?.focus(); }
+};
+
+// ── TABS ──────────────────────────────────────────────────────
+const TABS=['orders','history','archives','routes','skus','retailers'];
+window.switchTab=function(t){
+  TABS.forEach((x,i)=>{
+    document.getElementById('tab-'+x).style.display=x===t?'block':'none';
+    const el=document.querySelectorAll('.tab')[i];
+    if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
+  });
+  if(t==='history')   renderHistory();
+  if(t==='archives')  renderArchives();
+  if(t==='skus')      renderSkuTable();
+  if(t==='retailers') renderRetailerTable();
+  if(t==='routes')    renderRoutesTab();
+};
+
+// ── FIREBASE LISTENERS ────────────────────────────────────────
+let readyCount=0;
+function checkReady(){ if(++readyCount>=3) hideLoader(); }
 function initListeners(){
   onSnapshot(query(collection(db,'skus'),orderBy('code')),snap=>{
     skus=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderSkuTable();
-    document.querySelectorAll('.sku-line').forEach(l=>buildSkuSD(l.id));
+    document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{
+      const lineId=el.id.replace('sd-opts-sku-','');
+      buildSkuOpts(lineId);
+    });
     checkReady();
   });
   onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
     retailers=snap.docs.map(d=>({id:d.id,...d.data()}));
-    const lock=getLock();
-    buildRetailerSD(lock?.routeId||'');
+    buildRetailerOpts(getLock()?.id||document.getElementById('val-order-route').value||'');
     renderRetailerTable();
     checkReady();
   });
   onSnapshot(query(collection(db,'routes'),orderBy('name')),snap=>{
     routes=snap.docs.map(d=>({id:d.id,...d.data()}));
-    buildRouteSD();
+    buildRouteOpts();
     renderRoutesTab();
     checkReady();
   });
@@ -369,165 +474,59 @@ function initListeners(){
     orders=all.filter(o=>!o.archived&&o.date===today);
     archivedOrders=all.filter(o=>o.archived);
     const at=document.querySelector('.tab.active')?.dataset?.tab;
-    if(at==='history')renderHistory();
-    if(at==='archives')renderArchives();
+    if(at==='history')  renderHistory();
+    if(at==='archives') renderArchives();
   });
 }
-
-// ── SEARCHABLE DROPDOWN ───────────────────────────────────────
-function toggleSD(sdId){
-  const lock=getLock();
-  if(sdId==='order-route-sd'&&lock)return;
-  const dd=document.getElementById(sdId);
-  const open=dd.classList.contains('open');
-  closeAllSD();
-  if(!open){dd.classList.add('open');dd.querySelector('input')?.focus();}
-}
-function closeAllSD(){document.querySelectorAll('.searchable-dropdown').forEach(d=>d.classList.remove('open'));}
-function filterSD(sdId,q){
-  const opts=document.getElementById(sdId).querySelector('.sd-options');
-  const items=opts.querySelectorAll('.sd-option:not(.placeholder)');
-  let vis=0;
-  items.forEach(el=>{
-    const m=el.dataset.label.toLowerCase().includes(q.toLowerCase());
-    el.style.display=m?'':'none';if(m)vis++;
-  });
-  let empty=opts.querySelector('.sd-empty');
-  if(!empty){empty=document.createElement('div');empty.className='sd-empty';empty.textContent='No results';opts.appendChild(empty);}
-  empty.style.display=vis?'none':'block';
-}
-function selectSDOption(sdId,value,label,inputId,cb){
-  const wrap=document.getElementById(sdId+'-wrap');
-  const trigger=wrap?.querySelector('.sd-trigger');
-  if(trigger){trigger.innerHTML=label+' <span>▾</span>';trigger.classList.remove('placeholder-style');}
-  document.getElementById(inputId).value=value;
-  closeAllSD();
-  if(cb)cb(value);
-}
-document.addEventListener('click',e=>{if(!e.target.closest('.searchable-wrap'))closeAllSD();});
-
-function buildRouteSD(){
-  const opts=document.getElementById('order-route-options');if(!opts)return;
-  opts.innerHTML=
-    `<div class="sd-option placeholder" onclick="selectSDOption('order-route-sd','','-- Select Route --','order-route',onRouteSelect)">All Routes (no filter)</div>`+
-    routes.map(r=>
-      `<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('order-route-sd','${r.id}','${r.name}','order-route',onRouteSelect)">
-        ${r.name} <span style="color:#a0aec0;font-size:.78rem">· ${(r.retailers||[]).length} retailers</span>
-      </div>`
-    ).join('');
-}
-function onRouteSelect(routeId){
-  buildRetailerSD(routeId);
-  document.getElementById('order-retailer').value='';
-  const tr=document.getElementById('retailer-sd-trigger');
-  if(tr){tr.innerHTML='-- Select Retailer -- <span>▾</span>';tr.classList.add('placeholder-style');}
-}
-function buildRetailerSD(routeId){
-  const opts=document.getElementById('retailer-sd-options');if(!opts)return;
-  let list=retailers;
-  if(routeId){
-    const route=routes.find(r=>r.id===routeId);
-    const ids=(route?.retailers||[]).map(r=>r.id);
-    list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);
-  }
-  opts.innerHTML=
-    `<div class="sd-option placeholder" onclick="selectSDOption('retailer-sd','','-- Select Retailer --','order-retailer')">-- Select Retailer --</div>`+
-    list.map(r=>
-      `<div class="sd-option" data-label="${r.name}" onclick="selectSDOption('retailer-sd','${r.id}','${r.name}','order-retailer')">
-        ${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.78rem">· ${r.contact}</span>`:''}
-      </div>`
-    ).join('');
-}
-function buildSkuSD(lineId){
-  const sdId=`sku-sd-${lineId}`;
-  const opts=document.getElementById(`${sdId}-options`);if(!opts)return;
-  opts.innerHTML=
-    `<div class="sd-option placeholder" onclick="selectSkuSD('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
-    skus.map(s=>
-      `<div class="sd-option" data-label="${s.code} ${s.name}" onclick="selectSkuSD('${lineId}','${s.id}','${s.code} — ${s.name}')">
-        <span class="badge badge-blue" style="margin-right:4px">${s.code}</span>${s.name}
-        <span style="color:#38a169;font-size:.78rem;margin-left:auto">${fmt(s.price)}</span>
-      </div>`
-    ).join('');
-}
-function selectSkuSD(lineId,skuId,label){
-  const sdId=`sku-sd-${lineId}`;
-  const trigger=document.querySelector(`#${sdId}-wrap .sd-trigger`);
-  if(trigger){trigger.innerHTML=label+' <span>▾</span>';trigger.classList.remove('placeholder-style');}
-  document.getElementById(`${sdId}-val`).value=skuId;
-  closeAllSD();
-  if(skuId){const sku=skus.find(s=>s.id===skuId);if(sku){document.querySelector(`#${lineId} .line-price`).value=sku.price;updateTotal();}}
-}
-
-// ── TABS ──────────────────────────────────────────────────────
-const TABS=['orders','history','archives','routes','skus','retailers'];
-function switchTab(t){
-  TABS.forEach((x,i)=>{
-    document.getElementById('tab-'+x).style.display=x===t?'block':'none';
-    const el=document.querySelectorAll('.tab')[i];
-    if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
-  });
-  if(t==='history')renderHistory();
-  if(t==='archives')renderArchives();
-  if(t==='skus')renderSkuTable();
-  if(t==='retailers')renderRetailerTable();
-  if(t==='routes')renderRoutesTab();
-}
-window.switchTab=switchTab;
 
 // ── SKU MANAGEMENT ────────────────────────────────────────────
 window.addSku=async function(){
   const code=document.getElementById('sku-code').value.trim();
   const name=document.getElementById('sku-name').value.trim();
   const price=parseFloat(document.getElementById('sku-price').value)||0;
-  if(!code||!name){toast('Enter SKU code and name');return;}
+  if(!code||!name){toast('Enter code and name');return;}
   try{
     await addDoc(collection(db,'skus'),{code,name,price});
-    document.getElementById('sku-code').value='';
-    document.getElementById('sku-name').value='';
-    document.getElementById('sku-price').value='';
-    toast('SKU saved! ✅');
+    ['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');
+    toast('SKU saved ✅');
   }catch(e){toast('Error: '+e.message);}
 };
 window.deleteSku=async function(id){
-  if(!confirm('Delete this SKU?'))return;
+  if(!confirm('Delete SKU?'))return;
   try{await deleteDoc(doc(db,'skus',id));toast('SKU deleted');}catch(e){toast('Error: '+e.message);}
 };
 window.editSkuRow=function(id){
-  const sku=skus.find(s=>s.id===id);if(!sku)return;
-  const row=document.getElementById('sku-row-'+id);if(!row)return;
+  const s=skus.find(x=>x.id===id); if(!s)return;
+  const row=document.getElementById('sku-row-'+id); if(!row)return;
   row.innerHTML=`
-    <td><input class="edit-input" id="edit-sku-code-${id}" value="${sku.code}" style="width:90px"/></td>
-    <td><input class="edit-input" id="edit-sku-name-${id}" value="${sku.name}"/></td>
-    <td><input class="edit-input" id="edit-sku-price-${id}" type="number" value="${sku.price}" style="width:90px"/></td>
-    <td style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn btn-save" onclick="saveSkuEdit('${id}')">Save</button>
-      <button class="btn btn-cancel" onclick="renderSkuTable()">Cancel</button>
-    </td>`;
+    <td><input class="edit-input" id="esk-code-${id}" value="${escHtml(s.code)}" style="width:90px"/></td>
+    <td><input class="edit-input" id="esk-name-${id}" value="${escHtml(s.name)}"/></td>
+    <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:80px"/></td>
+    <td><button class="btn btn-save" onclick="saveSkuEdit('${id}')">Save</button>
+        <button class="btn btn-cancel" style="margin-left:4px" onclick="renderSkuTable()">Cancel</button></td>`;
 };
 window.saveSkuEdit=async function(id){
-  const code=document.getElementById('edit-sku-code-'+id).value.trim();
-  const name=document.getElementById('edit-sku-name-'+id).value.trim();
-  const price=parseFloat(document.getElementById('edit-sku-price-'+id).value)||0;
+  const code=document.getElementById('esk-code-'+id).value.trim();
+  const name=document.getElementById('esk-name-'+id).value.trim();
+  const price=parseFloat(document.getElementById('esk-price-'+id).value)||0;
   if(!code||!name){toast('Code and name required');return;}
   try{await updateDoc(doc(db,'skus',id),{code,name,price});toast('SKU updated ✅');}
   catch(e){toast('Error: '+e.message);}
 };
 function renderSkuTable(){
-  const wrap=document.getElementById('sku-table-wrap');if(!wrap)return;
-  const q=(document.getElementById('sku-search')?.value||'').toLowerCase().trim();
+  const wrap=document.getElementById('sku-table-wrap'); if(!wrap)return;
+  const q=(document.getElementById('sku-search')?.value||'').toLowerCase();
   const f=skus.filter(s=>!q||s.code.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
   if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet.</div>';return;}
-  if(!f.length){wrap.innerHTML='<div class="empty">No SKUs match search.</div>';return;}
+  if(!f.length){wrap.innerHTML='<div class="empty">No match.</div>';return;}
   wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
     f.map(s=>`<tr id="sku-row-${s.id}">
-      <td><span class="badge badge-blue">${s.code}</span></td>
-      <td>${s.name}</td><td>${fmt(s.price)}</td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
-        <button class="btn btn-danger" onclick="deleteSku('${s.id}')">Delete</button>
-      </td></tr>`).join('')+
-    `</tbody></table><div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${f.length} of ${skus.length} SKUs</div>`;
+      <td><span class="badge badge-blue">${escHtml(s.code)}</span></td>
+      <td>${escHtml(s.name)}</td><td>${fmt(s.price)}</td>
+      <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
+          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
+    </tr>`).join('')+`</tbody></table>
+    <div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${f.length} of ${skus.length} SKUs</div>`;
 }
 window.renderSkuTable=renderSkuTable;
 
@@ -535,58 +534,54 @@ window.renderSkuTable=renderSkuTable;
 window.addRetailer=async function(){
   const name=document.getElementById('ret-name').value.trim();
   const contact=document.getElementById('ret-contact').value.trim();
-  if(!name){toast('Enter retailer name');return;}
+  if(!name){toast('Enter name');return;}
   try{
     await addDoc(collection(db,'retailers'),{name,contact});
     document.getElementById('ret-name').value='';
     document.getElementById('ret-contact').value='';
-    toast('Retailer saved! ✅');
+    toast('Retailer saved ✅');
   }catch(e){toast('Error: '+e.message);}
 };
 window.deleteRetailer=async function(id){
-  if(!confirm('Delete this retailer?'))return;
-  try{await deleteDoc(doc(db,'retailers',id));toast('Retailer deleted');}catch(e){toast('Error: '+e.message);}
+  if(!confirm('Delete retailer?'))return;
+  try{await deleteDoc(doc(db,'retailers',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}
 };
 window.editRetailerRow=function(id){
-  const ret=retailers.find(r=>r.id===id);if(!ret)return;
-  const row=document.getElementById('ret-row-'+id);if(!row)return;
+  const r=retailers.find(x=>x.id===id); if(!r)return;
+  const row=document.getElementById('ret-row-'+id); if(!row)return;
   row.innerHTML=`
-    <td><input class="edit-input" id="edit-ret-name-${id}" value="${ret.name}"/></td>
-    <td><input class="edit-input" id="edit-ret-contact-${id}" value="${ret.contact||''}"/></td>
-    <td style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn btn-save" onclick="saveRetailerEdit('${id}')">Save</button>
-      <button class="btn btn-cancel" onclick="renderRetailerTable()">Cancel</button>
-    </td>`;
+    <td><input class="edit-input" id="ert-name-${id}" value="${escHtml(r.name)}"/></td>
+    <td><input class="edit-input" id="ert-contact-${id}" value="${escHtml(r.contact||'')}"/></td>
+    <td><button class="btn btn-save" onclick="saveRetailerEdit('${id}')">Save</button>
+        <button class="btn btn-cancel" style="margin-left:4px" onclick="renderRetailerTable()">Cancel</button></td>`;
 };
 window.saveRetailerEdit=async function(id){
-  const name=document.getElementById('edit-ret-name-'+id).value.trim();
-  const contact=document.getElementById('edit-ret-contact-'+id).value.trim();
+  const name=document.getElementById('ert-name-'+id).value.trim();
+  const contact=document.getElementById('ert-contact-'+id).value.trim();
   if(!name){toast('Name required');return;}
   try{await updateDoc(doc(db,'retailers',id),{name,contact});toast('Retailer updated ✅');}
   catch(e){toast('Error: '+e.message);}
 };
 function renderRetailerTable(){
-  const wrap=document.getElementById('ret-table-wrap');if(!wrap)return;
+  const wrap=document.getElementById('ret-table-wrap'); if(!wrap)return;
   if(!retailers.length){wrap.innerHTML='<div class="empty">No retailers yet.</div>';return;}
   wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Contact/Location</th><th>Actions</th></tr></thead><tbody>`+
     retailers.map(r=>`<tr id="ret-row-${r.id}">
-      <td><b>${r.name}</b></td><td>${r.contact||'—'}</td>
-      <td style="display:flex;gap:6px;flex-wrap:wrap">
-        <button class="btn btn-edit" onclick="editRetailerRow('${r.id}')">Edit</button>
-        <button class="btn btn-danger" onclick="deleteRetailer('${r.id}')">Delete</button>
-      </td></tr>`).join('')+
-    `</tbody></table>`;
+      <td><b>${escHtml(r.name)}</b></td><td>${escHtml(r.contact||'—')}</td>
+      <td><button class="btn btn-edit" onclick="editRetailerRow('${r.id}')">Edit</button>
+          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteRetailer('${r.id}')">Delete</button></td>
+    </tr>`).join('')+`</tbody></table>`;
 }
 
 // ── ROUTES ────────────────────────────────────────────────────
 window.addRoute=async function(){
   const name=document.getElementById('route-name').value.trim();
   if(!name){toast('Enter route name');return;}
-  try{await addDoc(collection(db,'routes'),{name,retailers:[]});document.getElementById('route-name').value='';toast('Route created! ✅');}
+  try{await addDoc(collection(db,'routes'),{name,retailers:[]});document.getElementById('route-name').value='';toast('Route created ✅');}
   catch(e){toast('Error: '+e.message);}
 };
 window.deleteRoute=async function(id){
-  if(!confirm('Delete this route?'))return;
+  if(!confirm('Delete route?'))return;
   try{await deleteDoc(doc(db,'routes',id));toast('Route deleted');}catch(e){toast('Error: '+e.message);}
 };
 window.addRetailerToRoute=async function(routeId,retId,retName){
@@ -598,54 +593,37 @@ window.addRetailerToRoute=async function(routeId,retId,retName){
 window.removeRetailerFromRoute=async function(routeId,retId){
   const route=routes.find(r=>r.id===routeId);
   const list=(route?.retailers||[]).filter(r=>r.id!==retId);
-  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});toast('Retailer removed');}
+  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});toast('Removed');}
   catch(e){toast('Error: '+e.message);}
 };
-window.onDragStart=function(e,routeId,idx){dragSrcIdx=idx;e.dataTransfer.effectAllowed='move';};
-window.onDragOver=function(e){e.preventDefault();e.dataTransfer.dropEffect='move';};
+window.onDragStart=function(e,routeId,idx){dragSrc={routeId,idx};e.dataTransfer.effectAllowed='move';};
+window.onDragOver=function(e){e.preventDefault();};
 window.onDrop=async function(e,routeId,dropIdx){
   e.preventDefault();
-  if(dragSrcIdx===null||dragSrcIdx===dropIdx)return;
+  if(!dragSrc||dragSrc.routeId!==routeId||dragSrc.idx===dropIdx)return;
   const route=routes.find(r=>r.id===routeId);
   const list=[...(route?.retailers||[])];
-  const [moved]=list.splice(dragSrcIdx,1);
+  const [moved]=list.splice(dragSrc.idx,1);
   list.splice(dropIdx,0,moved);
-  dragSrcIdx=null;
-  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});}catch(e){toast('Error: '+e.message);}
-};
-window.openRouteRetailerPicker=function(routeId){
-  const sdId=`rrp-${routeId}`;
-  const dd=document.getElementById(sdId);
-  const open=dd.classList.contains('open');
-  closeAllSD();
-  if(!open){
-    const route=routes.find(r=>r.id===routeId);
-    const assignedIds=(route?.retailers||[]).map(r=>r.id);
-    const available=retailers.filter(r=>!assignedIds.includes(r.id));
-    const opts=document.getElementById(`rrp-opts-${routeId}`);
-    opts.innerHTML=available.length
-      ? available.map(r=>`<div class="sd-option" data-label="${r.name}" onclick="addRetailerToRoute('${routeId}','${r.id}','${r.name}')">
-          ${r.name}${r.contact?` <span style="color:#a0aec0;font-size:.78rem">· ${r.contact}</span>`:''}
-        </div>`).join('')
-      : '<div class="sd-empty">All retailers already added</div>';
-    dd.classList.add('open');dd.querySelector('input')?.focus();
-  }
+  dragSrc=null;
+  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});}catch(e){toast('Error');}
 };
 function renderRoutesTab(){
-  const wrap=document.getElementById('routes-list');if(!wrap)return;
+  const wrap=document.getElementById('routes-list'); if(!wrap)return;
   if(!routes.length){wrap.innerHTML='<div class="card"><div class="empty">No routes yet.</div></div>';return;}
   wrap.innerHTML='';
   routes.forEach(route=>{
     const retList=route.retailers||[];
-    const card=document.createElement('div');card.className='card';
+    const card=document.createElement('div'); card.className='card';
     card.innerHTML=`
       <div class="order-header">
-        <div><b>🗺️ ${route.name}</b> <span class="badge badge-blue">${retList.length} retailers</span></div>
+        <div><b>🗺️ ${escHtml(route.name)}</b> <span class="badge badge-blue">${retList.length} retailers</span></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <div class="searchable-wrap" style="width:200px" id="rrp-${route.id}-wrap">
-            <button type="button" class="sd-trigger placeholder-style" style="font-size:.8rem;padding:6px 10px" onclick="openRouteRetailerPicker('${route.id}')">+ Add Retailer <span>▾</span></button>
-            <div class="searchable-dropdown" id="rrp-${route.id}">
-              <div class="sd-search"><input placeholder="Search..." oninput="filterSD('rrp-${route.id}',this.value)" onclick="event.stopPropagation()"/></div>
+          <div class="searchable-wrap" style="width:200px" id="rrp-wrap-${route.id}">
+            <button type="button" class="sd-trigger placeholder-style" style="font-size:.8rem;padding:6px 10px"
+              onclick="openRouteRetailerPicker('${route.id}')">+ Add Retailer <span>▾</span></button>
+            <div class="searchable-dropdown" id="rrp-dd-${route.id}">
+              <div class="sd-search"><input placeholder="Search..." oninput="filterRouteRetailerPicker('${route.id}',this.value)" onclick="event.stopPropagation()"/></div>
               <div class="sd-options" id="rrp-opts-${route.id}"></div>
             </div>
           </div>
@@ -661,42 +639,56 @@ function renderRoutesTab(){
               ondrop="onDrop(event,'${route.id}',${i})">
               <span class="drag-handle">⠿</span>
               <span class="seq-badge">${i+1}</span>
-              <span style="flex:1">${r.name}</span>
-              <button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem" onclick="removeRetailerFromRoute('${route.id}','${r.id}')">✕</button>
+              <span style="flex:1">${escHtml(r.name)}</span>
+              <button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem"
+                onclick="removeRetailerFromRoute('${route.id}','${r.id}')">✕</button>
             </div>`).join('')
-          : '<div style="color:#a0aec0;font-size:.85rem;padding:8px 0">No retailers yet. Add some above.</div>'
+          : '<div style="color:#a0aec0;font-size:.85rem;padding:8px 0">No retailers yet.</div>'
         }
       </div>`;
     wrap.appendChild(card);
   });
 }
+window.filterRouteRetailerPicker=function(routeId,q){
+  const opts=document.getElementById('rrp-opts-'+routeId); if(!opts)return;
+  opts.querySelectorAll('.sd-option').forEach(el=>{
+    el.style.display=(el.dataset.label||'').toLowerCase().includes(q.toLowerCase())?'':'none';
+  });
+};
 
 // ── ORDER LINES ───────────────────────────────────────────────
 window.addSkuLine=function(){
   lineCount++;
-  const id='line-'+lineCount, sdId=`sku-sd-${id}`;
+  const lineId=''+lineCount;
+  const key='sku-'+lineId;
   const div=document.createElement('div');
-  div.className='sku-line';div.id=id;
+  div.className='sku-line'; div.id='line-'+lineId;
   div.innerHTML=`
     <div class="fg" style="flex:3;min-width:200px">
       <label>SKU</label>
-      <div class="searchable-wrap" id="${sdId}-wrap">
-        <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('${sdId}')">-- Select SKU -- <span>▾</span></button>
-        <div class="searchable-dropdown" id="${sdId}">
-          <div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD('${sdId}',this.value)" onclick="event.stopPropagation()"/></div>
-          <div class="sd-options" id="${sdId}-options"></div>
+      <div class="searchable-wrap" id="sd-wrap-${key}">
+        <button type="button" class="sd-trigger placeholder-style" id="sd-btn-${key}"
+          onclick="toggleSD('${key}')">-- Select SKU -- <span>▾</span></button>
+        <div class="searchable-dropdown" id="sd-dd-${key}">
+          <div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD('${key}',this.value)" onclick="event.stopPropagation()"/></div>
+          <div class="sd-options" id="sd-opts-${key}"></div>
         </div>
       </div>
-      <input type="hidden" id="${sdId}-val" class="line-sku-val" value=""/>
+      <input type="hidden" id="val-${key}" class="line-sku-val" value=""/>
     </div>
-    <div class="fg" style="flex:1;min-width:70px"><label>Qty</label><input type="number" class="line-qty" min="1" value="1" oninput="updateTotal()"/></div>
-    <div class="fg" style="flex:1;min-width:100px"><label>Price (₹)</label><input type="number" class="line-price" min="0" placeholder="0.00" oninput="updateTotal()"/></div>
-    <div class="fg" style="flex:2;min-width:150px"><label>Notes</label><input type="text" class="line-notes" placeholder="Optional"/></div>
-    <div style="padding-bottom:1px"><button class="btn btn-danger" onclick="removeLine('${id}')">✕</button></div>`;
+    <div class="fg" style="flex:1;min-width:70px"><label>Qty</label>
+      <input type="number" class="line-qty" min="1" value="1" oninput="updateTotal()"/></div>
+    <div class="fg" style="flex:1;min-width:100px"><label>Price (₹)</label>
+      <input type="number" class="line-price" min="0" placeholder="0.00" oninput="updateTotal()"/></div>
+    <div class="fg" style="flex:2;min-width:140px"><label>Notes</label>
+      <input type="text" class="line-notes" placeholder="Optional"/></div>
+    <div style="padding-bottom:1px">
+      <button class="btn btn-danger" onclick="removeLine('${lineId}')">✕</button></div>`;
   document.getElementById('sku-lines').appendChild(div);
-  buildSkuSD(id);updateTotal();
+  buildSkuOpts(lineId);
+  updateTotal();
 };
-window.removeLine=function(id){document.getElementById(id).remove();updateTotal();};
+window.removeLine=function(lineId){ document.getElementById('line-'+lineId)?.remove(); updateTotal(); };
 window.updateTotal=function(){
   let t=0;
   document.querySelectorAll('.sku-line').forEach(l=>{
@@ -704,16 +696,14 @@ window.updateTotal=function(){
   });
   document.getElementById('running-total').textContent='Order Total: '+fmt(t);
 };
-window.toggleSD=toggleSD;window.filterSD=filterSD;
-window.selectSDOption=selectSDOption;window.selectSkuSD=selectSkuSD;
 
 // ── SAVE ORDER ────────────────────────────────────────────────
 window.saveOrder=async function(){
-  const retId=document.getElementById('order-retailer').value;
-  const routeId=document.getElementById('order-route').value;
+  const retId=document.getElementById('val-order-retailer').value;
+  const routeId=document.getElementById('val-order-route').value;
   const date=document.getElementById('order-date').value||getISTDateStr();
-  if(!retId){toast('Please select a retailer');return;}
-  const lines=[];let valid=true;
+  if(!retId){toast('Select a retailer');return;}
+  const lines=[]; let valid=true;
   document.querySelectorAll('.sku-line').forEach(line=>{
     const skuId=line.querySelector('.line-sku-val').value;
     if(!skuId){valid=false;return;}
@@ -730,17 +720,17 @@ window.saveOrder=async function(){
   const total=lines.reduce((s,l)=>s+l.subtotal,0);
   try{
     await addDoc(collection(db,'orders'),{
-      retailerId:retId,retailerName:retailer.name,
-      routeId:routeId||'',routeName:route?.name||'',
-      date,lines,total,archived:false,
+      retailerId:retId, retailerName:retailer.name,
+      routeId:routeId||'', routeName:route?.name||'',
+      date, lines, total, archived:false,
       createdAt:new Date().toISOString()
     });
-    // reset retailer only (keep route if locked)
-    document.getElementById('order-retailer').value='';
-    const rtr=document.getElementById('retailer-sd-trigger');
-    if(rtr){rtr.innerHTML='-- Select Retailer -- <span>▾</span>';rtr.classList.add('placeholder-style');}
+    // reset retailer only; keep route if locked
+    document.getElementById('val-order-retailer').value='';
+    const rb=document.getElementById('sd-btn-order-retailer');
+    if(rb){rb.innerHTML='-- Select Retailer -- <span>▾</span>';rb.classList.add('placeholder-style');}
     document.getElementById('sku-lines').innerHTML='';
-    lineCount=0;updateTotal();
+    lineCount=0; updateTotal();
     toast('Order saved! ✅');
   }catch(e){toast('Error: '+e.message);}
 };
@@ -751,25 +741,26 @@ function renderHistory(){
   const stats=document.getElementById('summary-stats');
   if(!orders.length){
     wrap.innerHTML='<div class="card"><div class="empty">No orders today yet.</div></div>';
-    stats.innerHTML='';return;
+    stats.innerHTML=''; return;
   }
   const totalAmt=orders.reduce((s,o)=>s+o.total,0);
-  const rSet=[...new Set(orders.map(o=>o.retailerName))];
   stats.innerHTML=`
     <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Today's Orders</div></div>
-    <div class="stat"><div class="stat-val">${rSet.length}</div><div class="stat-lbl">Retailers</div></div>
+    <div class="stat"><div class="stat-val">${[...new Set(orders.map(o=>o.retailerName))].length}</div><div class="stat-lbl">Retailers</div></div>
     <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Today's Total</div></div>`;
   wrap.innerHTML='';
-  const btn=document.createElement('div');
-  btn.style.cssText='display:flex;justify-content:flex-end;margin-bottom:16px';
-  btn.innerHTML=`<button class="btn btn-pdf" onclick="exportAllPDF()">📄 Export All Orders PDF</button>`;
-  wrap.appendChild(btn);
+  const exportDiv=document.createElement('div');
+  exportDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:16px';
+  exportDiv.innerHTML=`<button class="btn btn-pdf" id="export-all-btn">📄 Export All Orders PDF</button>`;
+  wrap.appendChild(exportDiv);
+  document.getElementById('export-all-btn').addEventListener('click', exportAllPDF);
   const sorted=[...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
   const grouped={};
   sorted.forEach(o=>{if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);});
   Object.entries(grouped).forEach(([rName,rOrders])=>{
-    const sec=document.createElement('div');sec.className='retailer-section';
-    sec.innerHTML=`<div class="retailer-title">🏪 ${rName} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
+    const sec=document.createElement('div'); sec.className='retailer-section';
+    sec.innerHTML=`<div class="retailer-title">🏪 ${escHtml(rName)}
+      <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
     rOrders.forEach(o=>sec.appendChild(buildOrderCard(o,false)));
     wrap.appendChild(sec);
   });
@@ -777,163 +768,167 @@ function renderHistory(){
 
 // ── RENDER ARCHIVES ───────────────────────────────────────────
 function renderArchives(){
-  const wrap=document.getElementById('archives-list');if(!wrap)return;
+  const wrap=document.getElementById('archives-list'); if(!wrap)return;
   if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders yet.</div></div>';return;}
   const byDate={};
   archivedOrders.forEach(o=>{if(!byDate[o.date])byDate[o.date]=[];byDate[o.date].push(o);});
-  const sorted=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
   wrap.innerHTML='';
-  sorted.forEach(date=>{
+  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
     const dayOrders=byDate[date];
     const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
-    const sec=document.createElement('div');sec.className='retailer-section';
+    const sec=document.createElement('div'); sec.className='retailer-section';
     sec.innerHTML=`<div class="retailer-title">📅 ${date}
       <span class="badge badge-blue">${dayOrders.length} orders</span>
-      <span style="color:#38a169;font-weight:600;font-size:.9rem">${fmt(dayTotal)}</span>
-    </div>`;
+      <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
     dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true)));
     wrap.appendChild(sec);
   });
 }
 
 function buildOrderCard(o,isArchive){
-  const card=document.createElement('div');card.className='card';
+  const card=document.createElement('div'); card.className='card';
   const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
   card.innerHTML=`
     <div class="order-header">
       <div>
         <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
-        ${o.routeName?`<span class="badge" style="background:#faf5ff;color:#805ad5;margin-left:6px">🗺️ ${o.routeName}</span>`:''}
-        <div class="order-meta">📅 ${o.date} &nbsp;|&nbsp; ${dateDisplay}</div>
+        ${o.routeName?`<span class="badge" style="background:#faf5ff;color:#805ad5;margin-left:6px">🗺️ ${escHtml(o.routeName)}</span>`:''}
+        <div class="order-meta">📅 ${o.date} | ${dateDisplay}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-pdf" onclick="exportSinglePDF('${o.id}',${isArchive})">📄 PDF</button>
-        ${!isArchive?`<button class="btn btn-danger" onclick="deleteOrder('${o.id}')">Delete</button>`:''}
+        <button class="btn btn-pdf single-pdf-btn">📄 PDF</button>
+        ${!isArchive?`<button class="btn btn-danger del-order-btn">Delete</button>`:''}
       </div>
     </div>
     <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>SKU Code</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
-      <tbody>${o.lines.map(l=>`<tr>
-        <td><span class="badge badge-blue">${l.skuCode}</span></td>
-        <td>${l.skuName}</td><td>${l.qty}</td><td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${l.notes||'—'}</td>
-      </tr>`).join('')}</tbody>
-    </table></div>
+      <table>
+        <thead><tr><th>SKU</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
+        <tbody>${o.lines.map(l=>`<tr>
+          <td><span class="badge badge-blue">${escHtml(l.skuCode)}</span></td>
+          <td>${escHtml(l.skuName)}</td><td>${l.qty}</td>
+          <td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${escHtml(l.notes||'—')}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+    </div>
     <div style="text-align:right;margin-top:10px" class="total">Total: ${fmt(o.total)}</div>`;
+  // attach events via JS (no inline onclick with closure data)
+  card.querySelector('.single-pdf-btn').addEventListener('click',()=>exportSinglePDF(o,isArchive));
+  if(!isArchive){
+    card.querySelector('.del-order-btn').addEventListener('click',()=>deleteOrder(o.id));
+  }
   return card;
 }
-window.deleteOrder=async function(id){
+async function deleteOrder(id){
   if(!confirm('Delete this order?'))return;
   try{await deleteDoc(doc(db,'orders',id));toast('Order deleted');}catch(e){toast('Error: '+e.message);}
-};
+}
 
 // ── PDF HELPERS ───────────────────────────────────────────────
 function pdfHeader(doc2,pw,title){
-  doc2.setFillColor(43,108,176);doc2.rect(0,0,pw,26,'F');
-  doc2.setTextColor(255,255,255);doc2.setFontSize(13);doc2.setFont('helvetica','bold');
+  doc2.setFillColor(43,108,176); doc2.rect(0,0,pw,26,'F');
+  doc2.setTextColor(255,255,255); doc2.setFontSize(13); doc2.setFont('helvetica','bold');
   doc2.text(title,14,11);
-  doc2.setFontSize(8);doc2.setFont('helvetica','normal');
+  doc2.setFontSize(8); doc2.setFont('helvetica','normal');
   doc2.text('Retailer Order Management System',14,19);
   doc2.setTextColor(44,62,80);
 }
-function pdfTableRows(doc2,m,pw,y,lines){
-  // header row
-  doc2.setFillColor(240,244,248);doc2.rect(m,y-4,pw-2*m,8,'F');
-  doc2.setFont('helvetica','bold');doc2.setFontSize(7.5);doc2.setTextColor(80,80,80);
+function pdfTableRows(doc2,m,pw,startY,lines){
+  let y=startY;
+  doc2.setFillColor(240,244,248); doc2.rect(m,y-4,pw-2*m,8,'F');
+  doc2.setFont('helvetica','bold'); doc2.setFontSize(7.5); doc2.setTextColor(80,80,80);
   const c=[m,46,98,122,146,168];
-  ['SKU Code','Product','Qty','Price','Subtotal','Notes'].forEach((h,i)=>doc2.text(h,c[i],y));
-  y+=6;doc2.setFont('helvetica','normal');doc2.setFontSize(7);
+  ['SKU','Product','Qty','Price','Subtotal','Notes'].forEach((h,i)=>doc2.text(h,c[i],y));
+  y+=6; doc2.setFont('helvetica','normal'); doc2.setFontSize(7);
   lines.forEach((l,i)=>{
-    if(y>280){doc2.addPage();y=16;}
+    if(y>278){doc2.addPage();y=16;}
     if(i%2===0){doc2.setFillColor(251,252,255);doc2.rect(m,y-3,pw-2*m,7,'F');}
     doc2.setTextColor(44,62,80);
-    doc2.text(l.skuCode,c[0],y);
-    doc2.text(doc2.splitTextToSize(l.skuName,46),c[1],y);
+    doc2.text(String(l.skuCode||''),c[0],y);
+    doc2.text(doc2.splitTextToSize(String(l.skuName||''),46),c[1],y);
     doc2.text(String(l.qty),c[2],y);
     doc2.text(fmt(l.price),c[3],y);
     doc2.text(fmt(l.subtotal),c[4],y);
-    doc2.text(doc2.splitTextToSize(l.notes||'—',22),c[5],y);
+    doc2.text(doc2.splitTextToSize(String(l.notes||'—'),22),c[5],y);
     y+=7;
   });
   return y;
 }
 function pdfFooter(doc2,pw){
-  doc2.setFontSize(7);doc2.setTextColor(180,180,180);doc2.setFont('helvetica','normal');
+  doc2.setFontSize(7); doc2.setTextColor(180,180,180); doc2.setFont('helvetica','normal');
   doc2.text('Generated by Retailer Order Management App',pw/2,290,{align:'center'});
 }
 
 // ── SINGLE PDF ────────────────────────────────────────────────
-window.exportSinglePDF=function(orderId,isArchive){
-  const src=isArchive?archivedOrders:orders;
-  const o=src.find(x=>x.id===orderId);
+function exportSinglePDF(o,isArchive){
   if(!o){toast('Order not found');return;}
-  const doc2=new jsPDF(),m=14,pw=210;
+  const { jsPDF } = window.jspdf;
+  const doc2=new jsPDF(), m=14, pw=210;
   pdfHeader(doc2,pw,'ORDER INVOICE');
-  doc2.setFontSize(9);doc2.setTextColor(44,62,80);
+  doc2.setFontSize(9); doc2.setTextColor(44,62,80);
   const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-  [['Retailer:',o.retailerName],['Route:',o.routeName||'—'],['Order ID:','#'+o.id.substr(0,6).toUpperCase()],['Date:',o.date],['Created:',dateDisplay]]
+  [['Retailer:',o.retailerName||''],['Route:',o.routeName||'—'],
+   ['Order ID:','#'+o.id.substr(0,6).toUpperCase()],['Date:',o.date||''],['Created:',dateDisplay]]
     .forEach(([k,v],i)=>{
-      doc2.setFont('helvetica','bold');doc2.text(k,m,34+i*7);
-      doc2.setFont('helvetica','normal');doc2.text(String(v),52,34+i*7);
+      doc2.setFont('helvetica','bold'); doc2.text(k,m,34+i*7);
+      doc2.setFont('helvetica','normal'); doc2.text(String(v),52,34+i*7);
     });
-  doc2.setDrawColor(220,220,220);doc2.line(m,70,pw-m,70);
+  doc2.setDrawColor(220,220,220); doc2.line(m,70,pw-m,70);
   let y=pdfTableRows(doc2,m,pw,78,o.lines);
-  doc2.setDrawColor(220,220,220);doc2.line(m,y,pw-m,y);y+=7;
-  doc2.setFont('helvetica','bold');doc2.setFontSize(10);doc2.setTextColor(43,108,176);
+  doc2.setDrawColor(220,220,220); doc2.line(m,y,pw-m,y); y+=7;
+  doc2.setFont('helvetica','bold'); doc2.setFontSize(10); doc2.setTextColor(43,108,176);
   doc2.text('TOTAL: '+fmt(o.total),pw-m,y,{align:'right'});
   pdfFooter(doc2,pw);
-  doc2.save(`Order_${o.retailerName}_${o.date}.pdf`);
+  doc2.save('Order_'+String(o.retailerName||'').replace(/\s+/g,'_')+'_'+o.date+'.pdf');
   toast('PDF downloaded!');
-};
+}
 
 // ── ALL ORDERS PDF ────────────────────────────────────────────
-window.exportAllPDF=function(){
+function exportAllPDF(){
   if(!orders.length){toast('No orders to export');return;}
+  const { jsPDF } = window.jspdf;
   const sorted=[...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
-  const doc2=new jsPDF(),m=14,pw=210;
+  const doc2=new jsPDF(), m=14, pw=210;
   pdfHeader(doc2,pw,'ALL ORDERS — '+getISTDateStr());
   const grandTotal=sorted.reduce((s,o)=>s+o.total,0);
-  doc2.setFontSize(8.5);doc2.setTextColor(44,62,80);doc2.setFont('helvetica','normal');
-  doc2.text(`Total Orders: ${sorted.length}   |   Grand Total: ${fmt(grandTotal)}`,m,32);
-  doc2.setDrawColor(220,220,220);doc2.line(m,36,pw-m,36);
+  doc2.setFontSize(8.5); doc2.setFont('helvetica','normal'); doc2.setTextColor(44,62,80);
+  doc2.text('Total Orders: '+sorted.length+'   |   Grand Total: '+fmt(grandTotal),m,32);
+  doc2.setDrawColor(220,220,220); doc2.line(m,36,pw-m,36);
   let y=43;
   sorted.forEach((o,idx)=>{
-    if(y>265){doc2.addPage();y=16;}
-    // order heading
-    doc2.setFillColor(235,244,255);doc2.rect(m,y-4,pw-2*m,9,'F');
-    doc2.setFont('helvetica','bold');doc2.setFontSize(9);doc2.setTextColor(43,108,176);
-    doc2.text(`${idx+1}. ${o.retailerName}${o.routeName?' ['+o.routeName+']':''}`,m+1,y+1);
-    doc2.setFont('helvetica','normal');doc2.setFontSize(7.5);doc2.setTextColor(120,120,120);
-    const dDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-    doc2.text(`#${o.id.substr(0,6).toUpperCase()}  ·  ${o.date}  ·  ${dDisplay}`,pw-m,y+1,{align:'right'});
-    y+=10;
+    if(y>262){doc2.addPage();y=16;}
+    doc2.setFillColor(235,244,255); doc2.rect(m,y-4,pw-2*m,9,'F');
+    doc2.setFont('helvetica','bold'); doc2.setFontSize(9); doc2.setTextColor(43,108,176);
+    doc2.text((idx+1)+'. '+String(o.retailerName||'')+(o.routeName?' ['+o.routeName+']':''),m+1,y+1);
+    doc2.setFont('helvetica','normal'); doc2.setFontSize(7); doc2.setTextColor(120,120,120);
+    const dd=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
+    doc2.text('#'+o.id.substr(0,6).toUpperCase()+'  ·  '+o.date+'  ·  '+dd,pw-m,y+1,{align:'right'});
+    y+=11;
     y=pdfTableRows(doc2,m,pw,y,o.lines);
-    doc2.setFont('helvetica','bold');doc2.setFontSize(8.5);doc2.setTextColor(43,108,176);
+    doc2.setFont('helvetica','bold'); doc2.setFontSize(8.5); doc2.setTextColor(43,108,176);
     doc2.text('Order Total: '+fmt(o.total),pw-m,y+1,{align:'right'});
     y+=8;
     if(idx<sorted.length-1){
-      doc2.setDrawColor(230,230,230);doc2.line(m,y,pw-m,y);y+=6;
+      doc2.setDrawColor(230,230,230); doc2.line(m,y,pw-m,y); y+=6;
     }
   });
-  // grand total footer bar
   if(y>272){doc2.addPage();y=20;}
-  doc2.setFillColor(43,108,176);doc2.rect(m,y,pw-2*m,10,'F');
-  doc2.setFont('helvetica','bold');doc2.setFontSize(10);doc2.setTextColor(255,255,255);
+  doc2.setFillColor(43,108,176); doc2.rect(m,y,pw-2*m,10,'F');
+  doc2.setFont('helvetica','bold'); doc2.setFontSize(10); doc2.setTextColor(255,255,255);
   doc2.text('GRAND TOTAL: '+fmt(grandTotal),pw-m-2,y+7,{align:'right'});
   pdfFooter(doc2,pw);
-  doc2.save(`All_Orders_${getISTDateStr()}.pdf`);
-  toast('All orders PDF downloaded! ✅');
-};
+  doc2.save('All_Orders_'+getISTDateStr()+'.pdf');
+  toast('All orders PDF downloaded ✅');
+}
 
 // ── INIT ──────────────────────────────────────────────────────
 showLoader('Connecting to cloud...');
 document.getElementById('order-date').value=getISTDateStr();
-addSkuLine();
+window.addSkuLine();
 applyLockUI();
 initListeners();
 scheduleMidnightArchive();
 scheduleLockReset();
-if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
