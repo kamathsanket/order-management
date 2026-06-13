@@ -12,95 +12,125 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
-header{background:linear-gradient(135deg,#2b6cb0,#3182ce);color:#fff;padding:16px 24px;display:flex;align-items:center;gap:12px}
-header h1{font-size:1.3rem;font-weight:700}
-.sync-dot{width:10px;height:10px;border-radius:50%;background:#68d391;margin-left:auto;box-shadow:0 0 6px #68d391;animation:pulse 2s infinite}
+header{background:linear-gradient(135deg,#2b6cb0,#3182ce);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
+header h1{font-size:1.2rem;font-weight:700}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:#68d391;margin-left:auto;box-shadow:0 0 6px #68d391;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 12px;overflow-x:auto}
-.tab{padding:12px 14px;cursor:pointer;font-weight:600;font-size:.82rem;border-bottom:3px solid transparent;color:#718096;transition:.2s;white-space:nowrap}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 8px;overflow-x:auto}
+.tab{padding:11px 12px;cursor:pointer;font-weight:600;font-size:.78rem;border-bottom:3px solid transparent;color:#718096;transition:.2s;white-space:nowrap}
 .tab.active{border-bottom-color:#3182ce;color:#3182ce}
-.content{padding:20px;max-width:1100px;margin:0 auto}
-.card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:20px}
-.card h2{font-size:1rem;font-weight:700;margin-bottom:16px;color:#2d3748}
+.content{padding:16px;max-width:1100px;margin:0 auto}
+.card{background:#fff;border-radius:12px;padding:18px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:16px}
+.card h2{font-size:.95rem;font-weight:700;margin-bottom:14px;color:#2d3748}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
-input,select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.9rem;width:100%;background:#fff;outline:none;transition:.2s}
+input,select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;width:100%;background:#fff;outline:none;transition:.2s}
 input:focus{border-color:#3182ce}
 .fg{display:flex;flex-direction:column;gap:4px}
-.fg label{font-size:.75rem;font-weight:600;color:#718096;text-transform:uppercase}
-.btn{padding:8px 16px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.82rem;transition:.2s;white-space:nowrap}
+.fg label{font-size:.72rem;font-weight:600;color:#718096;text-transform:uppercase}
+.btn{padding:7px 14px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.8rem;transition:.2s;white-space:nowrap}
 .btn-primary{background:#3182ce;color:#fff}.btn-primary:hover{background:#2b6cb0}
 .btn-success{background:#38a169;color:#fff}.btn-success:hover{background:#276749}
 .btn-danger{background:#e53e3e;color:#fff}.btn-danger:hover{background:#c53030}
 .btn-outline{background:#fff;border:1.5px solid #e2e8f0;color:#4a5568}.btn-outline:hover{background:#f7fafc}
 .btn-pdf{background:#805ad5;color:#fff}.btn-pdf:hover{background:#6b46c1}
 .btn-edit{background:#ed8936;color:#fff}.btn-edit:hover{background:#c05621}
-.btn-save{background:#38a169;color:#fff;padding:5px 12px;font-size:.78rem}.btn-save:hover{background:#276749}
-.btn-cancel{background:#e2e8f0;color:#4a5568;padding:5px 12px;font-size:.78rem}
-table{width:100%;border-collapse:collapse;font-size:.85rem}
-th{background:#f7fafc;padding:9px 12px;text-align:left;font-weight:700;color:#4a5568;border-bottom:2px solid #e2e8f0}
-td{padding:9px 12px;border-bottom:1px solid #f0f4f8;vertical-align:middle}
+.btn-save{background:#38a169;color:#fff;padding:5px 10px;font-size:.75rem}
+.btn-cancel{background:#e2e8f0;color:#4a5568;padding:5px 10px;font-size:.75rem}
+.btn-confirm{background:#38a169;color:#fff;width:100%;padding:10px;font-size:.9rem;font-weight:700;border-radius:8px;border:none;cursor:pointer;margin-top:12px}
+.btn-confirm:hover{background:#276749}
+.btn-confirm:disabled{background:#a0aec0;cursor:not-allowed}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th{background:#f7fafc;padding:8px 10px;text-align:left;font-weight:700;color:#4a5568;border-bottom:2px solid #e2e8f0}
+td{padding:8px 10px;border-bottom:1px solid #f0f4f8;vertical-align:middle}
 tr:last-child td{border-bottom:none}
-.badge{display:inline-block;padding:2px 10px;border-radius:20px;font-size:.75rem;font-weight:700}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:.72rem;font-weight:700}
 .badge-blue{background:#ebf8ff;color:#2b6cb0}
-.empty{text-align:center;padding:40px;color:#a0aec0;font-size:.95rem}
+.badge-green{background:#f0fff4;color:#276749}
+.badge-orange{background:#fffaf0;color:#c05621}
+.badge-purple{background:#faf5ff;color:#6b46c1}
+.empty{text-align:center;padding:36px;color:#a0aec0;font-size:.9rem}
 .sku-line{display:flex;gap:8px;align-items:flex-end;background:#f7fafc;border-radius:8px;padding:10px;margin-bottom:8px;flex-wrap:wrap}
-.order-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
-.order-meta{font-size:.78rem;color:#718096;margin-top:2px}
-.total{font-weight:700;color:#2d3748;font-size:1rem}
-.retailer-section{margin-bottom:24px}
-.retailer-title{font-size:1rem;font-weight:700;color:#2b6cb0;margin-bottom:12px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.stat{background:#fff;border-radius:10px;padding:14px 18px;flex:1;min-width:130px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
-.stat-val{font-size:1.5rem;font-weight:700;color:#3182ce}
-.stat-lbl{font-size:.75rem;color:#718096;margin-top:2px}
-#toast{position:fixed;bottom:24px;right:24px;background:#2d3748;color:#fff;padding:10px 20px;border-radius:8px;font-size:.88rem;opacity:0;transition:.3s;pointer-events:none;z-index:9999}
+.order-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.order-meta{font-size:.75rem;color:#718096;margin-top:2px}
+.total{font-weight:700;color:#2d3748;font-size:.95rem}
+.section-title{font-size:.95rem;font-weight:700;color:#2b6cb0;margin-bottom:10px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.summary-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.stat{background:#fff;border-radius:10px;padding:12px 16px;flex:1;min-width:120px;box-shadow:0 1px 4px rgba(0,0,0,.07);text-align:center}
+.stat-val{font-size:1.4rem;font-weight:700;color:#3182ce}
+.stat-lbl{font-size:.72rem;color:#718096;margin-top:2px}
+#toast{position:fixed;bottom:20px;right:20px;background:#2d3748;color:#fff;padding:10px 18px;border-radius:8px;font-size:.85rem;opacity:0;transition:.3s;pointer-events:none;z-index:9999}
 #toast.show{opacity:1}
-#global-loader{position:fixed;inset:0;background:rgba(240,244,248,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px}
-.spinner{width:40px;height:40px;border:4px solid #e2e8f0;border-top-color:#3182ce;border-radius:50%;animation:spin .8s linear infinite}
+#global-loader{position:fixed;inset:0;background:rgba(240,244,248,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:12px}
+.spinner{width:38px;height:38px;border:4px solid #e2e8f0;border-top-color:#3182ce;border-radius:50%;animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-#loader-msg{color:#4a5568;font-weight:600}
+#loader-msg{color:#4a5568;font-weight:600;font-size:.9rem}
+/* Searchable dropdown */
 .searchable-wrap{position:relative;width:100%}
-.searchable-dropdown{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:500;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.13);display:none}
+.searchable-dropdown{position:absolute;top:calc(100%+2px);left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:500;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.13);display:none}
 .searchable-dropdown.open{display:block}
-.sd-search{padding:8px 10px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff;z-index:1}
-.sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:6px 10px;font-size:.85rem;width:100%}
-.sd-option{padding:9px 12px;cursor:pointer;font-size:.85rem;transition:.15s}
+.sd-search{padding:7px 9px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff;z-index:1}
+.sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 9px;font-size:.82rem;width:100%}
+.sd-option{padding:8px 11px;cursor:pointer;font-size:.82rem;transition:.15s}
 .sd-option:hover{background:#ebf8ff;color:#2b6cb0}
 .sd-option.placeholder-opt{color:#a0aec0;font-style:italic}
-.sd-empty{padding:10px 12px;color:#a0aec0;font-size:.85rem;text-align:center}
-.sd-trigger{width:100%;padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748;gap:6px}
+.sd-empty{padding:9px 11px;color:#a0aec0;font-size:.82rem;text-align:center}
+.sd-trigger{width:100%;padding:8px 11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.86rem;background:#fff;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:#2d3748;gap:6px}
 .sd-trigger.placeholder-style{color:#a0aec0}
-.route-lock-bar{background:#ebf8ff;border:1.5px solid #bee3f8;border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
-.route-lock-bar label{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;font-size:.9rem;color:#2b6cb0}
-.route-lock-bar input[type=checkbox]{width:18px;height:18px;accent-color:#3182ce;cursor:pointer}
-.lock-info{font-size:.8rem;color:#4299e1;flex:1}
-.route-retailer-list{display:flex;flex-direction:column;gap:6px;margin-top:12px}
-.route-ret-item{display:flex;align-items:center;gap:10px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:8px 12px;cursor:grab;transition:.15s}
+/* Route lock */
+.route-lock-bar{background:#ebf8ff;border:1.5px solid #bee3f8;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.route-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#2b6cb0}
+.route-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#3182ce;cursor:pointer}
+.lock-info{font-size:.78rem;color:#4299e1;flex:1}
+/* Routes */
+.route-retailer-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.route-ret-item{display:flex;align-items:center;gap:9px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 11px;cursor:grab;transition:.15s}
 .route-ret-item:hover{border-color:#bee3f8;background:#ebf8ff}
-.drag-handle{color:#cbd5e0;font-size:1.1rem}
-.seq-badge{background:#3182ce;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
-.edit-input{padding:5px 8px;border:1.5px solid #3182ce;border-radius:6px;font-size:.85rem;width:100%}
-@media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}.tab{padding:10px 8px;font-size:.75rem}}
+.drag-handle{color:#cbd5e0;font-size:1rem}
+.seq-badge{background:#3182ce;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
+.edit-input{padding:5px 7px;border:1.5px solid #3182ce;border-radius:6px;font-size:.82rem;width:100%}
+/* Packing */
+.outlet-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden}
+.outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;transition:.15s;user-select:none}
+.outlet-header:hover{background:#f7fafc}
+.outlet-header.confirmed{background:#f0fff4;border-left:4px solid #38a169}
+.outlet-body{padding:0 18px 16px;display:none}
+.outlet-body.open{display:block}
+.pack-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f4f8}
+.pack-item:last-child{border-bottom:none}
+.pack-checkbox{width:20px;height:20px;accent-color:#38a169;cursor:pointer;flex-shrink:0}
+.pack-checkbox:disabled{accent-color:#a0aec0;cursor:not-allowed}
+.pack-sku-name{flex:1;font-size:.88rem}
+.pack-sku-name.unavailable{text-decoration:line-through;color:#a0aec0}
+.pack-qty-input{width:72px;padding:5px 8px;border:1.5px solid #e2e8f0;border-radius:6px;font-size:.85rem;text-align:center}
+.pack-qty-input:focus{border-color:#38a169;outline:none}
+.pack-qty-input:disabled{background:#f7fafc;color:#a0aec0}
+.pack-ordered{font-size:.75rem;color:#a0aec0;white-space:nowrap}
+/* Final bill */
+.bill-outlet-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden}
+.bill-outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;transition:.15s;background:#f0fff4;border-left:4px solid #38a169}
+.bill-outlet-header:hover{background:#e6ffed}
+.bill-outlet-body{padding:0 18px 16px;display:none}
+.bill-outlet-body.open{display:block}
+@media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}.tab{padding:9px 8px;font-size:.72rem}}
 </style>
 </head>
 <body>
 <div id="global-loader"><div class="spinner"></div><div id="loader-msg">Connecting to cloud...</div></div>
-
 <header>
-  <span style="font-size:1.5rem">📦</span>
+  <span style="font-size:1.4rem">📦</span>
   <h1>Retailer Order Management</h1>
   <div class="sync-dot"></div>
 </header>
-
 <div class="tabs">
-  <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 New Order</div>
+  <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 Order</div>
   <div class="tab" data-tab="history" onclick="switchTab('history')">📋 History</div>
+  <div class="tab" data-tab="packing" onclick="switchTab('packing')">📦 Packing</div>
+  <div class="tab" data-tab="finalbill" onclick="switchTab('finalbill')">🧾 Final Bill</div>
   <div class="tab" data-tab="archives" onclick="switchTab('archives')">🗂️ Archives</div>
   <div class="tab" data-tab="routes" onclick="switchTab('routes')">🗺️ Routes</div>
   <div class="tab" data-tab="skus" onclick="switchTab('skus')">🏷️ SKUs</div>
   <div class="tab" data-tab="retailers" onclick="switchTab('retailers')">🏪 Retailers</div>
 </div>
-
 <div class="content">
   <!-- NEW ORDER -->
   <div id="tab-orders">
@@ -108,10 +138,10 @@ tr:last-child td{border-bottom:none}
       <h2>Create New Order</h2>
       <div class="route-lock-bar">
         <label><input type="checkbox" id="route-lock-chk" onchange="onRouteLockChange()"/> Lock Route for today</label>
-        <span class="lock-info" id="route-lock-info">Select a route below, then tick to lock till midnight.</span>
+        <span class="lock-info" id="route-lock-info">Select a route, then tick to lock till midnight.</span>
       </div>
       <div class="row">
-        <div class="fg" style="flex:1;min-width:180px">
+        <div class="fg" style="flex:1;min-width:170px">
           <label>Route (optional)</label>
           <div class="searchable-wrap" id="sd-wrap-order-route">
             <button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-route" onclick="toggleSD('order-route')">-- Select Route -- <span>▾</span></button>
@@ -122,7 +152,7 @@ tr:last-child td{border-bottom:none}
           </div>
           <input type="hidden" id="val-order-route" value=""/>
         </div>
-        <div class="fg" style="flex:1;min-width:180px">
+        <div class="fg" style="flex:1;min-width:170px">
           <label>Retailer</label>
           <div class="searchable-wrap" id="sd-wrap-order-retailer">
             <button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-retailer" onclick="toggleSD('order-retailer')">-- Select Retailer -- <span>▾</span></button>
@@ -133,7 +163,7 @@ tr:last-child td{border-bottom:none}
           </div>
           <input type="hidden" id="val-order-retailer" value=""/>
         </div>
-        <div class="fg" style="flex:1;min-width:150px">
+        <div class="fg" style="flex:1;min-width:140px">
           <label>Order Date</label>
           <input type="date" id="order-date"/>
         </div>
@@ -149,22 +179,36 @@ tr:last-child td{border-bottom:none}
       <button class="btn btn-success" onclick="saveOrder()">✅ Save Order</button>
     </div>
   </div>
-
   <!-- HISTORY -->
   <div id="tab-history" style="display:none">
     <div class="summary-row" id="summary-stats"></div>
     <div id="orders-list"></div>
   </div>
-
+  <!-- PACKING -->
+  <div id="tab-packing" style="display:none">
+    <div class="card" style="background:linear-gradient(135deg,#fffaf0,#fff);border-left:4px solid #ed8936">
+      <b style="color:#c05621">📦 Packing</b>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Tick each SKU when packed. Adjust qty if needed. Click Confirm to finalize.</p>
+    </div>
+    <div id="packing-list"></div>
+  </div>
+  <!-- FINAL BILL -->
+  <div id="tab-finalbill" style="display:none">
+    <div class="card" style="background:linear-gradient(135deg,#f0fff4,#fff);border-left:4px solid #38a169">
+      <b style="color:#276749">🧾 Final Bill</b>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Confirmed packed items only. Read-only.</p>
+    </div>
+    <div class="summary-row" id="bill-stats"></div>
+    <div id="finalbill-list"></div>
+  </div>
   <!-- ARCHIVES -->
   <div id="tab-archives" style="display:none">
     <div class="card" style="background:linear-gradient(135deg,#faf5ff,#fff);border-left:4px solid #805ad5">
       <b style="color:#805ad5">🗂️ Archives</b>
-      <p style="font-size:.85rem;color:#718096;margin-top:4px">Past orders archived at midnight IST. Read-only.</p>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Past orders archived at midnight IST.</p>
     </div>
     <div id="archives-list"></div>
   </div>
-
   <!-- ROUTES -->
   <div id="tab-routes" style="display:none">
     <div class="card">
@@ -176,34 +220,32 @@ tr:last-child td{border-bottom:none}
     </div>
     <div id="routes-list"></div>
   </div>
-
   <!-- SKUs -->
   <div id="tab-skus" style="display:none">
     <div class="card">
       <h2>Add New SKU</h2>
       <div class="row">
-        <div class="fg" style="flex:2;min-width:130px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. SKU-001"/></div>
-        <div class="fg" style="flex:3;min-width:170px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Widget 500ml"/></div>
-        <div class="fg" style="flex:1;min-width:100px"><label>Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
+        <div class="fg" style="flex:2;min-width:120px"><label>SKU Code</label><input id="sku-code" placeholder="SKU-001"/></div>
+        <div class="fg" style="flex:3;min-width:160px"><label>Product Name</label><input id="sku-name" placeholder="Widget 500ml"/></div>
+        <div class="fg" style="flex:1;min-width:90px"><label>Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addSku()">Add SKU</button></div>
       </div>
     </div>
     <div class="card">
       <h2>SKU List</h2>
-      <div class="row" style="margin-bottom:12px">
+      <div class="row" style="margin-bottom:10px">
         <div class="fg" style="flex:1"><label>🔍 Search</label><input id="sku-search" placeholder="Search by code or name..." oninput="renderSkuTable()"/></div>
       </div>
       <div id="sku-table-wrap"></div>
     </div>
   </div>
-
   <!-- RETAILERS -->
   <div id="tab-retailers" style="display:none">
     <div class="card">
       <h2>Add New Retailer</h2>
       <div class="row">
-        <div class="fg" style="flex:2;min-width:160px"><label>Retailer Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div>
-        <div class="fg" style="flex:2;min-width:160px"><label>Contact / Location</label><input id="ret-contact" placeholder="e.g. Mumbai"/></div>
+        <div class="fg" style="flex:2;min-width:150px"><label>Retailer Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div>
+        <div class="fg" style="flex:2;min-width:150px"><label>Contact / Location</label><input id="ret-contact" placeholder="e.g. Mumbai"/></div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addRetailer()">Add Retailer</button></div>
       </div>
     </div>
@@ -215,7 +257,6 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="toast"></div>
 
-<!-- Load jsPDF first, then Firebase as module -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -233,23 +274,22 @@ const app = initializeApp(firebaseConfig);
 const db  = getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
-let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[];
+let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[], packingDocs=[];
 let lineCount=0, dragSrc=null;
 const LOCK_KEY='routeLock_v2';
 
-// ── IST HELPERS ───────────────────────────────────────────────
-function getISTDateStr(){
-  return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
-}
+// ── IST ───────────────────────────────────────────────────────
+function getISTDateStr(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'}); }
 function msToISTMidnight(){
   const now=new Date();
   const istNow=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
   const mdn=new Date(istNow); mdn.setHours(24,0,0,0);
-  return mdn - istNow;
+  return mdn-istNow;
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
 const fmt=n=>'₹'+parseFloat(n||0).toFixed(2);
+const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 function toast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
@@ -259,15 +299,11 @@ function showLoader(m){document.getElementById('loader-msg').textContent=m;docum
 function hideLoader(){document.getElementById('global-loader').style.display='none';}
 
 // ── ROUTE LOCK ────────────────────────────────────────────────
-const LOCK_KEY_DATE = LOCK_KEY+'_date';
-function saveLock(id,name){ localStorage.setItem(LOCK_KEY,JSON.stringify({id,name,date:getISTDateStr()})); }
-function clearLock(){ localStorage.removeItem(LOCK_KEY); }
+function saveLock(id,name){localStorage.setItem(LOCK_KEY,JSON.stringify({id,name,date:getISTDateStr()}));}
+function clearLock(){localStorage.removeItem(LOCK_KEY);}
 function getLock(){
-  try{
-    const d=JSON.parse(localStorage.getItem(LOCK_KEY)||'null');
-    if(!d||d.date!==getISTDateStr()){clearLock();return null;}
-    return d;
-  }catch{return null;}
+  try{const d=JSON.parse(localStorage.getItem(LOCK_KEY)||'null');if(!d||d.date!==getISTDateStr()){clearLock();return null;}return d;}
+  catch{return null;}
 }
 function applyLockUI(){
   const lock=getLock();
@@ -277,7 +313,7 @@ function applyLockUI(){
   if(lock){
     chk.checked=true;
     document.getElementById('val-order-route').value=lock.id;
-    btn.innerHTML=escHtml(lock.name)+' <span>▾</span>';
+    btn.innerHTML=esc(lock.name)+' <span>▾</span>';
     btn.classList.remove('placeholder-style');
     btn.style.opacity='.65'; btn.style.pointerEvents='none';
     info.textContent='🔒 Locked till midnight. Uncheck to change.';
@@ -285,151 +321,119 @@ function applyLockUI(){
   } else {
     chk.checked=false;
     btn.style.opacity='1'; btn.style.pointerEvents='';
-    info.textContent='Select a route below, then tick to lock it till midnight.';
+    info.textContent='Select a route, then tick to lock till midnight.';
   }
 }
 window.onRouteLockChange=function(){
   const chk=document.getElementById('route-lock-chk');
   const id=document.getElementById('val-order-route').value;
   const name=document.getElementById('sd-btn-order-route').textContent.replace('▾','').trim();
-  if(chk.checked){
-    if(!id){chk.checked=false;toast('Select a route first');return;}
-    saveLock(id,name);
-  } else { clearLock(); }
+  if(chk.checked){if(!id){chk.checked=false;toast('Select a route first');return;}saveLock(id,name);}
+  else clearLock();
   applyLockUI();
 };
-function scheduleLockReset(){ setTimeout(()=>{clearLock();applyLockUI();toast('🌙 Route lock cleared');scheduleLockReset();},msToISTMidnight()); }
+function scheduleLockReset(){setTimeout(()=>{clearLock();applyLockUI();toast('🌙 Route lock cleared');scheduleLockReset();},msToISTMidnight());}
+
+// ── MIDNIGHT ARCHIVE ──────────────────────────────────────────
 function scheduleMidnightArchive(){
   setTimeout(async()=>{
     for(const o of orders){
       try{await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()});}catch{}
     }
-    toast('🌙 Orders archived');
+    // archive packing docs
+    for(const p of packingDocs){
+      try{await updateDoc(doc(db,'packing',p.id),{archived:true});}catch{}
+    }
+    toast('🌙 Midnight reset done');
     scheduleMidnightArchive();
   },msToISTMidnight());
 }
 
 // ── SEARCHABLE DROPDOWN ───────────────────────────────────────
-// Naming convention: sd-wrap-{key}, sd-btn-{key}, sd-dd-{key}, sd-opts-{key}, val-{key}
 function toggleSD(key){
-  const lock=getLock();
-  if(key==='order-route'&&lock) return;
+  if(key==='order-route'&&getLock()) return;
   const dd=document.getElementById('sd-dd-'+key);
   const isOpen=dd.classList.contains('open');
   closeAllSD();
-  if(!isOpen){ dd.classList.add('open'); dd.querySelector('input')?.focus(); }
+  if(!isOpen){dd.classList.add('open');dd.querySelector('input')?.focus();}
 }
-function closeAllSD(){ document.querySelectorAll('.searchable-dropdown').forEach(d=>d.classList.remove('open')); }
+function closeAllSD(){document.querySelectorAll('.searchable-dropdown').forEach(d=>d.classList.remove('open'));}
 function filterSD(key,q){
-  const opts=document.getElementById('sd-opts-'+key);
-  opts.querySelectorAll('.sd-option:not(.placeholder-opt)').forEach(el=>{
+  document.getElementById('sd-opts-'+key)?.querySelectorAll('.sd-option:not(.placeholder-opt)').forEach(el=>{
     el.style.display=el.dataset.label.toLowerCase().includes(q.toLowerCase())?'':'none';
   });
 }
-// Generic select for any SD
 function selectSD(key,value,label,cb){
   const btn=document.getElementById('sd-btn-'+key);
-  if(btn){ btn.innerHTML=escHtml(label)+' <span>▾</span>'; btn.classList.remove('placeholder-style'); }
+  if(btn){btn.innerHTML=esc(label)+' <span>▾</span>';btn.classList.remove('placeholder-style');}
   document.getElementById('val-'+key).value=value;
   closeAllSD();
   if(cb) cb(value);
 }
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-document.addEventListener('click',e=>{ if(!e.target.closest('.searchable-wrap')) closeAllSD(); });
+document.addEventListener('click',e=>{if(!e.target.closest('.searchable-wrap'))closeAllSD();});
+window.toggleSD=toggleSD; window.filterSD=filterSD; window.selectSD=selectSD;
 
-// Expose to inline onclick
-window.toggleSD=toggleSD; window.filterSD=filterSD;
-
-// ── ROUTE DROPDOWN ────────────────────────────────────────────
 function buildRouteOpts(){
-  const opts=document.getElementById('sd-opts-order-route'); if(!opts) return;
-  opts.innerHTML=
-    `<div class="sd-option placeholder-opt" onclick="selectSD('order-route','','-- No Route --',onRouteSelect)">No Route (show all retailers)</div>`+
-    routes.map(r=>
-      `<div class="sd-option" data-label="${escHtml(r.name)}"
-        onclick="selectSD('order-route','${r.id}','${escHtml(r.name)}',onRouteSelect)">
-        ${escHtml(r.name)} <span style="color:#a0aec0;font-size:.78rem">· ${(r.retailers||[]).length} retailers</span>
-      </div>`
-    ).join('');
+  const opts=document.getElementById('sd-opts-order-route');if(!opts)return;
+  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-route','','-- No Route --',onRouteSelect)">No Route</div>`+
+    routes.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-route','${r.id}','${esc(r.name)}',onRouteSelect)">
+      ${esc(r.name)} <span style="color:#a0aec0;font-size:.75rem">· ${(r.retailers||[]).length} retailers</span></div>`).join('');
 }
 function onRouteSelect(routeId){
   buildRetailerOpts(routeId);
-  // reset retailer
+  document.getElementById('val-order-retailer').value='';
   const rb=document.getElementById('sd-btn-order-retailer');
   if(rb){rb.innerHTML='-- Select Retailer -- <span>▾</span>';rb.classList.add('placeholder-style');}
-  document.getElementById('val-order-retailer').value='';
 }
 window.onRouteSelect=onRouteSelect;
-
-// ── RETAILER DROPDOWN ─────────────────────────────────────────
 function buildRetailerOpts(routeId){
-  const opts=document.getElementById('sd-opts-order-retailer'); if(!opts) return;
+  const opts=document.getElementById('sd-opts-order-retailer');if(!opts)return;
   let list=retailers;
-  if(routeId){
-    const route=routes.find(r=>r.id===routeId);
-    const ids=(route?.retailers||[]).map(r=>r.id);
-    list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);
-  }
-  opts.innerHTML=
-    `<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --')">-- Select Retailer --</div>`+
-    list.map(r=>
-      `<div class="sd-option" data-label="${escHtml(r.name)}"
-        onclick="selectSD('order-retailer','${r.id}','${escHtml(r.name)}')">
-        ${escHtml(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.78rem">· ${escHtml(r.contact)}</span>`:''}
-      </div>`
-    ).join('');
+  if(routeId){const route=routes.find(r=>r.id===routeId);const ids=(route?.retailers||[]).map(r=>r.id);list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);}
+  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --')">-- Select Retailer --</div>`+
+    list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}')">
+      ${esc(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.75rem">· ${esc(r.contact)}</span>`:''}
+    </div>`).join('');
 }
-
-// ── SKU LINE DROPDOWN ─────────────────────────────────────────
 function buildSkuOpts(lineId){
   const key='sku-'+lineId;
-  const opts=document.getElementById('sd-opts-'+key); if(!opts) return;
-  opts.innerHTML=
-    `<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
-    skus.map(s=>
-      `<div class="sd-option" data-label="${escHtml(s.code)} ${escHtml(s.name)}"
-        onclick="selectSkuOpt('${lineId}','${s.id}','${escHtml(s.code)} — ${escHtml(s.name)}')">
-        <span class="badge badge-blue" style="margin-right:4px">${escHtml(s.code)}</span>${escHtml(s.name)}
-        <span style="color:#38a169;font-size:.78rem;margin-left:auto">${fmt(s.price)}</span>
-      </div>`
-    ).join('');
+  const opts=document.getElementById('sd-opts-'+key);if(!opts)return;
+  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
+    skus.map(s=>`<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
+      <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}
+      <span style="color:#38a169;font-size:.75rem;margin-left:auto">${fmt(s.price)}</span>
+    </div>`).join('');
 }
 function selectSkuOpt(lineId,skuId,label){
-  const key='sku-'+lineId;
-  selectSD(key,skuId,label);
-  if(skuId){
-    const sku=skus.find(s=>s.id===skuId);
-    if(sku){ document.querySelector('#line-'+lineId+' .line-price').value=sku.price; updateTotal(); }
-  }
+  selectSD('sku-'+lineId,skuId,label);
+  if(skuId){const sku=skus.find(s=>s.id===skuId);if(sku){document.querySelector('#line-'+lineId+' .line-price').value=sku.price;updateTotal();}}
 }
 window.selectSkuOpt=selectSkuOpt;
-window.selectSD=selectSD;
-
-// ── ROUTE PICKER FOR ROUTE TAB ────────────────────────────────
 function buildRouteRetailerPicker(routeId){
-  const opts=document.getElementById('rrp-opts-'+routeId); if(!opts) return;
+  const opts=document.getElementById('rrp-opts-'+routeId);if(!opts)return;
   const route=routes.find(r=>r.id===routeId);
   const used=new Set((route?.retailers||[]).map(r=>r.id));
   const avail=retailers.filter(r=>!used.has(r.id));
   opts.innerHTML=avail.length
-    ? avail.map(r=>
-        `<div class="sd-option" data-label="${escHtml(r.name)}"
-          onclick="addRetailerToRoute('${routeId}','${r.id}','${escHtml(r.name)}')">
-          ${escHtml(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.78rem">· ${escHtml(r.contact)}</span>`:''}
-        </div>`
-      ).join('')
-    : '<div class="sd-empty">All retailers already added</div>';
+    ? avail.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="addRetailerToRoute('${routeId}','${r.id}','${esc(r.name)}')">
+        ${esc(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.75rem">· ${esc(r.contact)}</span>`:''}
+      </div>`).join('')
+    : '<div class="sd-empty">All retailers added</div>';
 }
 window.openRouteRetailerPicker=function(routeId){
-  const ddId='rrp-dd-'+routeId;
-  const dd=document.getElementById(ddId);
+  const dd=document.getElementById('rrp-dd-'+routeId);
   const isOpen=dd?.classList.contains('open');
   closeAllSD();
-  if(!isOpen&&dd){ buildRouteRetailerPicker(routeId); dd.classList.add('open'); dd.querySelector('input')?.focus(); }
+  if(!isOpen&&dd){buildRouteRetailerPicker(routeId);dd.classList.add('open');dd.querySelector('input')?.focus();}
+};
+window.filterRouteRetailerPicker=function(routeId,q){
+  document.getElementById('rrp-opts-'+routeId)?.querySelectorAll('.sd-option').forEach(el=>{
+    el.style.display=(el.dataset.label||'').toLowerCase().includes(q.toLowerCase())?'':'none';
+  });
 };
 
 // ── TABS ──────────────────────────────────────────────────────
-const TABS=['orders','history','archives','routes','skus','retailers'];
+const TABS=['orders','history','packing','finalbill','archives','routes','skus','retailers'];
 window.switchTab=function(t){
   TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
@@ -437,23 +441,22 @@ window.switchTab=function(t){
     if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
   });
   if(t==='history')   renderHistory();
+  if(t==='packing')   renderPacking();
+  if(t==='finalbill') renderFinalBill();
   if(t==='archives')  renderArchives();
   if(t==='skus')      renderSkuTable();
   if(t==='retailers') renderRetailerTable();
   if(t==='routes')    renderRoutesTab();
 };
 
-// ── FIREBASE LISTENERS ────────────────────────────────────────
+// ── LISTENERS ─────────────────────────────────────────────────
 let readyCount=0;
-function checkReady(){ if(++readyCount>=3) hideLoader(); }
+function checkReady(){if(++readyCount>=4)hideLoader();}
 function initListeners(){
   onSnapshot(query(collection(db,'skus'),orderBy('code')),snap=>{
     skus=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderSkuTable();
-    document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{
-      const lineId=el.id.replace('sd-opts-sku-','');
-      buildSkuOpts(lineId);
-    });
+    document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{buildSkuOpts(el.id.replace('sd-opts-sku-',''));});
     checkReady();
   });
   onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
@@ -464,8 +467,7 @@ function initListeners(){
   });
   onSnapshot(query(collection(db,'routes'),orderBy('name')),snap=>{
     routes=snap.docs.map(d=>({id:d.id,...d.data()}));
-    buildRouteOpts();
-    renderRoutesTab();
+    buildRouteOpts(); renderRoutesTab();
     checkReady();
   });
   onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),snap=>{
@@ -474,9 +476,315 @@ function initListeners(){
     orders=all.filter(o=>!o.archived&&o.date===today);
     archivedOrders=all.filter(o=>o.archived);
     const at=document.querySelector('.tab.active')?.dataset?.tab;
-    if(at==='history')  renderHistory();
-    if(at==='archives') renderArchives();
+    if(at==='history')renderHistory();
+    if(at==='packing')renderPacking();
+    checkReady();
   });
+  onSnapshot(query(collection(db,'packing'),orderBy('retailerName')),snap=>{
+    packingDocs=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const at=document.querySelector('.tab.active')?.dataset?.tab;
+    if(at==='packing')renderPacking();
+    if(at==='finalbill')renderFinalBill();
+  });
+}
+
+// ── MERGED ORDERS BY RETAILER ─────────────────────────────────
+function getMergedByRetailer(){
+  const map={};
+  orders.forEach(o=>{
+    if(!map[o.retailerId]){
+      map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};
+    }
+    o.lines.forEach(l=>{
+      const key=l.skuId;
+      if(!map[o.retailerId].skus[key]){
+        map[o.retailerId].skus[key]={skuId:l.skuId,skuCode:l.skuCode,skuName:l.skuName,price:l.price,orderedQty:0};
+      }
+      map[o.retailerId].skus[key].orderedQty+=l.qty;
+    });
+  });
+  return Object.values(map).map(r=>({...r,skus:Object.values(r.skus)}));
+}
+
+// ── PACKING ───────────────────────────────────────────────────
+function getPackingDoc(retailerId){
+  const today=getISTDateStr();
+  return packingDocs.find(p=>p.retailerId===retailerId&&p.date===today&&!p.archived)||null;
+}
+function renderPacking(){
+  const wrap=document.getElementById('packing-list');if(!wrap)return;
+  const merged=getMergedByRetailer();
+  if(!merged.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';return;}
+  wrap.innerHTML='';
+  merged.forEach(outlet=>{
+    const pDoc=getPackingDoc(outlet.retailerId);
+    const confirmed=pDoc?.confirmed||false;
+    const card=document.createElement('div');card.className='outlet-card';
+    const statusBadge=confirmed
+      ? '<span class="badge badge-green" style="margin-left:8px">✅ Packed</span>'
+      : '<span class="badge badge-orange" style="margin-left:8px">⏳ Pending</span>';
+    card.innerHTML=`
+      <div class="outlet-header${confirmed?' confirmed':''}" onclick="toggleOutletBody('pack-body-${outlet.retailerId}')">
+        <div>
+          <b>${esc(outlet.retailerName)}</b>${statusBadge}
+          ${outlet.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(outlet.routeName)}</span>`:''}
+          <div class="order-meta">${outlet.skus.length} SKUs ordered</div>
+        </div>
+        <span style="color:#a0aec0;font-size:1.1rem">▾</span>
+      </div>
+      <div class="outlet-body" id="pack-body-${outlet.retailerId}">
+        <div id="pack-items-${outlet.retailerId}"></div>
+        ${!confirmed?`<button class="btn-confirm" onclick="confirmPacking('${outlet.retailerId}','${esc(outlet.retailerName)}')">✅ Confirm Packing</button>`
+          :'<div style="text-align:center;color:#38a169;font-weight:600;padding:8px">✅ Packing Confirmed</div>'}
+      </div>`;
+    wrap.appendChild(card);
+    renderPackItems(outlet, pDoc, confirmed);
+  });
+}
+function renderPackItems(outlet, pDoc, confirmed){
+  const wrap=document.getElementById('pack-items-'+outlet.retailerId);if(!wrap)return;
+  wrap.innerHTML='';
+  outlet.skus.forEach(sku=>{
+    const savedItem=pDoc?.items?.find(i=>i.skuId===sku.skuId);
+    const isTicked=savedItem?.packed||false;
+    const packedQty=savedItem?.packedQty??sku.orderedQty;
+    const div=document.createElement('div');div.className='pack-item';
+    div.innerHTML=`
+      <input type="checkbox" class="pack-checkbox" id="chk-${outlet.retailerId}-${sku.skuId}"
+        ${isTicked?'checked':''} ${confirmed?'disabled':''}
+        onchange="onPackTick('${outlet.retailerId}','${sku.skuId}')"/>
+      <div style="flex:1">
+        <div class="pack-sku-name${!isTicked&&confirmed?' unavailable':''}">${esc(sku.skuCode)} — ${esc(sku.skuName)}</div>
+        <div class="pack-ordered">Ordered: ${sku.orderedQty} | Price: ${fmt(sku.price)}</div>
+      </div>
+      <input type="number" class="pack-qty-input" id="qty-${outlet.retailerId}-${sku.skuId}"
+        value="${packedQty}" min="0" ${confirmed?'disabled':''}
+        onchange="onPackQtyChange('${outlet.retailerId}','${sku.skuId}')"/>`;
+    wrap.appendChild(div);
+  });
+}
+window.toggleOutletBody=function(id){
+  const body=document.getElementById(id);if(!body)return;
+  body.classList.toggle('open');
+};
+window.onPackTick=async function(retailerId,skuId){
+  await autoSavePacking(retailerId);
+};
+window.onPackQtyChange=async function(retailerId,skuId){
+  await autoSavePacking(retailerId);
+};
+async function autoSavePacking(retailerId){
+  const merged=getMergedByRetailer();
+  const outlet=merged.find(o=>o.retailerId===retailerId);if(!outlet)return;
+  const items=outlet.skus.map(sku=>{
+    const chk=document.getElementById('chk-'+retailerId+'-'+sku.skuId);
+    const qtyEl=document.getElementById('qty-'+retailerId+'-'+sku.skuId);
+    return {skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,
+      orderedQty:sku.orderedQty,packed:chk?.checked||false,
+      packedQty:parseFloat(qtyEl?.value||0)||0};
+  });
+  const today=getISTDateStr();
+  const existing=getPackingDoc(retailerId);
+  try{
+    if(existing){
+      await updateDoc(doc(db,'packing',existing.id),{items,updatedAt:new Date().toISOString()});
+    } else {
+      await addDoc(collection(db,'packing'),{
+        retailerId,retailerName:outlet.retailerName,
+        routeName:outlet.routeName||'',date:today,
+        items,confirmed:false,archived:false,
+        createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+      });
+    }
+  }catch(e){console.error('Auto-save error',e);}
+}
+window.confirmPacking=async function(retailerId,retailerName){
+  const merged=getMergedByRetailer();
+  const outlet=merged.find(o=>o.retailerId===retailerId);if(!outlet)return;
+  const items=outlet.skus.map(sku=>{
+    const chk=document.getElementById('chk-'+retailerId+'-'+sku.skuId);
+    const qtyEl=document.getElementById('qty-'+retailerId+'-'+sku.skuId);
+    return {skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,
+      orderedQty:sku.orderedQty,packed:chk?.checked||false,
+      packedQty:parseFloat(qtyEl?.value||0)||0};
+  });
+  const packedCount=items.filter(i=>i.packed).length;
+  if(packedCount===0){toast('Tick at least one SKU to confirm');return;}
+  const today=getISTDateStr();
+  const existing=getPackingDoc(retailerId);
+  try{
+    if(existing){
+      await updateDoc(doc(db,'packing',existing.id),{items,confirmed:true,confirmedAt:new Date().toISOString()});
+    } else {
+      await addDoc(collection(db,'packing'),{
+        retailerId,retailerName:outlet.retailerName,
+        routeName:outlet.routeName||'',date:today,
+        items,confirmed:true,archived:false,
+        createdAt:new Date().toISOString(),confirmedAt:new Date().toISOString()
+      });
+    }
+    toast('✅ Packing confirmed for '+retailerName);
+  }catch(e){toast('Error: '+e.message);}
+};
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory(){
+  const wrap=document.getElementById('orders-list');
+  const stats=document.getElementById('summary-stats');
+  if(!orders.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';stats.innerHTML='';return;}
+  const totalAmt=orders.reduce((s,o)=>s+o.total,0);
+  stats.innerHTML=`
+    <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Orders</div></div>
+    <div class="stat"><div class="stat-val">${[...new Set(orders.map(o=>o.retailerName))].length}</div><div class="stat-lbl">Retailers</div></div>
+    <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Total</div></div>`;
+  wrap.innerHTML='';
+  const exportDiv=document.createElement('div');
+  exportDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
+  exportDiv.innerHTML='<button class="btn btn-pdf" id="export-all-btn">📄 Export All PDF</button>';
+  wrap.appendChild(exportDiv);
+  document.getElementById('export-all-btn').addEventListener('click',exportAllPDF);
+  const grouped={};
+  [...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')).forEach(o=>{
+    if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);
+  });
+  Object.entries(grouped).forEach(([rName,rOrders])=>{
+    const sec=document.createElement('div');sec.className='retailer-section' ;
+    sec.innerHTML=`<div class="section-title">🏪 ${esc(rName)} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
+    rOrders.forEach(o=>{
+      const pDoc=getPackingDoc(o.retailerId);
+      sec.appendChild(buildOrderCard(o,false,pDoc));
+    });
+    wrap.appendChild(sec);
+  });
+}
+
+// ── ORDER CARD ────────────────────────────────────────────────
+function buildOrderCard(o,isArchive,pDoc){
+  const card=document.createElement('div');card.className='card';
+  const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
+  const rows=o.lines.map(l=>{
+    const packItem=pDoc?.items?.find(i=>i.skuId===l.skuId);
+    const packedQty=pDoc?.confirmed&&packItem?.packed?packItem.packedQty:null;
+    return `<tr>
+      <td><span class="badge badge-blue">${esc(l.skuCode)}</span></td>
+      <td>${esc(l.skuName)}</td>
+      <td>${l.qty}</td>
+      <td>${packedQty!==null?`<span class="badge badge-green">${packedQty}</span>`:'<span style="color:#a0aec0">—</span>'}</td>
+      <td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${esc(l.notes||'—')}</td>
+    </tr>`;
+  }).join('');
+  card.innerHTML=`
+    <div class="order-header">
+      <div>
+        <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
+        ${o.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(o.routeName)}</span>`:''}
+        <div class="order-meta">📅 ${o.date} | ${dateDisplay}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-pdf single-pdf-btn">📄 PDF</button>
+        ${!isArchive?'<button class="btn btn-danger del-order-btn">Delete</button>':''}
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>SKU</th><th>Product</th><th>Ordered</th><th>Packed</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div style="text-align:right;margin-top:8px" class="total">Total: ${fmt(o.total)}</div>`;
+  card.querySelector('.single-pdf-btn').addEventListener('click',()=>exportSinglePDF(o,isArchive));
+  if(!isArchive) card.querySelector('.del-order-btn').addEventListener('click',()=>deleteOrder(o.id));
+  return card;
+}
+
+// ── FINAL BILL ────────────────────────────────────────────────
+function renderFinalBill(){
+  const wrap=document.getElementById('finalbill-list');
+  const stats=document.getElementById('bill-stats');
+  if(!wrap)return;
+  const today=getISTDateStr();
+  const confirmed=packingDocs.filter(p=>p.confirmed&&p.date===today&&!p.archived);
+  if(!confirmed.length){
+    wrap.innerHTML='<div class="card"><div class="empty">No confirmed packing yet. Confirm packing first.</div></div>';
+    stats.innerHTML='';return;
+  }
+  const grandTotal=confirmed.reduce((s,p)=>{
+    return s+p.items.filter(i=>i.packed).reduce((ss,i)=>ss+(i.packedQty*i.price),0);
+  },0);
+  stats.innerHTML=`
+    <div class="stat"><div class="stat-val">${confirmed.length}</div><div class="stat-lbl">Outlets</div></div>
+    <div class="stat"><div class="stat-val">${fmt(grandTotal)}</div><div class="stat-lbl">Grand Total</div></div>`;
+  wrap.innerHTML='';
+  // export all bill PDF button
+  const btnDiv=document.createElement('div');
+  btnDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
+  btnDiv.innerHTML='<button class="btn btn-pdf" id="bill-pdf-btn">📄 Export Final Bill PDF</button>';
+  wrap.appendChild(btnDiv);
+  document.getElementById('bill-pdf-btn').addEventListener('click',()=>exportFinalBillPDF(confirmed));
+  confirmed.forEach(p=>{
+    const packedItems=p.items.filter(i=>i.packed);
+    const outletTotal=packedItems.reduce((s,i)=>s+(i.packedQty*i.price),0);
+    const card=document.createElement('div');card.className='bill-outlet-card';
+    card.innerHTML=`
+      <div class="bill-outlet-header" onclick="toggleOutletBody('bill-body-${p.retailerId}')">
+        <div>
+          <b>${esc(p.retailerName)}</b>
+          ${p.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(p.routeName)}</span>`:''}
+          <div class="order-meta">${packedItems.length} SKUs packed</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <b style="color:#276749">${fmt(outletTotal)}</b>
+          <span style="color:#a0aec0">▾</span>
+        </div>
+      </div>
+      <div class="bill-outlet-body" id="bill-body-${p.retailerId}">
+        <div style="overflow-x:auto;margin-top:8px">
+        <table>
+          <thead><tr><th>SKU</th><th>Product</th><th>Packed Qty</th><th>Price</th><th>Amount</th></tr></thead>
+          <tbody>
+            ${packedItems.map(i=>`<tr>
+              <td><span class="badge badge-blue">${esc(i.skuCode)}</span></td>
+              <td>${esc(i.skuName)}</td>
+              <td><b>${i.packedQty}</b></td>
+              <td>${fmt(i.price)}</td>
+              <td><b style="color:#276749">${fmt(i.packedQty*i.price)}</b></td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+        <div style="text-align:right;margin-top:10px;font-weight:700;color:#276749;font-size:1rem">
+          Outlet Total: ${fmt(outletTotal)}
+        </div>
+      </div>`;
+    wrap.appendChild(card);
+  });
+  // grand total bar
+  const gtDiv=document.createElement('div');
+  gtDiv.style.cssText='background:#276749;color:#fff;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1rem;margin-top:8px';
+  gtDiv.innerHTML=`<span>GRAND TOTAL</span><span>${fmt(grandTotal)}</span>`;
+  wrap.appendChild(gtDiv);
+}
+
+// ── ARCHIVES ──────────────────────────────────────────────────
+function renderArchives(){
+  const wrap=document.getElementById('archives-list');if(!wrap)return;
+  if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders.</div></div>';return;}
+  const byDate={};
+  archivedOrders.forEach(o=>{if(!byDate[o.date])byDate[o.date]=[];byDate[o.date].push(o);});
+  wrap.innerHTML='';
+  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+    const dayOrders=byDate[date];
+    const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
+    const sec=document.createElement('div');sec.className='retailer-section';
+    sec.innerHTML=`<div class="section-title">📅 ${date}
+      <span class="badge badge-blue">${dayOrders.length} orders</span>
+      <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
+    dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
+    wrap.appendChild(sec);
+  });
+}
+
+async function deleteOrder(id){
+  if(!confirm('Delete this order?'))return;
+  try{await deleteDoc(doc(db,'orders',id));toast('Order deleted');}catch(e){toast('Error: '+e.message);}
 }
 
 // ── SKU MANAGEMENT ────────────────────────────────────────────
@@ -485,23 +793,16 @@ window.addSku=async function(){
   const name=document.getElementById('sku-name').value.trim();
   const price=parseFloat(document.getElementById('sku-price').value)||0;
   if(!code||!name){toast('Enter code and name');return;}
-  try{
-    await addDoc(collection(db,'skus'),{code,name,price});
-    ['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');
-    toast('SKU saved ✅');
-  }catch(e){toast('Error: '+e.message);}
+  try{await addDoc(collection(db,'skus'),{code,name,price});['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');toast('SKU saved ✅');}
+  catch(e){toast('Error: '+e.message);}
 };
-window.deleteSku=async function(id){
-  if(!confirm('Delete SKU?'))return;
-  try{await deleteDoc(doc(db,'skus',id));toast('SKU deleted');}catch(e){toast('Error: '+e.message);}
-};
+window.deleteSku=async function(id){if(!confirm('Delete SKU?'))return;try{await deleteDoc(doc(db,'skus',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}};
 window.editSkuRow=function(id){
-  const s=skus.find(x=>x.id===id); if(!s)return;
-  const row=document.getElementById('sku-row-'+id); if(!row)return;
-  row.innerHTML=`
-    <td><input class="edit-input" id="esk-code-${id}" value="${escHtml(s.code)}" style="width:90px"/></td>
-    <td><input class="edit-input" id="esk-name-${id}" value="${escHtml(s.name)}"/></td>
-    <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:80px"/></td>
+  const s=skus.find(x=>x.id===id);if(!s)return;
+  const row=document.getElementById('sku-row-'+id);if(!row)return;
+  row.innerHTML=`<td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
+    <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
+    <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:70px"/></td>
     <td><button class="btn btn-save" onclick="saveSkuEdit('${id}')">Save</button>
         <button class="btn btn-cancel" style="margin-left:4px" onclick="renderSkuTable()">Cancel</button></td>`;
 };
@@ -509,24 +810,21 @@ window.saveSkuEdit=async function(id){
   const code=document.getElementById('esk-code-'+id).value.trim();
   const name=document.getElementById('esk-name-'+id).value.trim();
   const price=parseFloat(document.getElementById('esk-price-'+id).value)||0;
-  if(!code||!name){toast('Code and name required');return;}
-  try{await updateDoc(doc(db,'skus',id),{code,name,price});toast('SKU updated ✅');}
-  catch(e){toast('Error: '+e.message);}
+  if(!code||!name){toast('Required');return;}
+  try{await updateDoc(doc(db,'skus',id),{code,name,price});toast('Updated ✅');}catch(e){toast('Error: '+e.message);}
 };
 function renderSkuTable(){
-  const wrap=document.getElementById('sku-table-wrap'); if(!wrap)return;
+  const wrap=document.getElementById('sku-table-wrap');if(!wrap)return;
   const q=(document.getElementById('sku-search')?.value||'').toLowerCase();
   const f=skus.filter(s=>!q||s.code.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
   if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet.</div>';return;}
   if(!f.length){wrap.innerHTML='<div class="empty">No match.</div>';return;}
   wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
-    f.map(s=>`<tr id="sku-row-${s.id}">
-      <td><span class="badge badge-blue">${escHtml(s.code)}</span></td>
-      <td>${escHtml(s.name)}</td><td>${fmt(s.price)}</td>
+    f.map(s=>`<tr id="sku-row-${s.id}"><td><span class="badge badge-blue">${esc(s.code)}</span></td>
+      <td>${esc(s.name)}</td><td>${fmt(s.price)}</td>
       <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
-          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
-    </tr>`).join('')+`</tbody></table>
-    <div style="font-size:.78rem;color:#a0aec0;margin-top:8px">Showing ${f.length} of ${skus.length} SKUs</div>`;
+          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td></tr>`).join('')+
+    `</tbody></table><div style="font-size:.75rem;color:#a0aec0;margin-top:6px">Showing ${f.length} of ${skus.length} SKUs</div>`;
 }
 window.renderSkuTable=renderSkuTable;
 
@@ -535,42 +833,32 @@ window.addRetailer=async function(){
   const name=document.getElementById('ret-name').value.trim();
   const contact=document.getElementById('ret-contact').value.trim();
   if(!name){toast('Enter name');return;}
-  try{
-    await addDoc(collection(db,'retailers'),{name,contact});
-    document.getElementById('ret-name').value='';
-    document.getElementById('ret-contact').value='';
-    toast('Retailer saved ✅');
-  }catch(e){toast('Error: '+e.message);}
+  try{await addDoc(collection(db,'retailers'),{name,contact});document.getElementById('ret-name').value='';document.getElementById('ret-contact').value='';toast('Saved ✅');}
+  catch(e){toast('Error: '+e.message);}
 };
-window.deleteRetailer=async function(id){
-  if(!confirm('Delete retailer?'))return;
-  try{await deleteDoc(doc(db,'retailers',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}
-};
+window.deleteRetailer=async function(id){if(!confirm('Delete?'))return;try{await deleteDoc(doc(db,'retailers',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}};
 window.editRetailerRow=function(id){
-  const r=retailers.find(x=>x.id===id); if(!r)return;
-  const row=document.getElementById('ret-row-'+id); if(!row)return;
-  row.innerHTML=`
-    <td><input class="edit-input" id="ert-name-${id}" value="${escHtml(r.name)}"/></td>
-    <td><input class="edit-input" id="ert-contact-${id}" value="${escHtml(r.contact||'')}"/></td>
+  const r=retailers.find(x=>x.id===id);if(!r)return;
+  const row=document.getElementById('ret-row-'+id);if(!row)return;
+  row.innerHTML=`<td><input class="edit-input" id="ert-name-${id}" value="${esc(r.name)}"/></td>
+    <td><input class="edit-input" id="ert-contact-${id}" value="${esc(r.contact||'')}"/></td>
     <td><button class="btn btn-save" onclick="saveRetailerEdit('${id}')">Save</button>
         <button class="btn btn-cancel" style="margin-left:4px" onclick="renderRetailerTable()">Cancel</button></td>`;
 };
 window.saveRetailerEdit=async function(id){
   const name=document.getElementById('ert-name-'+id).value.trim();
   const contact=document.getElementById('ert-contact-'+id).value.trim();
-  if(!name){toast('Name required');return;}
-  try{await updateDoc(doc(db,'retailers',id),{name,contact});toast('Retailer updated ✅');}
-  catch(e){toast('Error: '+e.message);}
+  if(!name){toast('Required');return;}
+  try{await updateDoc(doc(db,'retailers',id),{name,contact});toast('Updated ✅');}catch(e){toast('Error: '+e.message);}
 };
 function renderRetailerTable(){
-  const wrap=document.getElementById('ret-table-wrap'); if(!wrap)return;
-  if(!retailers.length){wrap.innerHTML='<div class="empty">No retailers yet.</div>';return;}
-  wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Contact/Location</th><th>Actions</th></tr></thead><tbody>`+
-    retailers.map(r=>`<tr id="ret-row-${r.id}">
-      <td><b>${escHtml(r.name)}</b></td><td>${escHtml(r.contact||'—')}</td>
+  const wrap=document.getElementById('ret-table-wrap');if(!wrap)return;
+  if(!retailers.length){wrap.innerHTML='<div class="empty">No retailers.</div>';return;}
+  wrap.innerHTML=`<table><thead><tr><th>Name</th><th>Contact</th><th>Actions</th></tr></thead><tbody>`+
+    retailers.map(r=>`<tr id="ret-row-${r.id}"><td><b>${esc(r.name)}</b></td><td>${esc(r.contact||'—')}</td>
       <td><button class="btn btn-edit" onclick="editRetailerRow('${r.id}')">Edit</button>
-          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteRetailer('${r.id}')">Delete</button></td>
-    </tr>`).join('')+`</tbody></table>`;
+          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteRetailer('${r.id}')">Delete</button></td></tr>`).join('')+
+    `</tbody></table>`;
 }
 
 // ── ROUTES ────────────────────────────────────────────────────
@@ -580,10 +868,7 @@ window.addRoute=async function(){
   try{await addDoc(collection(db,'routes'),{name,retailers:[]});document.getElementById('route-name').value='';toast('Route created ✅');}
   catch(e){toast('Error: '+e.message);}
 };
-window.deleteRoute=async function(id){
-  if(!confirm('Delete route?'))return;
-  try{await deleteDoc(doc(db,'routes',id));toast('Route deleted');}catch(e){toast('Error: '+e.message);}
-};
+window.deleteRoute=async function(id){if(!confirm('Delete route?'))return;try{await deleteDoc(doc(db,'routes',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}};
 window.addRetailerToRoute=async function(routeId,retId,retName){
   const route=routes.find(r=>r.id===routeId);
   const list=[...(route?.retailers||[]),{id:retId,name:retName}];
@@ -593,82 +878,63 @@ window.addRetailerToRoute=async function(routeId,retId,retName){
 window.removeRetailerFromRoute=async function(routeId,retId){
   const route=routes.find(r=>r.id===routeId);
   const list=(route?.retailers||[]).filter(r=>r.id!==retId);
-  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});toast('Removed');}
-  catch(e){toast('Error: '+e.message);}
+  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});toast('Removed');}catch(e){toast('Error: '+e.message);}
 };
 window.onDragStart=function(e,routeId,idx){dragSrc={routeId,idx};e.dataTransfer.effectAllowed='move';};
 window.onDragOver=function(e){e.preventDefault();};
 window.onDrop=async function(e,routeId,dropIdx){
-  e.preventDefault();
-  if(!dragSrc||dragSrc.routeId!==routeId||dragSrc.idx===dropIdx)return;
-  const route=routes.find(r=>r.id===routeId);
-  const list=[...(route?.retailers||[])];
-  const [moved]=list.splice(dragSrc.idx,1);
-  list.splice(dropIdx,0,moved);
-  dragSrc=null;
+  e.preventDefault();if(!dragSrc||dragSrc.routeId!==routeId||dragSrc.idx===dropIdx)return;
+  const route=routes.find(r=>r.id===routeId);const list=[...(route?.retailers||[])];
+  const [moved]=list.splice(dragSrc.idx,1);list.splice(dropIdx,0,moved);dragSrc=null;
   try{await updateDoc(doc(db,'routes',routeId),{retailers:list});}catch(e){toast('Error');}
 };
 function renderRoutesTab(){
-  const wrap=document.getElementById('routes-list'); if(!wrap)return;
+  const wrap=document.getElementById('routes-list');if(!wrap)return;
   if(!routes.length){wrap.innerHTML='<div class="card"><div class="empty">No routes yet.</div></div>';return;}
   wrap.innerHTML='';
   routes.forEach(route=>{
     const retList=route.retailers||[];
-    const card=document.createElement('div'); card.className='card';
+    const card=document.createElement('div');card.className='card';
     card.innerHTML=`
       <div class="order-header">
-        <div><b>🗺️ ${escHtml(route.name)}</b> <span class="badge badge-blue">${retList.length} retailers</span></div>
+        <div><b>🗺️ ${esc(route.name)}</b> <span class="badge badge-blue">${retList.length} retailers</span></div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <div class="searchable-wrap" style="width:200px" id="rrp-wrap-${route.id}">
-            <button type="button" class="sd-trigger placeholder-style" style="font-size:.8rem;padding:6px 10px"
+          <div class="searchable-wrap" style="width:190px" id="rrp-wrap-${route.id}">
+            <button type="button" class="sd-trigger placeholder-style" style="font-size:.78rem;padding:6px 10px"
               onclick="openRouteRetailerPicker('${route.id}')">+ Add Retailer <span>▾</span></button>
             <div class="searchable-dropdown" id="rrp-dd-${route.id}">
               <div class="sd-search"><input placeholder="Search..." oninput="filterRouteRetailerPicker('${route.id}',this.value)" onclick="event.stopPropagation()"/></div>
               <div class="sd-options" id="rrp-opts-${route.id}"></div>
             </div>
           </div>
-          <button class="btn btn-danger" onclick="deleteRoute('${route.id}')">Delete Route</button>
+          <button class="btn btn-danger" onclick="deleteRoute('${route.id}')">Delete</button>
         </div>
       </div>
       <div class="route-retailer-list">
         ${retList.length
-          ? retList.map((r,i)=>`
-            <div class="route-ret-item" draggable="true"
+          ? retList.map((r,i)=>`<div class="route-ret-item" draggable="true"
               ondragstart="onDragStart(event,'${route.id}',${i})"
-              ondragover="onDragOver(event)"
-              ondrop="onDrop(event,'${route.id}',${i})">
-              <span class="drag-handle">⠿</span>
-              <span class="seq-badge">${i+1}</span>
-              <span style="flex:1">${escHtml(r.name)}</span>
-              <button class="btn btn-danger" style="padding:4px 10px;font-size:.75rem"
+              ondragover="onDragOver(event)" ondrop="onDrop(event,'${route.id}',${i})">
+              <span class="drag-handle">⠿</span><span class="seq-badge">${i+1}</span>
+              <span style="flex:1">${esc(r.name)}</span>
+              <button class="btn btn-danger" style="padding:3px 8px;font-size:.72rem"
                 onclick="removeRetailerFromRoute('${route.id}','${r.id}')">✕</button>
             </div>`).join('')
-          : '<div style="color:#a0aec0;font-size:.85rem;padding:8px 0">No retailers yet.</div>'
+          : '<div style="color:#a0aec0;font-size:.82rem;padding:6px 0">No retailers yet.</div>'
         }
       </div>`;
     wrap.appendChild(card);
   });
 }
-window.filterRouteRetailerPicker=function(routeId,q){
-  const opts=document.getElementById('rrp-opts-'+routeId); if(!opts)return;
-  opts.querySelectorAll('.sd-option').forEach(el=>{
-    el.style.display=(el.dataset.label||'').toLowerCase().includes(q.toLowerCase())?'':'none';
-  });
-};
 
 // ── ORDER LINES ───────────────────────────────────────────────
 window.addSkuLine=function(){
-  lineCount++;
-  const lineId=''+lineCount;
-  const key='sku-'+lineId;
-  const div=document.createElement('div');
-  div.className='sku-line'; div.id='line-'+lineId;
+  lineCount++;const lineId=''+lineCount;const key='sku-'+lineId;
+  const div=document.createElement('div');div.className='sku-line';div.id='line-'+lineId;
   div.innerHTML=`
-    <div class="fg" style="flex:3;min-width:200px">
-      <label>SKU</label>
+    <div class="fg" style="flex:3;min-width:190px"><label>SKU</label>
       <div class="searchable-wrap" id="sd-wrap-${key}">
-        <button type="button" class="sd-trigger placeholder-style" id="sd-btn-${key}"
-          onclick="toggleSD('${key}')">-- Select SKU -- <span>▾</span></button>
+        <button type="button" class="sd-trigger placeholder-style" id="sd-btn-${key}" onclick="toggleSD('${key}')">-- Select SKU -- <span>▾</span></button>
         <div class="searchable-dropdown" id="sd-dd-${key}">
           <div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD('${key}',this.value)" onclick="event.stopPropagation()"/></div>
           <div class="sd-options" id="sd-opts-${key}"></div>
@@ -676,24 +942,17 @@ window.addSkuLine=function(){
       </div>
       <input type="hidden" id="val-${key}" class="line-sku-val" value=""/>
     </div>
-    <div class="fg" style="flex:1;min-width:70px"><label>Qty</label>
-      <input type="number" class="line-qty" min="1" value="1" oninput="updateTotal()"/></div>
-    <div class="fg" style="flex:1;min-width:100px"><label>Price (₹)</label>
-      <input type="number" class="line-price" min="0" placeholder="0.00" oninput="updateTotal()"/></div>
-    <div class="fg" style="flex:2;min-width:140px"><label>Notes</label>
-      <input type="text" class="line-notes" placeholder="Optional"/></div>
-    <div style="padding-bottom:1px">
-      <button class="btn btn-danger" onclick="removeLine('${lineId}')">✕</button></div>`;
+    <div class="fg" style="flex:1;min-width:65px"><label>Qty</label><input type="number" class="line-qty" min="1" value="1" oninput="updateTotal()"/></div>
+    <div class="fg" style="flex:1;min-width:90px"><label>Price (₹)</label><input type="number" class="line-price" min="0" placeholder="0.00" oninput="updateTotal()"/></div>
+    <div class="fg" style="flex:2;min-width:130px"><label>Notes</label><input type="text" class="line-notes" placeholder="Optional"/></div>
+    <div style="padding-bottom:1px"><button class="btn btn-danger" onclick="removeLine('${lineId}')">✕</button></div>`;
   document.getElementById('sku-lines').appendChild(div);
-  buildSkuOpts(lineId);
-  updateTotal();
+  buildSkuOpts(lineId);updateTotal();
 };
-window.removeLine=function(lineId){ document.getElementById('line-'+lineId)?.remove(); updateTotal(); };
+window.removeLine=function(lineId){document.getElementById('line-'+lineId)?.remove();updateTotal();};
 window.updateTotal=function(){
   let t=0;
-  document.querySelectorAll('.sku-line').forEach(l=>{
-    t+=(parseFloat(l.querySelector('.line-qty').value)||0)*(parseFloat(l.querySelector('.line-price').value)||0);
-  });
+  document.querySelectorAll('.sku-line').forEach(l=>{t+=(parseFloat(l.querySelector('.line-qty').value)||0)*(parseFloat(l.querySelector('.line-price').value)||0);});
   document.getElementById('running-total').textContent='Order Total: '+fmt(t);
 };
 
@@ -703,7 +962,7 @@ window.saveOrder=async function(){
   const routeId=document.getElementById('val-order-route').value;
   const date=document.getElementById('order-date').value||getISTDateStr();
   if(!retId){toast('Select a retailer');return;}
-  const lines=[]; let valid=true;
+  const lines=[];let valid=true;
   document.querySelectorAll('.sku-line').forEach(line=>{
     const skuId=line.querySelector('.line-sku-val').value;
     if(!skuId){valid=false;return;}
@@ -713,211 +972,172 @@ window.saveOrder=async function(){
     const sku=skus.find(s=>s.id===skuId);
     lines.push({skuId,skuCode:sku.code,skuName:sku.name,qty,price,notes,subtotal:qty*price});
   });
-  if(!valid){toast('Select a SKU for each line');return;}
+  if(!valid){toast('Select SKU for each line');return;}
   if(!lines.length){toast('Add at least one SKU line');return;}
   const retailer=retailers.find(r=>r.id===retId);
   const route=routes.find(r=>r.id===routeId);
   const total=lines.reduce((s,l)=>s+l.subtotal,0);
   try{
     await addDoc(collection(db,'orders'),{
-      retailerId:retId, retailerName:retailer.name,
-      routeId:routeId||'', routeName:route?.name||'',
-      date, lines, total, archived:false,
-      createdAt:new Date().toISOString()
+      retailerId:retId,retailerName:retailer.name,
+      routeId:routeId||'',routeName:route?.name||'',
+      date,lines,total,archived:false,createdAt:new Date().toISOString()
     });
-    // reset retailer only; keep route if locked
     document.getElementById('val-order-retailer').value='';
     const rb=document.getElementById('sd-btn-order-retailer');
     if(rb){rb.innerHTML='-- Select Retailer -- <span>▾</span>';rb.classList.add('placeholder-style');}
     document.getElementById('sku-lines').innerHTML='';
-    lineCount=0; updateTotal();
-    toast('Order saved! ✅');
+    lineCount=0;updateTotal();toast('Order saved! ✅');
   }catch(e){toast('Error: '+e.message);}
 };
 
-// ── RENDER HISTORY ────────────────────────────────────────────
-function renderHistory(){
-  const wrap=document.getElementById('orders-list');
-  const stats=document.getElementById('summary-stats');
-  if(!orders.length){
-    wrap.innerHTML='<div class="card"><div class="empty">No orders today yet.</div></div>';
-    stats.innerHTML=''; return;
-  }
-  const totalAmt=orders.reduce((s,o)=>s+o.total,0);
-  stats.innerHTML=`
-    <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Today's Orders</div></div>
-    <div class="stat"><div class="stat-val">${[...new Set(orders.map(o=>o.retailerName))].length}</div><div class="stat-lbl">Retailers</div></div>
-    <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Today's Total</div></div>`;
-  wrap.innerHTML='';
-  const exportDiv=document.createElement('div');
-  exportDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:16px';
-  exportDiv.innerHTML=`<button class="btn btn-pdf" id="export-all-btn">📄 Export All Orders PDF</button>`;
-  wrap.appendChild(exportDiv);
-  document.getElementById('export-all-btn').addEventListener('click', exportAllPDF);
-  const sorted=[...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
-  const grouped={};
-  sorted.forEach(o=>{if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);});
-  Object.entries(grouped).forEach(([rName,rOrders])=>{
-    const sec=document.createElement('div'); sec.className='retailer-section';
-    sec.innerHTML=`<div class="retailer-title">🏪 ${escHtml(rName)}
-      <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
-    rOrders.forEach(o=>sec.appendChild(buildOrderCard(o,false)));
-    wrap.appendChild(sec);
-  });
-}
-
-// ── RENDER ARCHIVES ───────────────────────────────────────────
-function renderArchives(){
-  const wrap=document.getElementById('archives-list'); if(!wrap)return;
-  if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders yet.</div></div>';return;}
-  const byDate={};
-  archivedOrders.forEach(o=>{if(!byDate[o.date])byDate[o.date]=[];byDate[o.date].push(o);});
-  wrap.innerHTML='';
-  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
-    const dayOrders=byDate[date];
-    const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
-    const sec=document.createElement('div'); sec.className='retailer-section';
-    sec.innerHTML=`<div class="retailer-title">📅 ${date}
-      <span class="badge badge-blue">${dayOrders.length} orders</span>
-      <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
-    dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true)));
-    wrap.appendChild(sec);
-  });
-}
-
-function buildOrderCard(o,isArchive){
-  const card=document.createElement('div'); card.className='card';
-  const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-  card.innerHTML=`
-    <div class="order-header">
-      <div>
-        <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
-        ${o.routeName?`<span class="badge" style="background:#faf5ff;color:#805ad5;margin-left:6px">🗺️ ${escHtml(o.routeName)}</span>`:''}
-        <div class="order-meta">📅 ${o.date} | ${dateDisplay}</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-pdf single-pdf-btn">📄 PDF</button>
-        ${!isArchive?`<button class="btn btn-danger del-order-btn">Delete</button>`:''}
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-      <table>
-        <thead><tr><th>SKU</th><th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
-        <tbody>${o.lines.map(l=>`<tr>
-          <td><span class="badge badge-blue">${escHtml(l.skuCode)}</span></td>
-          <td>${escHtml(l.skuName)}</td><td>${l.qty}</td>
-          <td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${escHtml(l.notes||'—')}</td>
-        </tr>`).join('')}</tbody>
-      </table>
-    </div>
-    <div style="text-align:right;margin-top:10px" class="total">Total: ${fmt(o.total)}</div>`;
-  // attach events via JS (no inline onclick with closure data)
-  card.querySelector('.single-pdf-btn').addEventListener('click',()=>exportSinglePDF(o,isArchive));
-  if(!isArchive){
-    card.querySelector('.del-order-btn').addEventListener('click',()=>deleteOrder(o.id));
-  }
-  return card;
-}
-async function deleteOrder(id){
-  if(!confirm('Delete this order?'))return;
-  try{await deleteDoc(doc(db,'orders',id));toast('Order deleted');}catch(e){toast('Error: '+e.message);}
-}
-
 // ── PDF HELPERS ───────────────────────────────────────────────
 function pdfHeader(doc2,pw,title){
-  doc2.setFillColor(43,108,176); doc2.rect(0,0,pw,26,'F');
-  doc2.setTextColor(255,255,255); doc2.setFontSize(13); doc2.setFont('helvetica','bold');
-  doc2.text(title,14,11);
-  doc2.setFontSize(8); doc2.setFont('helvetica','normal');
-  doc2.text('Retailer Order Management System',14,19);
+  doc2.setFillColor(43,108,176);doc2.rect(0,0,pw,24,'F');
+  doc2.setTextColor(255,255,255);doc2.setFontSize(12);doc2.setFont('helvetica','bold');
+  doc2.text(title,13,10);
+  doc2.setFontSize(7.5);doc2.setFont('helvetica','normal');
+  doc2.text('Retailer Order Management System',13,18);
   doc2.setTextColor(44,62,80);
 }
-function pdfTableRows(doc2,m,pw,startY,lines){
+function pdfTableRows(doc2,m,pw,startY,lines,hasPacked){
   let y=startY;
-  doc2.setFillColor(240,244,248); doc2.rect(m,y-4,pw-2*m,8,'F');
-  doc2.setFont('helvetica','bold'); doc2.setFontSize(7.5); doc2.setTextColor(80,80,80);
-  const c=[m,46,98,122,146,168];
-  ['SKU','Product','Qty','Price','Subtotal','Notes'].forEach((h,i)=>doc2.text(h,c[i],y));
-  y+=6; doc2.setFont('helvetica','normal'); doc2.setFontSize(7);
+  doc2.setFillColor(240,244,248);doc2.rect(m,y-4,pw-2*m,8,'F');
+  doc2.setFont('helvetica','bold');doc2.setFontSize(7);doc2.setTextColor(80,80,80);
+  const c=hasPacked?[m,43,90,110,132,155,175]:[m,43,95,118,142,165];
+  const hdrs=hasPacked?['SKU','Product','Ordered','Packed','Price','Subtotal','Notes']:['SKU','Product','Qty','Price','Subtotal','Notes'];
+  hdrs.forEach((h,i)=>doc2.text(h,c[i],y));
+  y+=6;doc2.setFont('helvetica','normal');doc2.setFontSize(6.5);
   lines.forEach((l,i)=>{
-    if(y>278){doc2.addPage();y=16;}
+    if(y>278){doc2.addPage();y=14;}
     if(i%2===0){doc2.setFillColor(251,252,255);doc2.rect(m,y-3,pw-2*m,7,'F');}
     doc2.setTextColor(44,62,80);
     doc2.text(String(l.skuCode||''),c[0],y);
-    doc2.text(doc2.splitTextToSize(String(l.skuName||''),46),c[1],y);
-    doc2.text(String(l.qty),c[2],y);
-    doc2.text(fmt(l.price),c[3],y);
-    doc2.text(fmt(l.subtotal),c[4],y);
-    doc2.text(doc2.splitTextToSize(String(l.notes||'—'),22),c[5],y);
+    doc2.text(doc2.splitTextToSize(String(l.skuName||''),42),c[1],y);
+    if(hasPacked){
+      doc2.text(String(l.qty),c[2],y);
+      doc2.text(l.packedQty!=null?String(l.packedQty):'—',c[3],y);
+      doc2.text(fmt(l.price),c[4],y);doc2.text(fmt(l.subtotal),c[5],y);
+      doc2.text(doc2.splitTextToSize(String(l.notes||'—'),20),c[6],y);
+    } else {
+      doc2.text(String(l.qty),c[2],y);
+      doc2.text(fmt(l.price),c[3],y);doc2.text(fmt(l.subtotal),c[4],y);
+      doc2.text(doc2.splitTextToSize(String(l.notes||'—'),22),c[5],y);
+    }
     y+=7;
   });
   return y;
 }
 function pdfFooter(doc2,pw){
-  doc2.setFontSize(7); doc2.setTextColor(180,180,180); doc2.setFont('helvetica','normal');
-  doc2.text('Generated by Retailer Order Management App',pw/2,290,{align:'center'});
+  doc2.setFontSize(6.5);doc2.setTextColor(180,180,180);doc2.setFont('helvetica','normal');
+  doc2.text('Generated by Retailer Order Management App',pw/2,291,{align:'center'});
 }
-
-// ── SINGLE PDF ────────────────────────────────────────────────
 function exportSinglePDF(o,isArchive){
-  if(!o){toast('Order not found');return;}
-  const { jsPDF } = window.jspdf;
-  const doc2=new jsPDF(), m=14, pw=210;
+  const {jsPDF}=window.jspdf;
+  const doc2=new jsPDF(),m=13,pw=210;
   pdfHeader(doc2,pw,'ORDER INVOICE');
-  doc2.setFontSize(9); doc2.setTextColor(44,62,80);
-  const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-  [['Retailer:',o.retailerName||''],['Route:',o.routeName||'—'],
-   ['Order ID:','#'+o.id.substr(0,6).toUpperCase()],['Date:',o.date||''],['Created:',dateDisplay]]
-    .forEach(([k,v],i)=>{
-      doc2.setFont('helvetica','bold'); doc2.text(k,m,34+i*7);
-      doc2.setFont('helvetica','normal'); doc2.text(String(v),52,34+i*7);
-    });
-  doc2.setDrawColor(220,220,220); doc2.line(m,70,pw-m,70);
-  let y=pdfTableRows(doc2,m,pw,78,o.lines);
-  doc2.setDrawColor(220,220,220); doc2.line(m,y,pw-m,y); y+=7;
-  doc2.setFont('helvetica','bold'); doc2.setFontSize(10); doc2.setTextColor(43,108,176);
+  doc2.setFontSize(8.5);doc2.setTextColor(44,62,80);
+  const dd=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
+  [['Retailer:',o.retailerName],['Route:',o.routeName||'—'],['Order ID:','#'+o.id.substr(0,6).toUpperCase()],['Date:',o.date],['Created:',dd]]
+    .forEach(([k,v],i)=>{doc2.setFont('helvetica','bold');doc2.text(k,m,31+i*7);doc2.setFont('helvetica','normal');doc2.text(String(v),50,31+i*7);});
+  doc2.setDrawColor(220,220,220);doc2.line(m,67,pw-m,67);
+  const pDoc=getPackingDoc(o.retailerId);
+  const lines=o.lines.map(l=>{
+    const pi=pDoc?.items?.find(i=>i.skuId===l.skuId);
+    return {...l,packedQty:pDoc?.confirmed&&pi?.packed?pi.packedQty:null};
+  });
+  let y=pdfTableRows(doc2,m,pw,75,lines,true);
+  doc2.line(m,y,pw-m,y);y+=6;
+  doc2.setFont('helvetica','bold');doc2.setFontSize(9);doc2.setTextColor(43,108,176);
   doc2.text('TOTAL: '+fmt(o.total),pw-m,y,{align:'right'});
   pdfFooter(doc2,pw);
   doc2.save('Order_'+String(o.retailerName||'').replace(/\s+/g,'_')+'_'+o.date+'.pdf');
   toast('PDF downloaded!');
 }
-
-// ── ALL ORDERS PDF ────────────────────────────────────────────
 function exportAllPDF(){
-  if(!orders.length){toast('No orders to export');return;}
-  const { jsPDF } = window.jspdf;
+  if(!orders.length){toast('No orders');return;}
+  const {jsPDF}=window.jspdf;
   const sorted=[...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
-  const doc2=new jsPDF(), m=14, pw=210;
+  const doc2=new jsPDF(),m=13,pw=210;
   pdfHeader(doc2,pw,'ALL ORDERS — '+getISTDateStr());
-  const grandTotal=sorted.reduce((s,o)=>s+o.total,0);
-  doc2.setFontSize(8.5); doc2.setFont('helvetica','normal'); doc2.setTextColor(44,62,80);
-  doc2.text('Total Orders: '+sorted.length+'   |   Grand Total: '+fmt(grandTotal),m,32);
-  doc2.setDrawColor(220,220,220); doc2.line(m,36,pw-m,36);
-  let y=43;
+  const grand=sorted.reduce((s,o)=>s+o.total,0);
+  doc2.setFontSize(8);doc2.setFont('helvetica','normal');doc2.setTextColor(44,62,80);
+  doc2.text('Total: '+sorted.length+' orders   Grand Total: '+fmt(grand),m,30);
+  doc2.setDrawColor(220,220,220);doc2.line(m,34,pw-m,34);
+  let y=41;
   sorted.forEach((o,idx)=>{
-    if(y>262){doc2.addPage();y=16;}
-    doc2.setFillColor(235,244,255); doc2.rect(m,y-4,pw-2*m,9,'F');
-    doc2.setFont('helvetica','bold'); doc2.setFontSize(9); doc2.setTextColor(43,108,176);
-    doc2.text((idx+1)+'. '+String(o.retailerName||'')+(o.routeName?' ['+o.routeName+']':''),m+1,y+1);
-    doc2.setFont('helvetica','normal'); doc2.setFontSize(7); doc2.setTextColor(120,120,120);
+    if(y>262){doc2.addPage();y=14;}
+    doc2.setFillColor(235,244,255);doc2.rect(m,y-4,pw-2*m,8,'F');
+    doc2.setFont('helvetica','bold');doc2.setFontSize(8.5);doc2.setTextColor(43,108,176);
+    doc2.text((idx+1)+'. '+String(o.retailerName||'')+(o.routeName?' ['+o.routeName+']':''),m+1,y);
+    doc2.setFont('helvetica','normal');doc2.setFontSize(6.5);doc2.setTextColor(120,120,120);
     const dd=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-    doc2.text('#'+o.id.substr(0,6).toUpperCase()+'  ·  '+o.date+'  ·  '+dd,pw-m,y+1,{align:'right'});
-    y+=11;
-    y=pdfTableRows(doc2,m,pw,y,o.lines);
-    doc2.setFont('helvetica','bold'); doc2.setFontSize(8.5); doc2.setTextColor(43,108,176);
-    doc2.text('Order Total: '+fmt(o.total),pw-m,y+1,{align:'right'});
-    y+=8;
-    if(idx<sorted.length-1){
-      doc2.setDrawColor(230,230,230); doc2.line(m,y,pw-m,y); y+=6;
-    }
+    doc2.text('#'+o.id.substr(0,6).toUpperCase()+'  ·  '+o.date+'  ·  '+dd,pw-m,y,{align:'right'});
+    y+=9;
+    const pDoc=getPackingDoc(o.retailerId);
+    const lines=o.lines.map(l=>{const pi=pDoc?.items?.find(i=>i.skuId===l.skuId);return {...l,packedQty:pDoc?.confirmed&&pi?.packed?pi.packedQty:null};});
+    y=pdfTableRows(doc2,m,pw,y,lines,true);
+    doc2.setFont('helvetica','bold');doc2.setFontSize(8);doc2.setTextColor(43,108,176);
+    doc2.text('Order Total: '+fmt(o.total),pw-m,y,{align:'right'});
+    y+=7;
+    if(idx<sorted.length-1){doc2.setDrawColor(230,230,230);doc2.line(m,y,pw-m,y);y+=5;}
   });
-  if(y>272){doc2.addPage();y=20;}
-  doc2.setFillColor(43,108,176); doc2.rect(m,y,pw-2*m,10,'F');
-  doc2.setFont('helvetica','bold'); doc2.setFontSize(10); doc2.setTextColor(255,255,255);
-  doc2.text('GRAND TOTAL: '+fmt(grandTotal),pw-m-2,y+7,{align:'right'});
+  if(y>272){doc2.addPage();y=18;}
+  doc2.setFillColor(43,108,176);doc2.rect(m,y,pw-2*m,9,'F');
+  doc2.setFont('helvetica','bold');doc2.setFontSize(9);doc2.setTextColor(255,255,255);
+  doc2.text('GRAND TOTAL: '+fmt(grand),pw-m-2,y+6,{align:'right'});
   pdfFooter(doc2,pw);
   doc2.save('All_Orders_'+getISTDateStr()+'.pdf');
-  toast('All orders PDF downloaded ✅');
+  toast('PDF downloaded ✅');
+}
+function exportFinalBillPDF(confirmed){
+  const {jsPDF}=window.jspdf;
+  const doc2=new jsPDF(),m=13,pw=210;
+  pdfHeader(doc2,pw,'FINAL BILL — '+getISTDateStr());
+  const grand=confirmed.reduce((s,p)=>s+p.items.filter(i=>i.packed).reduce((ss,i)=>ss+(i.packedQty*i.price),0),0);
+  doc2.setFontSize(8);doc2.setFont('helvetica','normal');doc2.setTextColor(44,62,80);
+  doc2.text('Outlets: '+confirmed.length+'   Grand Total: '+fmt(grand),m,30);
+  doc2.setDrawColor(220,220,220);doc2.line(m,34,pw-m,34);
+  let y=41;
+  confirmed.forEach((p,idx)=>{
+    const packedItems=p.items.filter(i=>i.packed);
+    const outletTotal=packedItems.reduce((s,i)=>s+(i.packedQty*i.price),0);
+    if(y>262){doc2.addPage();y=14;}
+    doc2.setFillColor(240,255,244);doc2.rect(m,y-4,pw-2*m,8,'F');
+    doc2.setFont('helvetica','bold');doc2.setFontSize(8.5);doc2.setTextColor(39,103,73);
+    doc2.text((idx+1)+'. '+String(p.retailerName||'')+(p.routeName?' ['+p.routeName+']':''),m+1,y);
+    doc2.setFont('helvetica','normal');doc2.setFontSize(6.5);doc2.setTextColor(120,120,120);
+    doc2.text(fmt(outletTotal),pw-m,y,{align:'right'});
+    y+=9;
+    // bill table
+    doc2.setFillColor(240,244,248);doc2.rect(m,y-4,pw-2*m,7,'F');
+    doc2.setFont('helvetica','bold');doc2.setFontSize(7);doc2.setTextColor(80,80,80);
+    const c=[m,55,130,155,178];
+    ['SKU','Product','Packed Qty','Price','Amount'].forEach((h,i)=>doc2.text(h,c[i],y));
+    y+=6;doc2.setFont('helvetica','normal');doc2.setFontSize(6.5);
+    packedItems.forEach((item,i)=>{
+      if(y>278){doc2.addPage();y=14;}
+      if(i%2===0){doc2.setFillColor(251,255,252);doc2.rect(m,y-3,pw-2*m,7,'F');}
+      doc2.setTextColor(44,62,80);
+      doc2.text(String(item.skuCode||''),c[0],y);
+      doc2.text(doc2.splitTextToSize(String(item.skuName||''),68),c[1],y);
+      doc2.text(String(item.packedQty),c[2],y);
+      doc2.text(fmt(item.price),c[3],y);
+      doc2.text(fmt(item.packedQty*item.price),c[4],y);
+      y+=7;
+    });
+    doc2.setFont('helvetica','bold');doc2.setFontSize(8);doc2.setTextColor(39,103,73);
+    doc2.text('Outlet Total: '+fmt(outletTotal),pw-m,y,{align:'right'});
+    y+=8;
+    if(idx<confirmed.length-1){doc2.setDrawColor(220,220,220);doc2.line(m,y,pw-m,y);y+=5;}
+  });
+  if(y>272){doc2.addPage();y=18;}
+  doc2.setFillColor(39,103,73);doc2.rect(m,y,pw-2*m,9,'F');
+  doc2.setFont('helvetica','bold');doc2.setFontSize(9);doc2.setTextColor(255,255,255);
+  doc2.text('GRAND TOTAL: '+fmt(grand),pw-m-2,y+6,{align:'right'});
+  pdfFooter(doc2,pw);
+  doc2.save('Final_Bill_'+getISTDateStr()+'.pdf');
+  toast('Final Bill PDF downloaded ✅');
 }
 
 // ── INIT ──────────────────────────────────────────────────────
@@ -928,7 +1148,8 @@ applyLockUI();
 initListeners();
 scheduleMidnightArchive();
 scheduleLockReset();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+window.toggleOutletBody=window.toggleOutletBody;
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
 </html>
