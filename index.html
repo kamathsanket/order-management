@@ -123,9 +123,9 @@ tr:last-child td{border-bottom:none}
 </header>
 <div class="tabs">
   <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 Order</div>
-  <div class="tab" data-tab="history" onclick="switchTab('history')">📋 History</div>
   <div class="tab" data-tab="packing" onclick="switchTab('packing')">📦 Packing</div>
   <div class="tab" data-tab="finalbill" onclick="switchTab('finalbill')">🧾 Final Bill</div>
+  <div class="tab" data-tab="history" onclick="switchTab('history')">📋 History</div>
   <div class="tab" data-tab="archives" onclick="switchTab('archives')">🗂️ Archives</div>
   <div class="tab" data-tab="routes" onclick="switchTab('routes')">🗺️ Routes</div>
   <div class="tab" data-tab="skus" onclick="switchTab('skus')">🏷️ SKUs</div>
@@ -433,7 +433,7 @@ window.filterRouteRetailerPicker=function(routeId,q){
 };
 
 // ── TABS ──────────────────────────────────────────────────────
-const TABS=['orders','history','packing','finalbill','archives','routes','skus','retailers'];
+const TABS=['orders','packing','finalbill','history','archives','routes','skus','retailers'];
 window.switchTab=function(t){
   TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
@@ -532,7 +532,7 @@ function renderPacking(){
         </div>
         <span style="color:#a0aec0;font-size:1.1rem">▾</span>
       </div>
-      <div class="outlet-body" id="pack-body-${outlet.retailerId}">
+      <div class="outlet-body${openOutlets.has(outlet.retailerId)?' open':''}" id="pack-body-${outlet.retailerId}">
         <div id="pack-items-${outlet.retailerId}"></div>
         ${!confirmed?`<button class="btn-confirm" onclick="confirmPacking('${outlet.retailerId}','${esc(outlet.retailerName)}')">✅ Confirm Packing</button>`
           :'<div style="text-align:center;color:#38a169;font-weight:600;padding:8px">✅ Packing Confirmed</div>'}
@@ -552,6 +552,7 @@ function renderPackItems(outlet, pDoc, confirmed){
     div.innerHTML=`
       <input type="checkbox" class="pack-checkbox" id="chk-${outlet.retailerId}-${sku.skuId}"
         ${isTicked?'checked':''} ${confirmed?'disabled':''}
+        onclick="event.stopPropagation()"
         onchange="onPackTick('${outlet.retailerId}','${sku.skuId}')"/>
       <div style="flex:1">
         <div class="pack-sku-name${!isTicked&&confirmed?' unavailable':''}">${esc(sku.skuCode)} — ${esc(sku.skuName)}</div>
@@ -563,9 +564,19 @@ function renderPackItems(outlet, pDoc, confirmed){
     wrap.appendChild(div);
   });
 }
+// Track which outlet bodies are open - persist across re-renders
+const openOutlets=new Set();
+
 window.toggleOutletBody=function(id){
   const body=document.getElementById(id);if(!body)return;
-  body.classList.toggle('open');
+  const retailerId=id.replace('pack-body-','').replace('bill-body-','');
+  if(body.classList.contains('open')){
+    body.classList.remove('open');
+    openOutlets.delete(retailerId);
+  } else {
+    body.classList.add('open');
+    openOutlets.add(retailerId);
+  }
 };
 window.onPackTick=async function(retailerId,skuId){
   await autoSavePacking(retailerId);
