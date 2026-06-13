@@ -24,7 +24,7 @@ header h1{font-size:1.2rem;font-weight:700}
 .card h2{font-size:.95rem;font-weight:700;margin-bottom:14px;color:#2d3748}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
 input,select{padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:.88rem;width:100%;background:#fff;outline:none;transition:.2s}
-input:focus{border-color:#3182ce}
+input:focus,select:focus{border-color:#3182ce}
 .fg{display:flex;flex-direction:column;gap:4px}
 .fg label{font-size:.72rem;font-weight:600;color:#718096;text-transform:uppercase}
 .btn{padding:7px 14px;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:.8rem;transition:.2s;white-space:nowrap}
@@ -48,6 +48,7 @@ tr:last-child td{border-bottom:none}
 .badge-green{background:#f0fff4;color:#276749}
 .badge-orange{background:#fffaf0;color:#c05621}
 .badge-purple{background:#faf5ff;color:#6b46c1}
+.badge-teal{background:#e6fffa;color:#234e52}
 .empty{text-align:center;padding:36px;color:#a0aec0;font-size:.9rem}
 .sku-line{display:flex;gap:8px;align-items:flex-end;background:#f7fafc;border-radius:8px;padding:10px;margin-bottom:8px;flex-wrap:wrap}
 .order-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px}
@@ -66,7 +67,7 @@ tr:last-child td{border-bottom:none}
 #loader-msg{color:#4a5568;font-weight:600;font-size:.9rem}
 /* Searchable dropdown */
 .searchable-wrap{position:relative;width:100%}
-.searchable-dropdown{position:absolute;top:calc(100%+2px);left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:500;max-height:200px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.13);display:none}
+.searchable-dropdown{position:absolute;top:calc(100% + 2px);left:0;right:0;background:#fff;border:1.5px solid #3182ce;border-radius:8px;z-index:500;max-height:220px;overflow-y:auto;box-shadow:0 4px 16px rgba(0,0,0,.13);display:none}
 .searchable-dropdown.open{display:block}
 .sd-search{padding:7px 9px;border-bottom:1px solid #e2e8f0;position:sticky;top:0;background:#fff;z-index:1}
 .sd-search input{border:1.5px solid #e2e8f0;border-radius:6px;padding:5px 9px;font-size:.82rem;width:100%}
@@ -81,13 +82,6 @@ tr:last-child td{border-bottom:none}
 .route-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#2b6cb0}
 .route-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#3182ce;cursor:pointer}
 .lock-info{font-size:.78rem;color:#4299e1;flex:1}
-/* Routes */
-.route-retailer-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
-.route-ret-item{display:flex;align-items:center;gap:9px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 11px;cursor:grab;transition:.15s}
-.route-ret-item:hover{border-color:#bee3f8;background:#ebf8ff}
-.drag-handle{color:#cbd5e0;font-size:1rem}
-.seq-badge{background:#3182ce;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
-.edit-input{padding:5px 7px;border:1.5px solid #3182ce;border-radius:6px;font-size:.82rem;width:100%}
 /* Packing */
 .outlet-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden}
 .outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;transition:.15s;user-select:none}
@@ -111,6 +105,23 @@ tr:last-child td{border-bottom:none}
 .bill-outlet-header:hover{background:#e6ffed}
 .bill-outlet-body{padding:0 18px 16px;display:none}
 .bill-outlet-body.open{display:block}
+/* SKU Groups */
+.group-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:12px;overflow:hidden}
+.group-header{display:flex;justify-content:space-between;align-items:center;padding:13px 16px;cursor:pointer;transition:.15s;background:#f7fafc;border-left:4px solid #3182ce}
+.group-header:hover{background:#ebf8ff}
+.group-body{padding:0 16px 14px;display:none}
+.group-body.open{display:block}
+/* Route list */
+.route-retailer-list{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.route-ret-item{display:flex;align-items:center;gap:9px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:8px;padding:7px 11px;cursor:grab;transition:.15s}
+.route-ret-item:hover{border-color:#bee3f8;background:#ebf8ff}
+.drag-handle{color:#cbd5e0;font-size:1rem}
+.seq-badge{background:#3182ce;color:#fff;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
+.edit-input{padding:5px 7px;border:1.5px solid #3182ce;border-radius:6px;font-size:.82rem;width:100%}
+/* SKU lock bar */
+.sku-lock-bar{background:#f0fff4;border:1.5px solid #9ae6b4;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.sku-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#276749}
+.sku-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#38a169;cursor:pointer}
 @media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}.tab{padding:9px 8px;font-size:.72rem}}
 </style>
 </head>
@@ -179,11 +190,6 @@ tr:last-child td{border-bottom:none}
       <button class="btn btn-success" onclick="saveOrder()">✅ Save Order</button>
     </div>
   </div>
-  <!-- HISTORY -->
-  <div id="tab-history" style="display:none">
-    <div class="summary-row" id="summary-stats"></div>
-    <div id="orders-list"></div>
-  </div>
   <!-- PACKING -->
   <div id="tab-packing" style="display:none">
     <div class="card" style="background:linear-gradient(135deg,#fffaf0,#fff);border-left:4px solid #ed8936">
@@ -200,6 +206,11 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="summary-row" id="bill-stats"></div>
     <div id="finalbill-list"></div>
+  </div>
+  <!-- HISTORY -->
+  <div id="tab-history" style="display:none">
+    <div class="summary-row" id="summary-stats"></div>
+    <div id="orders-list"></div>
   </div>
   <!-- ARCHIVES -->
   <div id="tab-archives" style="display:none">
@@ -222,17 +233,49 @@ tr:last-child td{border-bottom:none}
   </div>
   <!-- SKUs -->
   <div id="tab-skus" style="display:none">
+    <!-- Add Group -->
     <div class="card">
-      <h2>Add New SKU</h2>
+      <h2>➕ Add New SKU Group</h2>
       <div class="row">
-        <div class="fg" style="flex:2;min-width:120px"><label>SKU Code</label><input id="sku-code" placeholder="SKU-001"/></div>
-        <div class="fg" style="flex:3;min-width:160px"><label>Product Name</label><input id="sku-name" placeholder="Widget 500ml"/></div>
+        <div class="fg" style="flex:1;min-width:110px"><label>Group Code</label><input id="grp-code" placeholder="e.g. AMUL"/></div>
+        <div class="fg" style="flex:2;min-width:160px"><label>Group Name</label><input id="grp-name" placeholder="e.g. Amul Products"/></div>
+        <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addGroup()">Add Group</button></div>
+      </div>
+    </div>
+    <!-- Groups list -->
+    <div class="card">
+      <h2>📂 SKU Groups</h2>
+      <div id="groups-list"></div>
+    </div>
+    <!-- Add SKU -->
+    <div class="card">
+      <h2>➕ Add New SKU</h2>
+      <!-- SKU lock bar -->
+      <div class="sku-lock-bar">
+        <label><input type="checkbox" id="sku-lock-chk" onchange="onSkuLockChange()"/> Lock SKU Group for today</label>
+        <span class="lock-info" id="sku-lock-info" style="color:#276749">Select a group below, then tick to lock it for today's entries.</span>
+      </div>
+      <div class="row">
+        <div class="fg" style="flex:1;min-width:110px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. A-001"/></div>
+        <div class="fg" style="flex:2;min-width:160px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Amul Butter 500g"/></div>
         <div class="fg" style="flex:1;min-width:90px"><label>Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
+        <div class="fg" style="flex:1;min-width:130px">
+          <label>Group</label>
+          <div class="searchable-wrap" id="sd-wrap-sku-group">
+            <button type="button" class="sd-trigger placeholder-style" id="sd-btn-sku-group" onclick="toggleSD('sku-group')">-- Select Group -- <span>▾</span></button>
+            <div class="searchable-dropdown" id="sd-dd-sku-group">
+              <div class="sd-search"><input placeholder="Search group..." oninput="filterSD('sku-group',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="sd-opts-sku-group"></div>
+            </div>
+          </div>
+          <input type="hidden" id="val-sku-group" value=""/>
+        </div>
         <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="addSku()">Add SKU</button></div>
       </div>
     </div>
+    <!-- All SKUs (ungrouped view) -->
     <div class="card">
-      <h2>SKU List</h2>
+      <h2>🏷️ All SKUs</h2>
       <div class="row" style="margin-bottom:10px">
         <div class="fg" style="flex:1"><label>🔍 Search</label><input id="sku-search" placeholder="Search by code or name..." oninput="renderSkuTable()"/></div>
       </div>
@@ -270,57 +313,48 @@ const firebaseConfig = {
   messagingSenderId: "427212874906",
   appId: "1:427212874906:web:f4959bc51d11ecb2e4ab23"
 };
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
-let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[], packingDocs=[];
+let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[], packingDocs=[], groups=[];
 let lineCount=0, dragSrc=null;
 const LOCK_KEY='routeLock_v2';
+const SKU_LOCK_KEY='skuGroupLock_v1';
+const openOutlets=new Set();
+const openGroups=new Set();
 
 // ── IST ───────────────────────────────────────────────────────
-function getISTDateStr(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'}); }
+function getISTDateStr(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});}
 function msToISTMidnight(){
   const now=new Date();
   const istNow=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Kolkata'}));
-  const mdn=new Date(istNow); mdn.setHours(24,0,0,0);
-  return mdn-istNow;
+  const mdn=new Date(istNow);mdn.setHours(24,0,0,0);return mdn-istNow;
 }
 
 // ── UTILS ─────────────────────────────────────────────────────
 const fmt=n=>'₹'+parseFloat(n||0).toFixed(2);
 const esc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-function toast(msg){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2800);
-}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2800);}
 function showLoader(m){document.getElementById('loader-msg').textContent=m;document.getElementById('global-loader').style.display='flex';}
 function hideLoader(){document.getElementById('global-loader').style.display='none';}
 
 // ── ROUTE LOCK ────────────────────────────────────────────────
 function saveLock(id,name){localStorage.setItem(LOCK_KEY,JSON.stringify({id,name,date:getISTDateStr()}));}
 function clearLock(){localStorage.removeItem(LOCK_KEY);}
-function getLock(){
-  try{const d=JSON.parse(localStorage.getItem(LOCK_KEY)||'null');if(!d||d.date!==getISTDateStr()){clearLock();return null;}return d;}
-  catch{return null;}
-}
+function getLock(){try{const d=JSON.parse(localStorage.getItem(LOCK_KEY)||'null');if(!d||d.date!==getISTDateStr()){clearLock();return null;}return d;}catch{return null;}}
 function applyLockUI(){
   const lock=getLock();
   const chk=document.getElementById('route-lock-chk');
   const info=document.getElementById('route-lock-info');
   const btn=document.getElementById('sd-btn-order-route');
   if(lock){
-    chk.checked=true;
-    document.getElementById('val-order-route').value=lock.id;
-    btn.innerHTML=esc(lock.name)+' <span>▾</span>';
-    btn.classList.remove('placeholder-style');
-    btn.style.opacity='.65'; btn.style.pointerEvents='none';
-    info.textContent='🔒 Locked till midnight. Uncheck to change.';
-    buildRetailerOpts(lock.id);
+    chk.checked=true;document.getElementById('val-order-route').value=lock.id;
+    btn.innerHTML=esc(lock.name)+' <span>▾</span>';btn.classList.remove('placeholder-style');
+    btn.style.opacity='.65';btn.style.pointerEvents='none';
+    info.textContent='🔒 Locked till midnight. Uncheck to change.';buildRetailerOpts(lock.id);
   } else {
-    chk.checked=false;
-    btn.style.opacity='1'; btn.style.pointerEvents='';
+    chk.checked=false;btn.style.opacity='1';btn.style.pointerEvents='';
     info.textContent='Select a route, then tick to lock till midnight.';
   }
 }
@@ -332,30 +366,53 @@ window.onRouteLockChange=function(){
   else clearLock();
   applyLockUI();
 };
-function scheduleLockReset(){setTimeout(()=>{clearLock();applyLockUI();toast('🌙 Route lock cleared');scheduleLockReset();},msToISTMidnight());}
 
-// ── MIDNIGHT ARCHIVE ──────────────────────────────────────────
+// ── SKU GROUP LOCK ────────────────────────────────────────────
+function saveSkuLock(id,name){localStorage.setItem(SKU_LOCK_KEY,JSON.stringify({id,name,date:getISTDateStr()}));}
+function clearSkuLock(){localStorage.removeItem(SKU_LOCK_KEY);}
+function getSkuLock(){try{const d=JSON.parse(localStorage.getItem(SKU_LOCK_KEY)||'null');if(!d||d.date!==getISTDateStr()){clearSkuLock();return null;}return d;}catch{return null;}}
+function applySkuLockUI(){
+  const lock=getSkuLock();
+  const chk=document.getElementById('sku-lock-chk');
+  const info=document.getElementById('sku-lock-info');
+  const btn=document.getElementById('sd-btn-sku-group');
+  if(lock){
+    chk.checked=true;document.getElementById('val-sku-group').value=lock.id;
+    btn.innerHTML=esc(lock.name)+' <span>▾</span>';btn.classList.remove('placeholder-style');
+    btn.style.opacity='.65';btn.style.pointerEvents='none';
+    info.textContent='🔒 Group locked till midnight. Uncheck to change.';
+  } else {
+    chk.checked=false;btn.style.opacity='1';btn.style.pointerEvents='';
+    info.textContent='Select a group, then tick to lock it for today\'s entries.';
+  }
+}
+window.onSkuLockChange=function(){
+  const chk=document.getElementById('sku-lock-chk');
+  const id=document.getElementById('val-sku-group').value;
+  const name=document.getElementById('sd-btn-sku-group').textContent.replace('▾','').trim();
+  if(chk.checked){if(!id){chk.checked=false;toast('Select a group first');return;}saveSkuLock(id,name);}
+  else clearSkuLock();
+  applySkuLockUI();
+};
+
+// ── MIDNIGHT ──────────────────────────────────────────────────
+function scheduleLockReset(){setTimeout(()=>{clearLock();clearSkuLock();applyLockUI();applySkuLockUI();toast('🌙 Locks cleared');scheduleLockReset();},msToISTMidnight());}
 function scheduleMidnightArchive(){
   setTimeout(async()=>{
-    for(const o of orders){
-      try{await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()});}catch{}
-    }
-    // archive packing docs
-    for(const p of packingDocs){
-      try{await updateDoc(doc(db,'packing',p.id),{archived:true});}catch{}
-    }
-    toast('🌙 Midnight reset done');
-    scheduleMidnightArchive();
+    for(const o of orders){try{await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()});}catch{}}
+    for(const p of packingDocs){try{await updateDoc(doc(db,'packing',p.id),{archived:true});}catch{}}
+    toast('🌙 Midnight reset done');scheduleMidnightArchive();
   },msToISTMidnight());
 }
 
 // ── SEARCHABLE DROPDOWN ───────────────────────────────────────
 function toggleSD(key){
-  if(key==='order-route'&&getLock()) return;
+  if(key==='order-route'&&getLock())return;
+  if(key==='sku-group'&&getSkuLock())return;
   const dd=document.getElementById('sd-dd-'+key);
-  const isOpen=dd.classList.contains('open');
+  const isOpen=dd?.classList.contains('open');
   closeAllSD();
-  if(!isOpen){dd.classList.add('open');dd.querySelector('input')?.focus();}
+  if(!isOpen&&dd){dd.classList.add('open');dd.querySelector('input')?.focus();}
 }
 function closeAllSD(){document.querySelectorAll('.searchable-dropdown').forEach(d=>d.classList.remove('open'));}
 function filterSD(key,q){
@@ -367,12 +424,20 @@ function selectSD(key,value,label,cb){
   const btn=document.getElementById('sd-btn-'+key);
   if(btn){btn.innerHTML=esc(label)+' <span>▾</span>';btn.classList.remove('placeholder-style');}
   document.getElementById('val-'+key).value=value;
-  closeAllSD();
-  if(cb) cb(value);
+  closeAllSD();if(cb)cb(value);
 }
 document.addEventListener('click',e=>{if(!e.target.closest('.searchable-wrap'))closeAllSD();});
-window.toggleSD=toggleSD; window.filterSD=filterSD; window.selectSD=selectSD;
+window.toggleSD=toggleSD;window.filterSD=filterSD;window.selectSD=selectSD;
 
+// Group SD
+function buildGroupOpts(){
+  const opts=document.getElementById('sd-opts-sku-group');if(!opts)return;
+  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('sku-group','','-- No Group --')">-- No Group --</div>`+
+    groups.map(g=>`<div class="sd-option" data-label="${esc(g.code)} ${esc(g.name)}" onclick="selectSD('sku-group','${g.id}','${esc(g.code)} — ${esc(g.name)}')">
+      <span class="badge badge-teal" style="margin-right:6px">${esc(g.code)}</span>${esc(g.name)}
+    </div>`).join('');
+}
+// Route SD
 function buildRouteOpts(){
   const opts=document.getElementById('sd-opts-order-route');if(!opts)return;
   opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-route','','-- No Route --',onRouteSelect)">No Route</div>`+
@@ -440,35 +505,41 @@ window.switchTab=function(t){
     const el=document.querySelectorAll('.tab')[i];
     if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
   });
-  if(t==='history')   renderHistory();
-  if(t==='packing')   renderPacking();
-  if(t==='finalbill') renderFinalBill();
-  if(t==='archives')  renderArchives();
-  if(t==='skus')      renderSkuTable();
-  if(t==='retailers') renderRetailerTable();
-  if(t==='routes')    renderRoutesTab();
+  if(t==='history')renderHistory();
+  if(t==='packing')renderPacking();
+  if(t==='finalbill')renderFinalBill();
+  if(t==='archives')renderArchives();
+  if(t==='skus'){renderSkuTable();renderGroupsList();}
+  if(t==='retailers')renderRetailerTable();
+  if(t==='routes')renderRoutesTab();
 };
 
 // ── LISTENERS ─────────────────────────────────────────────────
 let readyCount=0;
-function checkReady(){if(++readyCount>=4)hideLoader();}
+function checkReady(){if(++readyCount>=5)hideLoader();}
 function initListeners(){
+  onSnapshot(query(collection(db,'skuGroups'),orderBy('code')),snap=>{
+    groups=snap.docs.map(d=>({id:d.id,...d.data()}));
+    buildGroupOpts();renderGroupsList();renderSkuTable();
+    // re-apply lock label if locked group name changed
+    const lock=getSkuLock();
+    if(lock){const g=groups.find(x=>x.id===lock.id);if(g)saveSkuLock(g.id,g.code+' — '+g.name);}
+    checkReady();
+  });
   onSnapshot(query(collection(db,'skus'),orderBy('code')),snap=>{
     skus=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderSkuTable();
+    renderSkuTable();renderGroupsList();
     document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{buildSkuOpts(el.id.replace('sd-opts-sku-',''));});
     checkReady();
   });
   onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
     retailers=snap.docs.map(d=>({id:d.id,...d.data()}));
     buildRetailerOpts(getLock()?.id||document.getElementById('val-order-route').value||'');
-    renderRetailerTable();
-    checkReady();
+    renderRetailerTable();checkReady();
   });
   onSnapshot(query(collection(db,'routes'),orderBy('name')),snap=>{
     routes=snap.docs.map(d=>({id:d.id,...d.data()}));
-    buildRouteOpts(); renderRoutesTab();
-    checkReady();
+    buildRouteOpts();renderRoutesTab();checkReady();
   });
   onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),snap=>{
     const all=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -478,7 +549,6 @@ function initListeners(){
     const at=document.querySelector('.tab.active')?.dataset?.tab;
     if(at==='history')renderHistory();
     if(at==='packing')renderPacking();
-    checkReady();
   });
   onSnapshot(query(collection(db,'packing'),orderBy('retailerName')),snap=>{
     packingDocs=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -488,341 +558,162 @@ function initListeners(){
   });
 }
 
-// ── MERGED ORDERS BY RETAILER ─────────────────────────────────
-function getMergedByRetailer(){
-  const map={};
-  orders.forEach(o=>{
-    if(!map[o.retailerId]){
-      map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};
-    }
-    o.lines.forEach(l=>{
-      const key=l.skuId;
-      if(!map[o.retailerId].skus[key]){
-        map[o.retailerId].skus[key]={skuId:l.skuId,skuCode:l.skuCode,skuName:l.skuName,price:l.price,orderedQty:0};
-      }
-      map[o.retailerId].skus[key].orderedQty+=l.qty;
-    });
-  });
-  return Object.values(map).map(r=>({...r,skus:Object.values(r.skus)}));
-}
-
-// ── PACKING ───────────────────────────────────────────────────
-function getPackingDoc(retailerId){
-  const today=getISTDateStr();
-  return packingDocs.find(p=>p.retailerId===retailerId&&p.date===today&&!p.archived)||null;
-}
-function renderPacking(){
-  const wrap=document.getElementById('packing-list');if(!wrap)return;
-  const merged=getMergedByRetailer();
-  if(!merged.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';return;}
-  wrap.innerHTML='';
-  merged.forEach(outlet=>{
-    const pDoc=getPackingDoc(outlet.retailerId);
-    const confirmed=pDoc?.confirmed||false;
-    const card=document.createElement('div');card.className='outlet-card';
-    const statusBadge=confirmed
-      ? '<span class="badge badge-green" style="margin-left:8px">✅ Packed</span>'
-      : '<span class="badge badge-orange" style="margin-left:8px">⏳ Pending</span>';
-    card.innerHTML=`
-      <div class="outlet-header${confirmed?' confirmed':''}" onclick="toggleOutletBody('pack-body-${outlet.retailerId}')">
-        <div>
-          <b>${esc(outlet.retailerName)}</b>${statusBadge}
-          ${outlet.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(outlet.routeName)}</span>`:''}
-          <div class="order-meta">${outlet.skus.length} SKUs ordered</div>
-        </div>
-        <span style="color:#a0aec0;font-size:1.1rem">▾</span>
-      </div>
-      <div class="outlet-body${openOutlets.has(outlet.retailerId)?' open':''}" id="pack-body-${outlet.retailerId}">
-        <div id="pack-items-${outlet.retailerId}"></div>
-        ${!confirmed?`<button class="btn-confirm" onclick="confirmPacking('${outlet.retailerId}','${esc(outlet.retailerName)}')">✅ Confirm Packing</button>`
-          :'<div style="text-align:center;color:#38a169;font-weight:600;padding:8px">✅ Packing Confirmed</div>'}
-      </div>`;
-    wrap.appendChild(card);
-    renderPackItems(outlet, pDoc, confirmed);
-  });
-}
-function renderPackItems(outlet, pDoc, confirmed){
-  const wrap=document.getElementById('pack-items-'+outlet.retailerId);if(!wrap)return;
-  wrap.innerHTML='';
-  outlet.skus.forEach(sku=>{
-    const savedItem=pDoc?.items?.find(i=>i.skuId===sku.skuId);
-    const isTicked=savedItem?.packed||false;
-    const packedQty=savedItem?.packedQty??sku.orderedQty;
-    const div=document.createElement('div');div.className='pack-item';
-    div.innerHTML=`
-      <input type="checkbox" class="pack-checkbox" id="chk-${outlet.retailerId}-${sku.skuId}"
-        ${isTicked?'checked':''} ${confirmed?'disabled':''}
-        onclick="event.stopPropagation()"
-        onchange="onPackTick('${outlet.retailerId}','${sku.skuId}')"/>
-      <div style="flex:1">
-        <div class="pack-sku-name${!isTicked&&confirmed?' unavailable':''}">${esc(sku.skuCode)} — ${esc(sku.skuName)}</div>
-        <div class="pack-ordered">Ordered: ${sku.orderedQty} | Price: ${fmt(sku.price)}</div>
-      </div>
-      <input type="number" class="pack-qty-input" id="qty-${outlet.retailerId}-${sku.skuId}"
-        value="${packedQty}" min="0" ${confirmed?'disabled':''}
-        onchange="onPackQtyChange('${outlet.retailerId}','${sku.skuId}')"/>`;
-    wrap.appendChild(div);
-  });
-}
-// Track which outlet bodies are open - persist across re-renders
-const openOutlets=new Set();
-
-window.toggleOutletBody=function(id){
-  const body=document.getElementById(id);if(!body)return;
-  const retailerId=id.replace('pack-body-','').replace('bill-body-','');
-  if(body.classList.contains('open')){
-    body.classList.remove('open');
-    openOutlets.delete(retailerId);
-  } else {
-    body.classList.add('open');
-    openOutlets.add(retailerId);
-  }
-};
-window.onPackTick=async function(retailerId,skuId){
-  await autoSavePacking(retailerId);
-};
-window.onPackQtyChange=async function(retailerId,skuId){
-  await autoSavePacking(retailerId);
-};
-async function autoSavePacking(retailerId){
-  const merged=getMergedByRetailer();
-  const outlet=merged.find(o=>o.retailerId===retailerId);if(!outlet)return;
-  const items=outlet.skus.map(sku=>{
-    const chk=document.getElementById('chk-'+retailerId+'-'+sku.skuId);
-    const qtyEl=document.getElementById('qty-'+retailerId+'-'+sku.skuId);
-    return {skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,
-      orderedQty:sku.orderedQty,packed:chk?.checked||false,
-      packedQty:parseFloat(qtyEl?.value||0)||0};
-  });
-  const today=getISTDateStr();
-  const existing=getPackingDoc(retailerId);
+// ── GROUP MANAGEMENT ──────────────────────────────────────────
+window.addGroup=async function(){
+  const code=document.getElementById('grp-code').value.trim().toUpperCase();
+  const name=document.getElementById('grp-name').value.trim();
+  if(!code||!name){toast('Enter group code and name');return;}
+  if(groups.find(g=>g.code===code)){toast('Group code already exists');return;}
   try{
-    if(existing){
-      await updateDoc(doc(db,'packing',existing.id),{items,updatedAt:new Date().toISOString()});
-    } else {
-      await addDoc(collection(db,'packing'),{
-        retailerId,retailerName:outlet.retailerName,
-        routeName:outlet.routeName||'',date:today,
-        items,confirmed:false,archived:false,
-        createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
-      });
-    }
-  }catch(e){console.error('Auto-save error',e);}
-}
-window.confirmPacking=async function(retailerId,retailerName){
-  const merged=getMergedByRetailer();
-  const outlet=merged.find(o=>o.retailerId===retailerId);if(!outlet)return;
-  const items=outlet.skus.map(sku=>{
-    const chk=document.getElementById('chk-'+retailerId+'-'+sku.skuId);
-    const qtyEl=document.getElementById('qty-'+retailerId+'-'+sku.skuId);
-    return {skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,
-      orderedQty:sku.orderedQty,packed:chk?.checked||false,
-      packedQty:parseFloat(qtyEl?.value||0)||0};
-  });
-  const packedCount=items.filter(i=>i.packed).length;
-  if(packedCount===0){toast('Tick at least one SKU to confirm');return;}
-  const today=getISTDateStr();
-  const existing=getPackingDoc(retailerId);
+    await addDoc(collection(db,'skuGroups'),{code,name,createdAt:new Date().toISOString()});
+    document.getElementById('grp-code').value='';
+    document.getElementById('grp-name').value='';
+    toast('Group created ✅');
+  }catch(e){toast('Error: '+e.message);}
+};
+window.deleteGroup=async function(id){
+  if(!confirm('Delete this group? SKUs in this group will become ungrouped.'))return;
+  // ungroup SKUs
+  const grouped=skus.filter(s=>s.groupId===id);
+  for(const s of grouped){try{await updateDoc(doc(db,'skus',s.id),{groupId:'',groupCode:'',groupName:''});}catch{}}
+  try{await deleteDoc(doc(db,'skuGroups',id));toast('Group deleted');}catch(e){toast('Error: '+e.message);}
+};
+window.editGroupRow=function(id){
+  const g=groups.find(x=>x.id===id);if(!g)return;
+  const row=document.getElementById('grp-row-'+id);if(!row)return;
+  row.innerHTML=`
+    <td><input class="edit-input" id="eg-code-${id}" value="${esc(g.code)}" style="width:80px;text-transform:uppercase"/></td>
+    <td colspan="2"><input class="edit-input" id="eg-name-${id}" value="${esc(g.name)}"/></td>
+    <td><button class="btn btn-save" onclick="saveGroupEdit('${id}')">Save</button>
+        <button class="btn btn-cancel" style="margin-left:4px" onclick="renderGroupsList()">Cancel</button></td>`;
+};
+window.saveGroupEdit=async function(id){
+  const code=document.getElementById('eg-code-'+id).value.trim().toUpperCase();
+  const name=document.getElementById('eg-name-'+id).value.trim();
+  if(!code||!name){toast('Required');return;}
   try{
-    if(existing){
-      await updateDoc(doc(db,'packing',existing.id),{items,confirmed:true,confirmedAt:new Date().toISOString()});
-    } else {
-      await addDoc(collection(db,'packing'),{
-        retailerId,retailerName:outlet.retailerName,
-        routeName:outlet.routeName||'',date:today,
-        items,confirmed:true,archived:false,
-        createdAt:new Date().toISOString(),confirmedAt:new Date().toISOString()
-      });
-    }
-    toast('✅ Packing confirmed for '+retailerName);
+    await updateDoc(doc(db,'skuGroups',id),{code,name});
+    // update group info on all SKUs in this group
+    const grouped=skus.filter(s=>s.groupId===id);
+    for(const s of grouped){try{await updateDoc(doc(db,'skus',s.id),{groupCode:code,groupName:name});}catch{}}
+    toast('Group updated ✅');
   }catch(e){toast('Error: '+e.message);}
 };
 
-// ── HISTORY ───────────────────────────────────────────────────
-function renderHistory(){
-  const wrap=document.getElementById('orders-list');
-  const stats=document.getElementById('summary-stats');
-  if(!orders.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';stats.innerHTML='';return;}
-  const totalAmt=orders.reduce((s,o)=>s+o.total,0);
-  stats.innerHTML=`
-    <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Orders</div></div>
-    <div class="stat"><div class="stat-val">${[...new Set(orders.map(o=>o.retailerName))].length}</div><div class="stat-lbl">Retailers</div></div>
-    <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Total</div></div>`;
+function renderGroupsList(){
+  const wrap=document.getElementById('groups-list');if(!wrap)return;
+  if(!groups.length){wrap.innerHTML='<div class="empty">No groups yet. Add one above.</div>';return;}
   wrap.innerHTML='';
-  const exportDiv=document.createElement('div');
-  exportDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
-  exportDiv.innerHTML='<button class="btn btn-pdf" id="export-all-btn">📄 Export All PDF</button>';
-  wrap.appendChild(exportDiv);
-  document.getElementById('export-all-btn').addEventListener('click',exportAllPDF);
-  const grouped={};
-  [...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')).forEach(o=>{
-    if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);
-  });
-  Object.entries(grouped).forEach(([rName,rOrders])=>{
-    const sec=document.createElement('div');sec.className='retailer-section' ;
-    sec.innerHTML=`<div class="section-title">🏪 ${esc(rName)} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
-    rOrders.forEach(o=>{
-      const pDoc=getPackingDoc(o.retailerId);
-      sec.appendChild(buildOrderCard(o,false,pDoc));
-    });
-    wrap.appendChild(sec);
-  });
-}
-
-// ── ORDER CARD ────────────────────────────────────────────────
-function buildOrderCard(o,isArchive,pDoc){
-  const card=document.createElement('div');card.className='card';
-  const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
-  const rows=o.lines.map(l=>{
-    const packItem=pDoc?.items?.find(i=>i.skuId===l.skuId);
-    const packedQty=pDoc?.confirmed&&packItem?.packed?packItem.packedQty:null;
-    return `<tr>
-      <td><span class="badge badge-blue">${esc(l.skuCode)}</span></td>
-      <td>${esc(l.skuName)}</td>
-      <td>${l.qty}</td>
-      <td>${packedQty!==null?`<span class="badge badge-green">${packedQty}</span>`:'<span style="color:#a0aec0">—</span>'}</td>
-      <td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${esc(l.notes||'—')}</td>
-    </tr>`;
-  }).join('');
-  card.innerHTML=`
-    <div class="order-header">
-      <div>
-        <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
-        ${o.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(o.routeName)}</span>`:''}
-        <div class="order-meta">📅 ${o.date} | ${dateDisplay}</div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn btn-pdf single-pdf-btn">📄 PDF</button>
-        ${!isArchive?'<button class="btn btn-danger del-order-btn">Delete</button>':''}
-      </div>
-    </div>
-    <div style="overflow-x:auto">
-    <table>
-      <thead><tr><th>SKU</th><th>Product</th><th>Ordered</th><th>Packed</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table></div>
-    <div style="text-align:right;margin-top:8px" class="total">Total: ${fmt(o.total)}</div>`;
-  card.querySelector('.single-pdf-btn').addEventListener('click',()=>exportSinglePDF(o,isArchive));
-  if(!isArchive) card.querySelector('.del-order-btn').addEventListener('click',()=>deleteOrder(o.id));
-  return card;
-}
-
-// ── FINAL BILL ────────────────────────────────────────────────
-function renderFinalBill(){
-  const wrap=document.getElementById('finalbill-list');
-  const stats=document.getElementById('bill-stats');
-  if(!wrap)return;
-  const today=getISTDateStr();
-  const confirmed=packingDocs.filter(p=>p.confirmed&&p.date===today&&!p.archived);
-  if(!confirmed.length){
-    wrap.innerHTML='<div class="card"><div class="empty">No confirmed packing yet. Confirm packing first.</div></div>';
-    stats.innerHTML='';return;
-  }
-  const grandTotal=confirmed.reduce((s,p)=>{
-    return s+p.items.filter(i=>i.packed).reduce((ss,i)=>ss+(i.packedQty*i.price),0);
-  },0);
-  stats.innerHTML=`
-    <div class="stat"><div class="stat-val">${confirmed.length}</div><div class="stat-lbl">Outlets</div></div>
-    <div class="stat"><div class="stat-val">${fmt(grandTotal)}</div><div class="stat-lbl">Grand Total</div></div>`;
-  wrap.innerHTML='';
-  // export all bill PDF button
-  const btnDiv=document.createElement('div');
-  btnDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
-  btnDiv.innerHTML='<button class="btn btn-pdf" id="bill-pdf-btn">📄 Export Final Bill PDF</button>';
-  wrap.appendChild(btnDiv);
-  document.getElementById('bill-pdf-btn').addEventListener('click',()=>exportFinalBillPDF(confirmed));
-  confirmed.forEach(p=>{
-    const packedItems=p.items.filter(i=>i.packed);
-    const outletTotal=packedItems.reduce((s,i)=>s+(i.packedQty*i.price),0);
-    const card=document.createElement('div');card.className='bill-outlet-card';
+  groups.forEach(g=>{
+    const groupSkus=skus.filter(s=>s.groupId===g.id);
+    const card=document.createElement('div');card.className='group-card';
+    const isOpen=openGroups.has(g.id);
     card.innerHTML=`
-      <div class="bill-outlet-header" onclick="toggleOutletBody('bill-body-${p.retailerId}')">
-        <div>
-          <b>${esc(p.retailerName)}</b>
-          ${p.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(p.routeName)}</span>`:''}
-          <div class="order-meta">${packedItems.length} SKUs packed</div>
-        </div>
+      <div class="group-header" onclick="toggleGroup('${g.id}')">
         <div style="display:flex;align-items:center;gap:10px">
-          <b style="color:#276749">${fmt(outletTotal)}</b>
+          <span class="badge badge-teal">${esc(g.code)}</span>
+          <b>${esc(g.name)}</b>
+          <span class="badge badge-blue">${groupSkus.length} SKUs</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center" onclick="event.stopPropagation()">
+          <button class="btn btn-edit" onclick="editGroupRow('${g.id}')">Edit</button>
+          <button class="btn btn-danger" onclick="deleteGroup('${g.id}')">Delete</button>
           <span style="color:#a0aec0">▾</span>
         </div>
       </div>
-      <div class="bill-outlet-body" id="bill-body-${p.retailerId}">
-        <div style="overflow-x:auto;margin-top:8px">
-        <table>
-          <thead><tr><th>SKU</th><th>Product</th><th>Packed Qty</th><th>Price</th><th>Amount</th></tr></thead>
-          <tbody>
-            ${packedItems.map(i=>`<tr>
-              <td><span class="badge badge-blue">${esc(i.skuCode)}</span></td>
-              <td>${esc(i.skuName)}</td>
-              <td><b>${i.packedQty}</b></td>
-              <td>${fmt(i.price)}</td>
-              <td><b style="color:#276749">${fmt(i.packedQty*i.price)}</b></td>
-            </tr>`).join('')}
-          </tbody>
-        </table></div>
-        <div style="text-align:right;margin-top:10px;font-weight:700;color:#276749;font-size:1rem">
-          Outlet Total: ${fmt(outletTotal)}
-        </div>
+      <div class="group-body${isOpen?' open':''}" id="grp-body-${g.id}">
+        ${groupSkus.length
+          ? `<div style="overflow-x:auto;margin-top:6px">
+              <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
+              groupSkus.map(s=>`<tr id="sku-row-${s.id}">
+                <td><span class="badge badge-blue">${esc(s.code)}</span></td>
+                <td>${esc(s.name)}</td><td>${fmt(s.price)}</td>
+                <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
+                    <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
+              </tr>`).join('')+
+              `</tbody></table></div>`
+          : '<div style="color:#a0aec0;font-size:.85rem;padding:10px 0">No SKUs in this group yet.</div>'
+        }
       </div>`;
     wrap.appendChild(card);
   });
-  // grand total bar
-  const gtDiv=document.createElement('div');
-  gtDiv.style.cssText='background:#276749;color:#fff;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1rem;margin-top:8px';
-  gtDiv.innerHTML=`<span>GRAND TOTAL</span><span>${fmt(grandTotal)}</span>`;
-  wrap.appendChild(gtDiv);
+  // ungrouped
+  const ungrouped=skus.filter(s=>!s.groupId);
+  if(ungrouped.length){
+    const card=document.createElement('div');card.className='group-card';
+    const isOpen=openGroups.has('__ungrouped__');
+    card.innerHTML=`
+      <div class="group-header" style="border-left-color:#a0aec0" onclick="toggleGroup('__ungrouped__')">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="badge" style="background:#f7fafc;color:#718096">—</span>
+          <b style="color:#718096">Ungrouped</b>
+          <span class="badge badge-blue">${ungrouped.length} SKUs</span>
+        </div>
+        <span style="color:#a0aec0">▾</span>
+      </div>
+      <div class="group-body${isOpen?' open':''}" id="grp-body-__ungrouped__">
+        <div style="overflow-x:auto;margin-top:6px">
+        <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
+        ungrouped.map(s=>`<tr id="sku-row-${s.id}">
+          <td><span class="badge badge-blue">${esc(s.code)}</span></td>
+          <td>${esc(s.name)}</td><td>${fmt(s.price)}</td>
+          <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
+              <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
+        </tr>`).join('')+
+        `</tbody></table></div>
+      </div>`;
+    wrap.appendChild(card);
+  }
 }
-
-// ── ARCHIVES ──────────────────────────────────────────────────
-function renderArchives(){
-  const wrap=document.getElementById('archives-list');if(!wrap)return;
-  if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders.</div></div>';return;}
-  const byDate={};
-  archivedOrders.forEach(o=>{if(!byDate[o.date])byDate[o.date]=[];byDate[o.date].push(o);});
-  wrap.innerHTML='';
-  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
-    const dayOrders=byDate[date];
-    const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
-    const sec=document.createElement('div');sec.className='retailer-section';
-    sec.innerHTML=`<div class="section-title">📅 ${date}
-      <span class="badge badge-blue">${dayOrders.length} orders</span>
-      <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
-    dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
-    wrap.appendChild(sec);
-  });
-}
-
-async function deleteOrder(id){
-  if(!confirm('Delete this order?'))return;
-  try{await deleteDoc(doc(db,'orders',id));toast('Order deleted');}catch(e){toast('Error: '+e.message);}
-}
+window.toggleGroup=function(id){
+  if(openGroups.has(id))openGroups.delete(id);else openGroups.add(id);
+  const body=document.getElementById('grp-body-'+id);
+  if(body)body.classList.toggle('open',openGroups.has(id));
+};
 
 // ── SKU MANAGEMENT ────────────────────────────────────────────
 window.addSku=async function(){
   const code=document.getElementById('sku-code').value.trim();
   const name=document.getElementById('sku-name').value.trim();
   const price=parseFloat(document.getElementById('sku-price').value)||0;
+  const groupId=document.getElementById('val-sku-group').value;
   if(!code||!name){toast('Enter code and name');return;}
-  try{await addDoc(collection(db,'skus'),{code,name,price});['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');toast('SKU saved ✅');}
-  catch(e){toast('Error: '+e.message);}
+  const group=groups.find(g=>g.id===groupId);
+  try{
+    await addDoc(collection(db,'skus'),{code,name,price,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});
+    ['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');
+    // don't reset group if locked
+    if(!getSkuLock()){
+      document.getElementById('val-sku-group').value='';
+      const btn=document.getElementById('sd-btn-sku-group');
+      if(btn){btn.innerHTML='-- Select Group -- <span>▾</span>';btn.classList.add('placeholder-style');}
+    }
+    toast('SKU saved ✅');
+  }catch(e){toast('Error: '+e.message);}
 };
 window.deleteSku=async function(id){if(!confirm('Delete SKU?'))return;try{await deleteDoc(doc(db,'skus',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}};
 window.editSkuRow=function(id){
   const s=skus.find(x=>x.id===id);if(!s)return;
   const row=document.getElementById('sku-row-'+id);if(!row)return;
-  row.innerHTML=`<td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
+  const groupOpts=groups.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>${esc(g.code)} — ${esc(g.name)}</option>`).join('');
+  row.innerHTML=`
+    <td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
     <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
     <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:70px"/></td>
-    <td><button class="btn btn-save" onclick="saveSkuEdit('${id}')">Save</button>
-        <button class="btn btn-cancel" style="margin-left:4px" onclick="renderSkuTable()">Cancel</button></td>`;
+    <td><select id="esk-grp-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce">
+        <option value="">-- No Group --</option>${groupOpts}</select>
+        <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}')">Save</button>
+        <button class="btn btn-cancel" style="margin-left:4px;margin-top:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
 };
 window.saveSkuEdit=async function(id){
   const code=document.getElementById('esk-code-'+id).value.trim();
   const name=document.getElementById('esk-name-'+id).value.trim();
   const price=parseFloat(document.getElementById('esk-price-'+id).value)||0;
+  const groupId=document.getElementById('esk-grp-'+id).value;
   if(!code||!name){toast('Required');return;}
-  try{await updateDoc(doc(db,'skus',id),{code,name,price});toast('Updated ✅');}catch(e){toast('Error: '+e.message);}
+  const group=groups.find(g=>g.id===groupId);
+  try{await updateDoc(doc(db,'skus',id),{code,name,price,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});toast('Updated ✅');}
+  catch(e){toast('Error: '+e.message);}
 };
 function renderSkuTable(){
   const wrap=document.getElementById('sku-table-wrap');if(!wrap)return;
@@ -830,14 +721,34 @@ function renderSkuTable(){
   const f=skus.filter(s=>!q||s.code.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
   if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet.</div>';return;}
   if(!f.length){wrap.innerHTML='<div class="empty">No match.</div>';return;}
-  wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
-    f.map(s=>`<tr id="sku-row-${s.id}"><td><span class="badge badge-blue">${esc(s.code)}</span></td>
-      <td>${esc(s.name)}</td><td>${fmt(s.price)}</td>
+  wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Group</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
+    f.map(s=>`<tr id="sku-row-${s.id}">
+      <td><span class="badge badge-blue">${esc(s.code)}</span></td>
+      <td>${esc(s.name)}</td>
+      <td>${s.groupCode?`<span class="badge badge-teal">${esc(s.groupCode)}</span>`:'<span style="color:#a0aec0">—</span>'}</td>
+      <td>${fmt(s.price)}</td>
       <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
-          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td></tr>`).join('')+
+          <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
+    </tr>`).join('')+
     `</tbody></table><div style="font-size:.75rem;color:#a0aec0;margin-top:6px">Showing ${f.length} of ${skus.length} SKUs</div>`;
 }
 window.renderSkuTable=renderSkuTable;
+
+// ── AUTO-MIGRATE SKUS TO GROUPS ───────────────────────────────
+// Called once after groups created to assign existing SKUs
+window.migrateSkusToGroups=async function(){
+  let moved=0;
+  for(const sku of skus){
+    const code=sku.code.toUpperCase();
+    let targetGroup=null;
+    if(code.startsWith('A')) targetGroup=groups.find(g=>g.code==='AMUL');
+    else if(code.startsWith('N')) targetGroup=groups.find(g=>g.code==='NOODLES');
+    if(targetGroup&&sku.groupId!==targetGroup.id){
+      try{await updateDoc(doc(db,'skus',sku.id),{groupId:targetGroup.id,groupCode:targetGroup.code,groupName:targetGroup.name});moved++;}catch(e){console.error(e);}
+    }
+  }
+  toast(`Migrated ${moved} SKUs to groups ✅`);
+};
 
 // ── RETAILER MANAGEMENT ───────────────────────────────────────
 window.addRetailer=async function(){
@@ -883,8 +794,7 @@ window.deleteRoute=async function(id){if(!confirm('Delete route?'))return;try{aw
 window.addRetailerToRoute=async function(routeId,retId,retName){
   const route=routes.find(r=>r.id===routeId);
   const list=[...(route?.retailers||[]),{id:retId,name:retName}];
-  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});closeAllSD();toast(retName+' added ✅');}
-  catch(e){toast('Error: '+e.message);}
+  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});closeAllSD();toast(retName+' added ✅');}catch(e){toast('Error: '+e.message);}
 };
 window.removeRetailerFromRoute=async function(routeId,retId){
   const route=routes.find(r=>r.id===routeId);
@@ -897,7 +807,7 @@ window.onDrop=async function(e,routeId,dropIdx){
   e.preventDefault();if(!dragSrc||dragSrc.routeId!==routeId||dragSrc.idx===dropIdx)return;
   const route=routes.find(r=>r.id===routeId);const list=[...(route?.retailers||[])];
   const [moved]=list.splice(dragSrc.idx,1);list.splice(dropIdx,0,moved);dragSrc=null;
-  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});}catch(e){toast('Error');}
+  try{await updateDoc(doc(db,'routes',routeId),{retailers:list});}catch{toast('Error');}
 };
 function renderRoutesTab(){
   const wrap=document.getElementById('routes-list');if(!wrap)return;
@@ -1002,7 +912,266 @@ window.saveOrder=async function(){
   }catch(e){toast('Error: '+e.message);}
 };
 
-// ── PDF HELPERS ───────────────────────────────────────────────
+// ── PACKING ───────────────────────────────────────────────────
+function getMergedByRetailer(){
+  const map={};
+  orders.forEach(o=>{
+    if(!map[o.retailerId])map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};
+    o.lines.forEach(l=>{
+      if(!map[o.retailerId].skus[l.skuId])map[o.retailerId].skus[l.skuId]={skuId:l.skuId,skuCode:l.skuCode,skuName:l.skuName,price:l.price,orderedQty:0};
+      map[o.retailerId].skus[l.skuId].orderedQty+=l.qty;
+    });
+  });
+  return Object.values(map).map(r=>({...r,skus:Object.values(r.skus)}));
+}
+function getPackingDoc(retailerId){
+  const today=getISTDateStr();
+  return packingDocs.find(p=>p.retailerId===retailerId&&p.date===today&&!p.archived)||null;
+}
+function renderPacking(){
+  const wrap=document.getElementById('packing-list');if(!wrap)return;
+  const merged=getMergedByRetailer();
+  if(!merged.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';return;}
+  wrap.innerHTML='';
+  merged.forEach(outlet=>{
+    const pDoc=getPackingDoc(outlet.retailerId);
+    const confirmed=pDoc?.confirmed||false;
+    const card=document.createElement('div');card.className='outlet-card';
+    const statusBadge=confirmed?'<span class="badge badge-green" style="margin-left:8px">✅ Packed</span>':'<span class="badge badge-orange" style="margin-left:8px">⏳ Pending</span>';
+    const isOpen=openOutlets.has(outlet.retailerId);
+    card.innerHTML=`
+      <div class="outlet-header${confirmed?' confirmed':''}" onclick="toggleOutletBody('pack-body-${outlet.retailerId}')">
+        <div>
+          <b>${esc(outlet.retailerName)}</b>${statusBadge}
+          ${outlet.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(outlet.routeName)}</span>`:''}
+          <div class="order-meta">${outlet.skus.length} SKUs ordered</div>
+        </div>
+        <span style="color:#a0aec0;font-size:1.1rem">▾</span>
+      </div>
+      <div class="outlet-body${isOpen?' open':''}" id="pack-body-${outlet.retailerId}">
+        <div id="pack-items-${outlet.retailerId}"></div>
+        ${!confirmed?`<button class="btn-confirm" onclick="confirmPacking('${outlet.retailerId}','${esc(outlet.retailerName)}')">✅ Confirm Packing</button>`
+          :'<div style="text-align:center;color:#38a169;font-weight:600;padding:8px">✅ Packing Confirmed</div>'}
+      </div>`;
+    wrap.appendChild(card);
+    renderPackItems(outlet,pDoc,confirmed);
+  });
+}
+function renderPackItems(outlet,pDoc,confirmed){
+  const wrap=document.getElementById('pack-items-'+outlet.retailerId);if(!wrap)return;
+  wrap.innerHTML='';
+  outlet.skus.forEach(sku=>{
+    const savedItem=pDoc?.items?.find(i=>i.skuId===sku.skuId);
+    const isTicked=savedItem?.packed||false;
+    const packedQty=savedItem?.packedQty??sku.orderedQty;
+    const div=document.createElement('div');div.className='pack-item';
+    div.innerHTML=`
+      <input type="checkbox" class="pack-checkbox" id="chk-${outlet.retailerId}-${sku.skuId}"
+        ${isTicked?'checked':''} ${confirmed?'disabled':''}
+        onclick="event.stopPropagation()"
+        onchange="onPackTick('${outlet.retailerId}','${sku.skuId}')"/>
+      <div style="flex:1">
+        <div class="pack-sku-name${!isTicked&&confirmed?' unavailable':''}">${esc(sku.skuCode)} — ${esc(sku.skuName)}</div>
+        <div class="pack-ordered">Ordered: ${sku.orderedQty} | Price: ${fmt(sku.price)}</div>
+      </div>
+      <input type="number" class="pack-qty-input" id="qty-${outlet.retailerId}-${sku.skuId}"
+        value="${packedQty}" min="0" ${confirmed?'disabled':''}
+        onclick="event.stopPropagation()"
+        onchange="onPackQtyChange('${outlet.retailerId}','${sku.skuId}')"/>`;
+    wrap.appendChild(div);
+  });
+}
+window.toggleOutletBody=function(id){
+  const body=document.getElementById(id);if(!body)return;
+  const retailerId=id.replace('pack-body-','').replace('bill-body-','');
+  if(body.classList.contains('open')){body.classList.remove('open');openOutlets.delete(retailerId);}
+  else{body.classList.add('open');openOutlets.add(retailerId);}
+};
+window.onPackTick=async function(retailerId){await autoSavePacking(retailerId);};
+window.onPackQtyChange=async function(retailerId){await autoSavePacking(retailerId);};
+async function autoSavePacking(retailerId){
+  const merged=getMergedByRetailer();
+  const outlet=merged.find(o=>o.retailerId===retailerId);if(!outlet)return;
+  const items=outlet.skus.map(sku=>{
+    const chk=document.getElementById('chk-'+retailerId+'-'+sku.skuId);
+    const qtyEl=document.getElementById('qty-'+retailerId+'-'+sku.skuId);
+    return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,
+      orderedQty:sku.orderedQty,packed:chk?.checked||false,packedQty:parseFloat(qtyEl?.value||0)||0};
+  });
+  const today=getISTDateStr();
+  const existing=getPackingDoc(retailerId);
+  try{
+    if(existing){await updateDoc(doc(db,'packing',existing.id),{items,updatedAt:new Date().toISOString()});}
+    else{await addDoc(collection(db,'packing'),{retailerId,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items,confirmed:false,archived:false,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()});}
+  }catch(e){console.error('Auto-save error',e);}
+}
+window.confirmPacking=async function(retailerId,retailerName){
+  const merged=getMergedByRetailer();
+  const outlet=merged.find(o=>o.retailerId===retailerId);if(!outlet)return;
+  const items=outlet.skus.map(sku=>{
+    const chk=document.getElementById('chk-'+retailerId+'-'+sku.skuId);
+    const qtyEl=document.getElementById('qty-'+retailerId+'-'+sku.skuId);
+    return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,
+      orderedQty:sku.orderedQty,packed:chk?.checked||false,packedQty:parseFloat(qtyEl?.value||0)||0};
+  });
+  if(!items.filter(i=>i.packed).length){toast('Tick at least one SKU');return;}
+  const today=getISTDateStr();
+  const existing=getPackingDoc(retailerId);
+  try{
+    if(existing){await updateDoc(doc(db,'packing',existing.id),{items,confirmed:true,confirmedAt:new Date().toISOString()});}
+    else{await addDoc(collection(db,'packing'),{retailerId,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items,confirmed:true,archived:false,createdAt:new Date().toISOString(),confirmedAt:new Date().toISOString()});}
+    // close after confirm
+    openOutlets.delete(retailerId);
+    toast('✅ Packing confirmed for '+retailerName);
+  }catch(e){toast('Error: '+e.message);}
+};
+
+// ── HISTORY ───────────────────────────────────────────────────
+function renderHistory(){
+  const wrap=document.getElementById('orders-list');
+  const stats=document.getElementById('summary-stats');
+  if(!orders.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';stats.innerHTML='';return;}
+  const totalAmt=orders.reduce((s,o)=>s+o.total,0);
+  stats.innerHTML=`
+    <div class="stat"><div class="stat-val">${orders.length}</div><div class="stat-lbl">Orders</div></div>
+    <div class="stat"><div class="stat-val">${[...new Set(orders.map(o=>o.retailerName))].length}</div><div class="stat-lbl">Retailers</div></div>
+    <div class="stat"><div class="stat-val">${fmt(totalAmt)}</div><div class="stat-lbl">Total</div></div>`;
+  wrap.innerHTML='';
+  const exportDiv=document.createElement('div');
+  exportDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
+  exportDiv.innerHTML='<button class="btn btn-pdf" id="export-all-btn">📄 Export All PDF</button>';
+  wrap.appendChild(exportDiv);
+  document.getElementById('export-all-btn').addEventListener('click',exportAllPDF);
+  const grouped={};
+  [...orders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||'')).forEach(o=>{
+    if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);
+  });
+  Object.entries(grouped).forEach(([rName,rOrders])=>{
+    const sec=document.createElement('div');sec.className='retailer-section';
+    sec.innerHTML=`<div class="section-title">🏪 ${esc(rName)} <span class="badge badge-blue">${rOrders.length} order${rOrders.length>1?'s':''}</span></div>`;
+    rOrders.forEach(o=>sec.appendChild(buildOrderCard(o,false,getPackingDoc(o.retailerId))));
+    wrap.appendChild(sec);
+  });
+}
+
+// ── FINAL BILL ────────────────────────────────────────────────
+function renderFinalBill(){
+  const wrap=document.getElementById('finalbill-list');
+  const stats=document.getElementById('bill-stats');
+  if(!wrap)return;
+  const today=getISTDateStr();
+  const confirmed=packingDocs.filter(p=>p.confirmed&&p.date===today&&!p.archived);
+  if(!confirmed.length){wrap.innerHTML='<div class="card"><div class="empty">No confirmed packing yet.</div></div>';stats.innerHTML='';return;}
+  const grandTotal=confirmed.reduce((s,p)=>s+p.items.filter(i=>i.packed).reduce((ss,i)=>ss+(i.packedQty*i.price),0),0);
+  stats.innerHTML=`
+    <div class="stat"><div class="stat-val">${confirmed.length}</div><div class="stat-lbl">Outlets</div></div>
+    <div class="stat"><div class="stat-val">${fmt(grandTotal)}</div><div class="stat-lbl">Grand Total</div></div>`;
+  wrap.innerHTML='';
+  const btnDiv=document.createElement('div');
+  btnDiv.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
+  btnDiv.innerHTML='<button class="btn btn-pdf" id="bill-pdf-btn">📄 Export Final Bill PDF</button>';
+  wrap.appendChild(btnDiv);
+  document.getElementById('bill-pdf-btn').addEventListener('click',()=>exportFinalBillPDF(confirmed));
+  confirmed.forEach(p=>{
+    const packedItems=p.items.filter(i=>i.packed);
+    const outletTotal=packedItems.reduce((s,i)=>s+(i.packedQty*i.price),0);
+    const card=document.createElement('div');card.className='bill-outlet-card';
+    card.innerHTML=`
+      <div class="bill-outlet-header" onclick="toggleBillBody('bill-body-${p.retailerId}','${p.retailerId}')">
+        <div>
+          <b>${esc(p.retailerName)}</b>
+          ${p.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(p.routeName)}</span>`:''}
+          <div class="order-meta">${packedItems.length} SKUs packed</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <b style="color:#276749">${fmt(outletTotal)}</b>
+          <span style="color:#a0aec0">▾</span>
+        </div>
+      </div>
+      <div class="bill-outlet-body" id="bill-body-${p.retailerId}">
+        <div style="overflow-x:auto;margin-top:8px">
+        <table>
+          <thead><tr><th>SKU</th><th>Product</th><th>Packed Qty</th><th>Price</th><th>Amount</th></tr></thead>
+          <tbody>${packedItems.map(i=>`<tr>
+            <td><span class="badge badge-blue">${esc(i.skuCode)}</span></td>
+            <td>${esc(i.skuName)}</td>
+            <td><b>${i.packedQty}</b></td>
+            <td>${fmt(i.price)}</td>
+            <td><b style="color:#276749">${fmt(i.packedQty*i.price)}</b></td>
+          </tr>`).join('')}</tbody>
+        </table></div>
+        <div style="text-align:right;margin-top:10px;font-weight:700;color:#276749;font-size:1rem">Outlet Total: ${fmt(outletTotal)}</div>
+      </div>`;
+    wrap.appendChild(card);
+  });
+  const gtDiv=document.createElement('div');
+  gtDiv.style.cssText='background:#276749;color:#fff;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1rem;margin-top:8px';
+  gtDiv.innerHTML=`<span>GRAND TOTAL</span><span>${fmt(grandTotal)}</span>`;
+  wrap.appendChild(gtDiv);
+}
+window.toggleBillBody=function(id){
+  const body=document.getElementById(id);if(!body)return;
+  body.classList.toggle('open');
+};
+
+// ── ARCHIVES ──────────────────────────────────────────────────
+function renderArchives(){
+  const wrap=document.getElementById('archives-list');if(!wrap)return;
+  if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders.</div></div>';return;}
+  const byDate={};
+  archivedOrders.forEach(o=>{if(!byDate[o.date])byDate[o.date]=[];byDate[o.date].push(o);});
+  wrap.innerHTML='';
+  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+    const dayOrders=byDate[date];
+    const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
+    const sec=document.createElement('div');sec.className='retailer-section';
+    sec.innerHTML=`<div class="section-title">📅 ${date} <span class="badge badge-blue">${dayOrders.length} orders</span> <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
+    dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
+    wrap.appendChild(sec);
+  });
+}
+
+function buildOrderCard(o,isArchive,pDoc){
+  const card=document.createElement('div');card.className='card';
+  const dateDisplay=o.createdAt?new Date(o.createdAt).toLocaleString():o.date;
+  const rows=o.lines.map(l=>{
+    const packItem=pDoc?.items?.find(i=>i.skuId===l.skuId);
+    const packedQty=pDoc?.confirmed&&packItem?.packed?packItem.packedQty:null;
+    return`<tr>
+      <td><span class="badge badge-blue">${esc(l.skuCode)}</span></td>
+      <td>${esc(l.skuName)}</td><td>${l.qty}</td>
+      <td>${packedQty!==null?`<span class="badge badge-green">${packedQty}</span>`:'<span style="color:#a0aec0">—</span>'}</td>
+      <td>${fmt(l.price)}</td><td>${fmt(l.subtotal)}</td><td>${esc(l.notes||'—')}</td>
+    </tr>`;
+  }).join('');
+  card.innerHTML=`
+    <div class="order-header">
+      <div>
+        <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
+        ${o.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(o.routeName)}</span>`:''}
+        <div class="order-meta">📅 ${o.date} | ${dateDisplay}</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-pdf single-pdf-btn">📄 PDF</button>
+        ${!isArchive?'<button class="btn btn-danger del-order-btn">Delete</button>':''}
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+    <table>
+      <thead><tr><th>SKU</th><th>Product</th><th>Ordered</th><th>Packed</th><th>Price</th><th>Subtotal</th><th>Notes</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table></div>
+    <div style="text-align:right;margin-top:8px" class="total">Total: ${fmt(o.total)}</div>`;
+  card.querySelector('.single-pdf-btn').addEventListener('click',()=>exportSinglePDF(o,isArchive));
+  if(!isArchive)card.querySelector('.del-order-btn').addEventListener('click',()=>deleteOrder(o.id));
+  return card;
+}
+async function deleteOrder(id){
+  if(!confirm('Delete this order?'))return;
+  try{await deleteDoc(doc(db,'orders',id));toast('Order deleted');}catch(e){toast('Error: '+e.message);}
+}
+
+// ── PDF ───────────────────────────────────────────────────────
 function pdfHeader(doc2,pw,title){
   doc2.setFillColor(43,108,176);doc2.rect(0,0,pw,24,'F');
   doc2.setTextColor(255,255,255);doc2.setFontSize(12);doc2.setFont('helvetica','bold');
@@ -1026,14 +1195,12 @@ function pdfTableRows(doc2,m,pw,startY,lines,hasPacked){
     doc2.text(String(l.skuCode||''),c[0],y);
     doc2.text(doc2.splitTextToSize(String(l.skuName||''),42),c[1],y);
     if(hasPacked){
-      doc2.text(String(l.qty),c[2],y);
-      doc2.text(l.packedQty!=null?String(l.packedQty):'—',c[3],y);
+      doc2.text(String(l.qty),c[2],y);doc2.text(l.packedQty!=null?String(l.packedQty):'—',c[3],y);
       doc2.text(fmt(l.price),c[4],y);doc2.text(fmt(l.subtotal),c[5],y);
       doc2.text(doc2.splitTextToSize(String(l.notes||'—'),20),c[6],y);
     } else {
-      doc2.text(String(l.qty),c[2],y);
-      doc2.text(fmt(l.price),c[3],y);doc2.text(fmt(l.subtotal),c[4],y);
-      doc2.text(doc2.splitTextToSize(String(l.notes||'—'),22),c[5],y);
+      doc2.text(String(l.qty),c[2],y);doc2.text(fmt(l.price),c[3],y);
+      doc2.text(fmt(l.subtotal),c[4],y);doc2.text(doc2.splitTextToSize(String(l.notes||'—'),22),c[5],y);
     }
     y+=7;
   });
@@ -1043,7 +1210,7 @@ function pdfFooter(doc2,pw){
   doc2.setFontSize(6.5);doc2.setTextColor(180,180,180);doc2.setFont('helvetica','normal');
   doc2.text('Generated by Retailer Order Management App',pw/2,291,{align:'center'});
 }
-function exportSinglePDF(o,isArchive){
+function exportSinglePDF(o){
   const {jsPDF}=window.jspdf;
   const doc2=new jsPDF(),m=13,pw=210;
   pdfHeader(doc2,pw,'ORDER INVOICE');
@@ -1053,10 +1220,7 @@ function exportSinglePDF(o,isArchive){
     .forEach(([k,v],i)=>{doc2.setFont('helvetica','bold');doc2.text(k,m,31+i*7);doc2.setFont('helvetica','normal');doc2.text(String(v),50,31+i*7);});
   doc2.setDrawColor(220,220,220);doc2.line(m,67,pw-m,67);
   const pDoc=getPackingDoc(o.retailerId);
-  const lines=o.lines.map(l=>{
-    const pi=pDoc?.items?.find(i=>i.skuId===l.skuId);
-    return {...l,packedQty:pDoc?.confirmed&&pi?.packed?pi.packedQty:null};
-  });
+  const lines=o.lines.map(l=>{const pi=pDoc?.items?.find(i=>i.skuId===l.skuId);return{...l,packedQty:pDoc?.confirmed&&pi?.packed?pi.packedQty:null};});
   let y=pdfTableRows(doc2,m,pw,75,lines,true);
   doc2.line(m,y,pw-m,y);y+=6;
   doc2.setFont('helvetica','bold');doc2.setFontSize(9);doc2.setTextColor(43,108,176);
@@ -1086,7 +1250,7 @@ function exportAllPDF(){
     doc2.text('#'+o.id.substr(0,6).toUpperCase()+'  ·  '+o.date+'  ·  '+dd,pw-m,y,{align:'right'});
     y+=9;
     const pDoc=getPackingDoc(o.retailerId);
-    const lines=o.lines.map(l=>{const pi=pDoc?.items?.find(i=>i.skuId===l.skuId);return {...l,packedQty:pDoc?.confirmed&&pi?.packed?pi.packedQty:null};});
+    const lines=o.lines.map(l=>{const pi=pDoc?.items?.find(i=>i.skuId===l.skuId);return{...l,packedQty:pDoc?.confirmed&&pi?.packed?pi.packedQty:null};});
     y=pdfTableRows(doc2,m,pw,y,lines,true);
     doc2.setFont('helvetica','bold');doc2.setFontSize(8);doc2.setTextColor(43,108,176);
     doc2.text('Order Total: '+fmt(o.total),pw-m,y,{align:'right'});
@@ -1120,7 +1284,6 @@ function exportFinalBillPDF(confirmed){
     doc2.setFont('helvetica','normal');doc2.setFontSize(6.5);doc2.setTextColor(120,120,120);
     doc2.text(fmt(outletTotal),pw-m,y,{align:'right'});
     y+=9;
-    // bill table
     doc2.setFillColor(240,244,248);doc2.rect(m,y-4,pw-2*m,7,'F');
     doc2.setFont('helvetica','bold');doc2.setFontSize(7);doc2.setTextColor(80,80,80);
     const c=[m,55,130,155,178];
@@ -1156,10 +1319,41 @@ showLoader('Connecting to cloud...');
 document.getElementById('order-date').value=getISTDateStr();
 window.addSkuLine();
 applyLockUI();
+applySkuLockUI();
 initListeners();
 scheduleMidnightArchive();
 scheduleLockReset();
-window.toggleOutletBody=window.toggleOutletBody;
+
+// Auto-create Amul & Noodles groups and migrate SKUs on first load
+async function setupDefaultGroups(){
+  // wait a moment for groups to load
+  await new Promise(r=>setTimeout(r,2500));
+  const hasAmul=groups.find(g=>g.code==='AMUL');
+  const hasNoodles=groups.find(g=>g.code==='NOODLES');
+  let amulId=hasAmul?.id, noodlesId=hasNoodles?.id;
+  if(!hasAmul){
+    const ref=await addDoc(collection(db,'skuGroups'),{code:'AMUL',name:'Amul',createdAt:new Date().toISOString()});
+    amulId=ref.id;
+  }
+  if(!hasNoodles){
+    const ref=await addDoc(collection(db,'skuGroups'),{code:'NOODLES',name:'Noodles',createdAt:new Date().toISOString()});
+    noodlesId=ref.id;
+  }
+  // wait for listener to update groups
+  await new Promise(r=>setTimeout(r,1000));
+  let moved=0;
+  for(const sku of skus){
+    const c=sku.code.toUpperCase();
+    let targetId=null, targetCode='', targetName='';
+    if(c.startsWith('A')&&sku.groupId!==amulId){targetId=amulId;targetCode='AMUL';targetName='Amul';}
+    else if(c.startsWith('N')&&sku.groupId!==noodlesId){targetId=noodlesId;targetCode='NOODLES';targetName='Noodles';}
+    if(targetId){
+      try{await updateDoc(doc(db,'skus',sku.id),{groupId:targetId,groupCode:targetCode,groupName:targetName});moved++;}catch{}
+    }
+  }
+  if(moved>0) toast(`✅ Auto-grouped ${moved} SKUs (Amul & Noodles)`);
+}
+setupDefaultGroups();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
