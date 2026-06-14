@@ -516,7 +516,7 @@ window.switchTab=function(t){
 
 // ── LISTENERS ─────────────────────────────────────────────────
 let readyCount=0;
-function checkReady(){if(++readyCount>=5)hideLoader();}
+function checkReady(){if(++readyCount>=4)hideLoader();}
 function initListeners(){
   onSnapshot(query(collection(db,'skuGroups'),orderBy('code')),snap=>{
     groups=snap.docs.map(d=>({id:d.id,...d.data()}));
