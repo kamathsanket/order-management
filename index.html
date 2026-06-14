@@ -83,10 +83,10 @@ tr:last-child td{border-bottom:none}
 .route-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#3182ce;cursor:pointer}
 .lock-info{font-size:.78rem;color:#4299e1;flex:1}
 /* Packing / Review */
-.outlet-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden}
-.outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;transition:.15s;user-select:none}
-.outlet-header:hover{background:#f7fafc}
+.outlet-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px}
+.outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;transition:.15s;user-select:none;border-radius:12px}
 .outlet-header.confirmed{background:#f0fff4;border-left:4px solid #38a169}
+.outlet-header:hover{background:#f7fafc;border-radius:12px}
 .outlet-body{padding:0 18px 16px;display:none}
 .outlet-body.open{display:block}
 .pack-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f4f8;flex-wrap:wrap}
@@ -135,6 +135,22 @@ tr:last-child td{border-bottom:none}
 .denom-row .denom-total{flex:1;text-align:right;color:#38a169;font-weight:600;font-size:.85rem}
 .cash-summary{margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px}
 .cash-summary-row{display:flex;justify-content:space-between;padding:5px 0;font-size:.88rem}
+/* Archive calendar */
+.archive-month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin-top:10px}
+.archive-month-cell{position:relative;text-align:center;padding:12px 6px;border-radius:8px;background:#f7fafc;border:1.5px solid #e2e8f0;cursor:pointer;font-weight:600;font-size:.85rem;color:#a0aec0;transition:.15s}
+.archive-month-cell:hover{border-color:#bee3f8;background:#ebf8ff}
+.archive-month-cell.has-data{color:#2b6cb0;border-color:#bee3f8;cursor:pointer}
+.archive-month-cell.active{background:#3182ce;color:#fff;border-color:#3182ce}
+.archive-month-badge{position:absolute;top:-6px;right:-6px;background:#e53e3e;color:#fff;border-radius:50%;width:18px;height:18px;font-size:.65rem;display:flex;align-items:center;justify-content:center}
+.archive-day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.archive-day-head{text-align:center;font-size:.7rem;font-weight:700;color:#a0aec0;padding:4px 0}
+.archive-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:#f7fafc;border:1.5px solid #e2e8f0;font-size:.78rem;color:#cbd5e0}
+.archive-day-cell.empty-cell{background:transparent;border:none}
+.archive-day-cell.has-data{background:#ebf8ff;border-color:#bee3f8;color:#2b6cb0;cursor:pointer;font-weight:700}
+.archive-day-cell.has-data:hover{background:#bee3f8}
+.archive-day-cell.selected{background:#3182ce;color:#fff;border-color:#3182ce}
+.archive-day-count{font-size:.6rem;background:#e53e3e;color:#fff;border-radius:8px;padding:0 4px;margin-top:2px;line-height:1.4}
+.archive-day-cell.selected .archive-day-count{background:#fff;color:#e53e3e}
 #sku-table-wrap,#ret-table-wrap{overflow-x:auto}
 @media(max-width:640px){
   header{padding:10px 12px;gap:8px}
@@ -324,7 +340,16 @@ tr:last-child td{border-bottom:none}
   <div id="tab-archives" style="display:none">
     <div class="card" style="background:linear-gradient(135deg,#faf5ff,#fff);border-left:4px solid #805ad5">
       <b style="color:#805ad5">🗂️ Archives</b>
-      <p style="font-size:.82rem;color:#718096;margin-top:4px">Past orders archived at midnight IST.</p>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Past orders archived at midnight IST. Pick a year, then a month, then a date to view that day's orders.</p>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div class="fg" style="flex:1;min-width:120px">
+          <label>Year</label>
+          <select id="archive-year-select" onchange="onArchiveYearChange()"></select>
+        </div>
+      </div>
+      <div id="archive-calendar"></div>
     </div>
     <div id="archives-list"></div>
   </div>
@@ -447,6 +472,8 @@ const db=getFirestore(app);
 let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[], packingDocs=[], groups=[];
 let collectionsData=[], physicalCashData=[];
 let lineCount=0, dragSrc=null, collectionHistoryOpen=false;
+let archivesYear=null, archivesMonth=null, archivesDate=null;
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const LOCK_KEY='routeLock_v2';
 const SKU_LOCK_KEY='skuGroupLock_v1';
 const openOutlets=new Set();
@@ -808,10 +835,10 @@ function renderGroupsList(){
         ${groupSkus.length
           ? `<div style="overflow-x:auto;margin-top:6px">
               <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>MRP</th><th>Actions</th></tr></thead><tbody>`+
-              groupSkus.map(s=>`<tr id="sku-row-${s.id}">
+              groupSkus.map(s=>`<tr id="sku-row-g-${s.id}">
                 <td><span class="badge badge-blue">${esc(s.code)}</span></td>
                 <td>${esc(s.name)}</td><td>${fmt(s.price)}</td><td>${fmt(s.mrp||0)}</td>
-                <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
+                <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}','g')">Edit</button>
                     <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
               </tr>`).join('')+
               `</tbody></table></div>`
@@ -836,10 +863,10 @@ function renderGroupsList(){
       <div class="group-body${isOpen?' open':''}" id="grp-body-__ungrouped__">
         <div style="overflow-x:auto;margin-top:6px">
         <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>MRP</th><th>Actions</th></tr></thead><tbody>`+
-        ungrouped.map(s=>`<tr id="sku-row-${s.id}">
+        ungrouped.map(s=>`<tr id="sku-row-g-${s.id}">
           <td><span class="badge badge-blue">${esc(s.code)}</span></td>
           <td>${esc(s.name)}</td><td>${fmt(s.price)}</td><td>${fmt(s.mrp||0)}</td>
-          <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
+          <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}','g')">Edit</button>
               <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
         </tr>`).join('')+
         `</tbody></table></div>
@@ -874,40 +901,38 @@ window.addSku=async function(){
   }catch(e){toast('Error: '+e.message);}
 };
 window.deleteSku=async function(id){if(!confirm('Delete SKU?'))return;try{await deleteDoc(doc(db,'skus',id));toast('Deleted');}catch(e){toast('Error: '+e.message);}};
-window.editSkuRow=function(id){
+window.editSkuRow=function(id,ctx){
   const s=skus.find(x=>x.id===id);if(!s)return;
-  const row=document.getElementById('sku-row-'+id);if(!row)return;
+  const row=document.getElementById('sku-row-'+ctx+'-'+id);if(!row)return;
   const groupOpts=groups.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>${esc(g.code)} — ${esc(g.name)}</option>`).join('');
-  const isGroupView=row.children.length===5; // group/ungrouped table has 5 cols (no Group column)
-  if(isGroupView){
+  if(ctx==='g'){
     row.innerHTML=`
-      <td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
-      <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
-      <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:70px"/></td>
-      <td><input class="edit-input" id="esk-mrp-${id}" type="number" value="${s.mrp||0}" style="width:70px"/></td>
-      <td><select id="esk-grp-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce">
+      <td><input class="edit-input" id="esk-code-g-${id}" value="${esc(s.code)}" style="width:80px"/></td>
+      <td><input class="edit-input" id="esk-name-g-${id}" value="${esc(s.name)}"/></td>
+      <td><input class="edit-input" id="esk-price-g-${id}" type="number" value="${s.price}" style="width:70px"/></td>
+      <td><input class="edit-input" id="esk-mrp-g-${id}" type="number" value="${s.mrp||0}" style="width:70px"/></td>
+      <td><select id="esk-grp-g-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce">
           <option value="">-- No Group --</option>${groupOpts}</select>
-          <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}')">Save</button>
+          <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}','g')">Save</button>
           <button class="btn btn-cancel" style="margin-left:4px;margin-top:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
   } else {
     row.innerHTML=`
-      <td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
-      <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
-      <td><span class="badge badge-teal">${esc(s.groupCode||'—')}</span></td>
-      <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:65px"/></td>
-      <td colspan="2"><input class="edit-input" id="esk-mrp-${id}" type="number" value="${s.mrp||0}" style="width:65px;display:inline-block"/>
-          <select id="esk-grp-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce;width:auto;display:inline-block;margin-left:4px">
-          <option value="">-- No Group --</option>${groupOpts}</select>
-          <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}')">Save</button>
-          <button class="btn btn-cancel" style="margin-left:4px;margin-top:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
+      <td><input class="edit-input" id="esk-code-a-${id}" value="${esc(s.code)}" style="width:80px"/></td>
+      <td><input class="edit-input" id="esk-name-a-${id}" value="${esc(s.name)}"/></td>
+      <td><select id="esk-grp-a-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce;width:auto">
+          <option value="">-- No Group --</option>${groupOpts}</select></td>
+      <td><input class="edit-input" id="esk-price-a-${id}" type="number" value="${s.price}" style="width:65px"/></td>
+      <td><input class="edit-input" id="esk-mrp-a-${id}" type="number" value="${s.mrp||0}" style="width:65px"/></td>
+      <td><button class="btn btn-save" onclick="saveSkuEdit('${id}','a')">Save</button>
+          <button class="btn btn-cancel" style="margin-left:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
   }
 };
-window.saveSkuEdit=async function(id){
-  const code=document.getElementById('esk-code-'+id).value.trim();
-  const name=document.getElementById('esk-name-'+id).value.trim();
-  const price=parseFloat(document.getElementById('esk-price-'+id).value)||0;
-  const mrp=parseFloat(document.getElementById('esk-mrp-'+id).value)||0;
-  const groupId=document.getElementById('esk-grp-'+id).value;
+window.saveSkuEdit=async function(id,ctx){
+  const code=document.getElementById('esk-code-'+ctx+'-'+id).value.trim();
+  const name=document.getElementById('esk-name-'+ctx+'-'+id).value.trim();
+  const price=parseFloat(document.getElementById('esk-price-'+ctx+'-'+id).value)||0;
+  const mrp=parseFloat(document.getElementById('esk-mrp-'+ctx+'-'+id).value)||0;
+  const groupId=document.getElementById('esk-grp-'+ctx+'-'+id).value;
   if(!code||!name){toast('Required');return;}
   const group=groups.find(g=>g.id===groupId);
   try{await updateDoc(doc(db,'skus',id),{code,name,price,mrp,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});toast('Updated ✅');}
@@ -1626,20 +1651,94 @@ window.savePhysicalCash=async function(){
 };
 
 // ── ARCHIVES ──────────────────────────────────────────────────
-function renderArchives(){
-  const wrap=document.getElementById('archives-list');if(!wrap)return;
-  if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders.</div></div>';return;}
-  const byDate={};
-  archivedOrders.forEach(o=>{if(!byDate[o.date])byDate[o.date]=[];byDate[o.date].push(o);});
-  wrap.innerHTML='';
-  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
-    const dayOrders=byDate[date];
-    const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
-    const sec=document.createElement('div');sec.className='retailer-section';
-    sec.innerHTML=`<div class="section-title">📅 ${date} <span class="badge badge-blue">${dayOrders.length} orders</span> <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
-    dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
-    wrap.appendChild(sec);
+function getArchiveDates(){
+  return [...new Set(archivedOrders.map(o=>o.date))];
+}
+function getArchiveYears(){
+  const years=new Set(getArchiveDates().map(d=>d.substring(0,4)));
+  years.add(String(new Date().getFullYear()));
+  return [...years].sort((a,b)=>b.localeCompare(a));
+}
+function buildArchiveYearSelect(){
+  const sel=document.getElementById('archive-year-select');if(!sel)return;
+  const years=getArchiveYears();
+  if(archivesYear===null||!years.includes(archivesYear))archivesYear=years[0];
+  sel.innerHTML=years.map(y=>`<option value="${y}" ${y===archivesYear?'selected':''}>${y}</option>`).join('');
+}
+window.onArchiveYearChange=function(){
+  archivesYear=document.getElementById('archive-year-select').value;
+  archivesMonth=null;archivesDate=null;
+  renderArchiveCalendar();renderArchivesContent();
+};
+function renderArchiveCalendar(){
+  const wrap=document.getElementById('archive-calendar');if(!wrap)return;
+  const dates=getArchiveDates();
+  const monthCounts=Array(12).fill(0);
+  dates.forEach(d=>{
+    const [y,m]=d.split('-');
+    if(y===archivesYear)monthCounts[parseInt(m,10)-1]++;
   });
+  let html='<div class="archive-month-grid">';
+  MONTH_NAMES.forEach((name,idx)=>{
+    const active=archivesMonth===idx?' active':'';
+    const hasData=monthCounts[idx]>0?' has-data':'';
+    html+=`<div class="archive-month-cell${active}${hasData}" onclick="selectArchiveMonth(${idx})">${name.substring(0,3)}${monthCounts[idx]>0?`<span class="archive-month-badge">${monthCounts[idx]}</span>`:''}</div>`;
+  });
+  html+='</div>';
+  if(archivesMonth!==null)html+=renderArchiveDayGrid();
+  wrap.innerHTML=html;
+}
+function renderArchiveDayGrid(){
+  const year=parseInt(archivesYear,10);
+  const month=archivesMonth;
+  const firstDay=new Date(year,month,1).getDay();
+  const daysInMonth=new Date(year,month+1,0).getDate();
+  const dayCounts={};
+  archivedOrders.forEach(o=>{
+    const [y,m,d]=o.date.split('-');
+    if(parseInt(y,10)===year&&parseInt(m,10)-1===month)dayCounts[parseInt(d,10)]=(dayCounts[parseInt(d,10)]||0)+1;
+  });
+  let html='<div class="archive-day-grid">';
+  ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d=>html+=`<div class="archive-day-head">${d}</div>`);
+  for(let i=0;i<firstDay;i++)html+='<div class="archive-day-cell empty-cell"></div>';
+  for(let day=1;day<=daysInMonth;day++){
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    const count=dayCounts[day]||0;
+    const isSelected=archivesDate===dateStr?' selected':'';
+    const hasData=count>0?' has-data':'';
+    html+=`<div class="archive-day-cell${hasData}${isSelected}" ${count>0?`onclick="selectArchiveDate('${dateStr}')"`:''}>
+      <div>${day}</div>${count>0?`<div class="archive-day-count">${count}</div>`:''}
+    </div>`;
+  }
+  html+='</div>';
+  return html;
+}
+window.selectArchiveMonth=function(idx){
+  archivesMonth=archivesMonth===idx?null:idx;
+  archivesDate=null;
+  renderArchiveCalendar();renderArchivesContent();
+};
+window.selectArchiveDate=function(dateStr){
+  archivesDate=archivesDate===dateStr?null:dateStr;
+  renderArchiveCalendar();renderArchivesContent();
+};
+function renderArchivesContent(){
+  const wrap=document.getElementById('archives-list');if(!wrap)return;
+  if(!archivedOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No archived orders yet.</div></div>';return;}
+  if(!archivesDate){wrap.innerHTML='<div class="card"><div class="empty">Select a month, then a highlighted date above to view archived orders.</div></div>';return;}
+  const dayOrders=archivedOrders.filter(o=>o.date===archivesDate);
+  if(!dayOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No orders for this date.</div></div>';return;}
+  const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
+  wrap.innerHTML='';
+  const sec=document.createElement('div');sec.className='retailer-section';
+  sec.innerHTML=`<div class="section-title">📅 ${archivesDate} <span class="badge badge-blue">${dayOrders.length} orders</span> <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
+  dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
+  wrap.appendChild(sec);
+}
+function renderArchives(){
+  buildArchiveYearSelect();
+  renderArchiveCalendar();
+  renderArchivesContent();
 }
 
 function buildOrderCard(o,isArchive,pDoc){
