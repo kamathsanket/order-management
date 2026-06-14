@@ -82,14 +82,14 @@ tr:last-child td{border-bottom:none}
 .route-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#2b6cb0}
 .route-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#3182ce;cursor:pointer}
 .lock-info{font-size:.78rem;color:#4299e1;flex:1}
-/* Packing */
+/* Packing / Review */
 .outlet-card{background:#fff;border-radius:12px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:14px;overflow:hidden}
 .outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;cursor:pointer;transition:.15s;user-select:none}
 .outlet-header:hover{background:#f7fafc}
 .outlet-header.confirmed{background:#f0fff4;border-left:4px solid #38a169}
 .outlet-body{padding:0 18px 16px;display:none}
 .outlet-body.open{display:block}
-.pack-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f4f8}
+.pack-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #f0f4f8;flex-wrap:wrap}
 .pack-item:last-child{border-bottom:none}
 .pack-checkbox{width:20px;height:20px;accent-color:#38a169;cursor:pointer;flex-shrink:0}
 .pack-checkbox:disabled{accent-color:#a0aec0;cursor:not-allowed}
@@ -186,6 +186,7 @@ tr:last-child td{border-bottom:none}
 </header>
 <div class="tabs">
   <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 Order</div>
+  <div class="tab" data-tab="review" onclick="switchTab('review')">📝 Review</div>
   <div class="tab" data-tab="packing" onclick="switchTab('packing')">📦 Packing</div>
   <div class="tab" data-tab="finalbill" onclick="switchTab('finalbill')">🧾 Final Bill</div>
   <div class="tab" data-tab="collection" onclick="switchTab('collection')">💰 Collection</div>
@@ -243,6 +244,14 @@ tr:last-child td{border-bottom:none}
       <div class="total" id="running-total">Order Total: ₹0.00</div>
       <button class="btn btn-success" onclick="saveOrder()">✅ Save Order</button>
     </div>
+  </div>
+  <!-- REVIEW -->
+  <div id="tab-review" style="display:none">
+    <div class="card" style="background:linear-gradient(135deg,#ebf8ff,#fff);border-left:4px solid #3182ce">
+      <b style="color:#2b6cb0">📝 Review Orders</b>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Edit quantities, prices, or add/remove SKUs before sending to packing. Click "Pack" when ready.</p>
+    </div>
+    <div id="review-list"></div>
   </div>
   <!-- PACKING -->
   <div id="tab-packing" style="display:none">
@@ -358,6 +367,7 @@ tr:last-child td{border-bottom:none}
         <div class="fg" style="flex:1;min-width:110px"><label>SKU Code</label><input id="sku-code" placeholder="e.g. A-001"/></div>
         <div class="fg" style="flex:2;min-width:160px"><label>Product Name</label><input id="sku-name" placeholder="e.g. Amul Butter 500g"/></div>
         <div class="fg" style="flex:1;min-width:90px"><label>Price (₹)</label><input id="sku-price" type="number" placeholder="0.00"/></div>
+        <div class="fg" style="flex:1;min-width:90px"><label>MRP (₹)</label><input id="sku-mrp" type="number" placeholder="0.00"/></div>
         <div class="fg" style="flex:1;min-width:130px">
           <label>Group</label>
           <div class="searchable-wrap" id="sd-wrap-sku-group">
@@ -441,6 +451,8 @@ const LOCK_KEY='routeLock_v2';
 const SKU_LOCK_KEY='skuGroupLock_v1';
 const openOutlets=new Set();
 const openGroups=new Set();
+const openReviewCards=new Set();
+const reviewEdits={};
 const DENOMS=[500,200,100,50,20,10];
 
 // ── IST ───────────────────────────────────────────────────────
@@ -574,14 +586,20 @@ function onRouteSelect(routeId){
   if(note)note.style.display='none';
 }
 window.onRouteSelect=onRouteSelect;
+
+// Retailer SD - excludes retailers who already have an order today
 function buildRetailerOpts(routeId){
   const opts=document.getElementById('sd-opts-order-retailer');if(!opts)return;
+  const orderedIds=new Set(orders.map(o=>o.retailerId));
   let list=retailers;
   if(routeId){const route=routes.find(r=>r.id===routeId);const ids=(route?.retailers||[]).map(r=>r.id);list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);}
+  list=list.filter(r=>!orderedIds.has(r.id));
   opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --',onOrderRetailerSelect)">-- Select Retailer --</div>`+
-    list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}',onOrderRetailerSelect)">
-      ${esc(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.75rem">· ${esc(r.contact)}</span>`:''}
-    </div>`).join('');
+    (list.length
+      ? list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}',onOrderRetailerSelect)">
+          ${esc(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.75rem">· ${esc(r.contact)}</span>`:''}
+        </div>`).join('')
+      : '<div class="sd-empty">All retailers already have an order today</div>');
 }
 // Collection balance note in Orders tab
 function onOrderRetailerSelect(retId){
@@ -647,13 +665,14 @@ function buildCollectionRouteOpts(){
 }
 
 // ── TABS ──────────────────────────────────────────────────────
-const TABS=['orders','packing','finalbill','collection','history','archives','routes','skus','retailers'];
+const TABS=['orders','review','packing','finalbill','collection','history','archives','routes','skus','retailers'];
 window.switchTab=function(t){
   TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
     const el=document.querySelectorAll('.tab')[i];
     if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
   });
+  if(t==='review')renderReview();
   if(t==='history')renderHistory();
   if(t==='packing')renderPacking();
   if(t==='finalbill')renderFinalBill();
@@ -682,6 +701,8 @@ function initListeners(){
       if(el.id.startsWith('sd-opts-sku-group'))return;
       buildSkuOpts(el.id.replace('sd-opts-sku-',''));
     });
+    const at=document.querySelector('.tab.active')?.dataset?.tab;
+    if(at==='review')renderReview();
     checkReady();
   });
   onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
@@ -698,9 +719,11 @@ function initListeners(){
     const today=getISTDateStr();
     orders=all.filter(o=>!o.archived&&o.date===today);
     archivedOrders=all.filter(o=>o.archived);
+    buildRetailerOpts(getLock()?.id||document.getElementById('val-order-route').value||'');
     const at=document.querySelector('.tab.active')?.dataset?.tab;
     if(at==='history')renderHistory();
     if(at==='packing')renderPacking();
+    if(at==='review')renderReview();
   });
   onSnapshot(query(collection(db,'packing'),orderBy('retailerName')),snap=>{
     packingDocs=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -784,10 +807,10 @@ function renderGroupsList(){
       <div class="group-body${isOpen?' open':''}" id="grp-body-${g.id}">
         ${groupSkus.length
           ? `<div style="overflow-x:auto;margin-top:6px">
-              <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
+              <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>MRP</th><th>Actions</th></tr></thead><tbody>`+
               groupSkus.map(s=>`<tr id="sku-row-${s.id}">
                 <td><span class="badge badge-blue">${esc(s.code)}</span></td>
-                <td>${esc(s.name)}</td><td>${fmt(s.price)}</td>
+                <td>${esc(s.name)}</td><td>${fmt(s.price)}</td><td>${fmt(s.mrp||0)}</td>
                 <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
                     <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
               </tr>`).join('')+
@@ -812,10 +835,10 @@ function renderGroupsList(){
       </div>
       <div class="group-body${isOpen?' open':''}" id="grp-body-__ungrouped__">
         <div style="overflow-x:auto;margin-top:6px">
-        <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
+        <table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>MRP</th><th>Actions</th></tr></thead><tbody>`+
         ungrouped.map(s=>`<tr id="sku-row-${s.id}">
           <td><span class="badge badge-blue">${esc(s.code)}</span></td>
-          <td>${esc(s.name)}</td><td>${fmt(s.price)}</td>
+          <td>${esc(s.name)}</td><td>${fmt(s.price)}</td><td>${fmt(s.mrp||0)}</td>
           <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
               <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
         </tr>`).join('')+
@@ -835,12 +858,13 @@ window.addSku=async function(){
   const code=document.getElementById('sku-code').value.trim();
   const name=document.getElementById('sku-name').value.trim();
   const price=parseFloat(document.getElementById('sku-price').value)||0;
+  const mrp=parseFloat(document.getElementById('sku-mrp').value)||0;
   const groupId=document.getElementById('val-sku-group').value;
   if(!code||!name){toast('Enter code and name');return;}
   const group=groups.find(g=>g.id===groupId);
   try{
-    await addDoc(collection(db,'skus'),{code,name,price,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});
-    ['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');
+    await addDoc(collection(db,'skus'),{code,name,price,mrp,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});
+    ['sku-code','sku-name','sku-price','sku-mrp'].forEach(id=>document.getElementById(id).value='');
     if(!getSkuLock()){
       document.getElementById('val-sku-group').value='';
       const btn=document.getElementById('sd-btn-sku-group');
@@ -854,23 +878,39 @@ window.editSkuRow=function(id){
   const s=skus.find(x=>x.id===id);if(!s)return;
   const row=document.getElementById('sku-row-'+id);if(!row)return;
   const groupOpts=groups.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>${esc(g.code)} — ${esc(g.name)}</option>`).join('');
-  row.innerHTML=`
-    <td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
-    <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
-    <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:70px"/></td>
-    <td><select id="esk-grp-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce">
-        <option value="">-- No Group --</option>${groupOpts}</select>
-        <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}')">Save</button>
-        <button class="btn btn-cancel" style="margin-left:4px;margin-top:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
+  const isGroupView=row.children.length===5; // group/ungrouped table has 5 cols (no Group column)
+  if(isGroupView){
+    row.innerHTML=`
+      <td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
+      <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
+      <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:70px"/></td>
+      <td><input class="edit-input" id="esk-mrp-${id}" type="number" value="${s.mrp||0}" style="width:70px"/></td>
+      <td><select id="esk-grp-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce">
+          <option value="">-- No Group --</option>${groupOpts}</select>
+          <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}')">Save</button>
+          <button class="btn btn-cancel" style="margin-left:4px;margin-top:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
+  } else {
+    row.innerHTML=`
+      <td><input class="edit-input" id="esk-code-${id}" value="${esc(s.code)}" style="width:80px"/></td>
+      <td><input class="edit-input" id="esk-name-${id}" value="${esc(s.name)}"/></td>
+      <td><span class="badge badge-teal">${esc(s.groupCode||'—')}</span></td>
+      <td><input class="edit-input" id="esk-price-${id}" type="number" value="${s.price}" style="width:65px"/></td>
+      <td colspan="2"><input class="edit-input" id="esk-mrp-${id}" type="number" value="${s.mrp||0}" style="width:65px;display:inline-block"/>
+          <select id="esk-grp-${id}" style="padding:4px 6px;font-size:.8rem;border-radius:6px;border:1.5px solid #3182ce;width:auto;display:inline-block;margin-left:4px">
+          <option value="">-- No Group --</option>${groupOpts}</select>
+          <button class="btn btn-save" style="margin-top:4px" onclick="saveSkuEdit('${id}')">Save</button>
+          <button class="btn btn-cancel" style="margin-left:4px;margin-top:4px" onclick="renderSkuTable();renderGroupsList()">Cancel</button></td>`;
+  }
 };
 window.saveSkuEdit=async function(id){
   const code=document.getElementById('esk-code-'+id).value.trim();
   const name=document.getElementById('esk-name-'+id).value.trim();
   const price=parseFloat(document.getElementById('esk-price-'+id).value)||0;
+  const mrp=parseFloat(document.getElementById('esk-mrp-'+id).value)||0;
   const groupId=document.getElementById('esk-grp-'+id).value;
   if(!code||!name){toast('Required');return;}
   const group=groups.find(g=>g.id===groupId);
-  try{await updateDoc(doc(db,'skus',id),{code,name,price,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});toast('Updated ✅');}
+  try{await updateDoc(doc(db,'skus',id),{code,name,price,mrp,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});toast('Updated ✅');}
   catch(e){toast('Error: '+e.message);}
 };
 function renderSkuTable(){
@@ -879,12 +919,13 @@ function renderSkuTable(){
   const f=skus.filter(s=>!q||s.code.toLowerCase().includes(q)||s.name.toLowerCase().includes(q));
   if(!skus.length){wrap.innerHTML='<div class="empty">No SKUs yet.</div>';return;}
   if(!f.length){wrap.innerHTML='<div class="empty">No match.</div>';return;}
-  wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Group</th><th>Price</th><th>Actions</th></tr></thead><tbody>`+
+  wrap.innerHTML=`<table><thead><tr><th>Code</th><th>Name</th><th>Group</th><th>Price</th><th>MRP</th><th>Actions</th></tr></thead><tbody>`+
     f.map(s=>`<tr id="sku-row-${s.id}">
       <td><span class="badge badge-blue">${esc(s.code)}</span></td>
       <td>${esc(s.name)}</td>
       <td>${s.groupCode?`<span class="badge badge-teal">${esc(s.groupCode)}</span>`:'<span style="color:#a0aec0">—</span>'}</td>
       <td>${fmt(s.price)}</td>
+      <td>${fmt(s.mrp||0)}</td>
       <td><button class="btn btn-edit" onclick="editSkuRow('${s.id}')">Edit</button>
           <button class="btn btn-danger" style="margin-left:4px" onclick="deleteSku('${s.id}')">Delete</button></td>
     </tr>`).join('')+
@@ -1044,7 +1085,7 @@ window.saveOrder=async function(){
     await addDoc(collection(db,'orders'),{
       retailerId:retId,retailerName:retailer.name,
       routeId:routeId||'',routeName:route?.name||'',
-      date,lines,total,archived:false,createdAt:new Date().toISOString()
+      date,lines,total,archived:false,status:'review',createdAt:new Date().toISOString()
     });
     document.getElementById('val-order-retailer').value='';
     const rb=document.getElementById('sd-btn-order-retailer');
@@ -1052,14 +1093,153 @@ window.saveOrder=async function(){
     const note=document.getElementById('retailer-balance-note');
     if(note)note.style.display='none';
     document.getElementById('sku-lines').innerHTML='';
-    lineCount=0;updateTotal();toast('Order saved! ✅');
+    lineCount=0;updateTotal();toast('Order saved! Sent to Review ✅');
+  }catch(e){toast('Error: '+e.message);}
+};
+
+// ── REVIEW ────────────────────────────────────────────────────
+function getReviewOrders(){
+  return orders.filter(o=>(o.status||'packing')==='review');
+}
+function getReviewLines(orderId){
+  if(!reviewEdits[orderId]){
+    const o=orders.find(x=>x.id===orderId);
+    reviewEdits[orderId]=o?JSON.parse(JSON.stringify(o.lines||[])):[];
+  }
+  return reviewEdits[orderId];
+}
+function recalcReviewLines(orderId){
+  getReviewLines(orderId).forEach(l=>{l.subtotal=(parseFloat(l.qty)||0)*(parseFloat(l.price)||0);});
+}
+function reviewTotal(orderId){
+  return getReviewLines(orderId).reduce((s,l)=>s+(l.subtotal||0),0);
+}
+function renderReview(){
+  const wrap=document.getElementById('review-list');if(!wrap)return;
+  const reviewOrders=getReviewOrders();
+  if(!reviewOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No orders pending review.</div></div>';return;}
+  wrap.innerHTML='';
+  reviewOrders.forEach(o=>{
+    recalcReviewLines(o.id);
+    const lines=getReviewLines(o.id);
+    const total=reviewTotal(o.id);
+    const isOpen=openReviewCards.has(o.id);
+    const card=document.createElement('div');card.className='outlet-card';
+    card.innerHTML=`
+      <div class="outlet-header" onclick="toggleReviewCard('${o.id}')">
+        <div>
+          <b>${esc(o.retailerName)}</b>
+          ${o.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(o.routeName)}</span>`:''}
+          <span class="badge badge-orange" style="margin-left:6px">📝 Review</span>
+          <div class="order-meta">${lines.length} SKUs | Total: ${fmt(total)}</div>
+        </div>
+        <span style="color:#a0aec0;font-size:1.1rem">▾</span>
+      </div>
+      <div class="outlet-body${isOpen?' open':''}" id="review-body-${o.id}">
+        <div id="review-items-${o.id}"></div>
+        <div class="row" style="margin-top:10px;align-items:flex-start" onclick="event.stopPropagation()">
+          <div class="searchable-wrap" style="flex:1;min-width:180px" id="sd-wrap-review-${o.id}">
+            <button type="button" class="sd-trigger placeholder-style" onclick="toggleSD('review-${o.id}')">+ Add SKU <span>▾</span></button>
+            <div class="searchable-dropdown" id="sd-dd-review-${o.id}">
+              <div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD('review-${o.id}',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="sd-opts-review-${o.id}"></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">
+          <div class="total" id="review-total-${o.id}">Total: ${fmt(total)}</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-save" onclick="saveReviewOrder('${o.id}')">💾 Save Changes</button>
+            <button class="btn-confirm" style="margin-top:0;width:auto;padding:8px 16px" onclick="packReviewOrder('${o.id}','${esc(o.retailerName)}')">📦 Pack</button>
+          </div>
+        </div>
+      </div>`;
+    wrap.appendChild(card);
+    renderReviewItems(o.id);
+    buildReviewSkuOpts(o.id);
+  });
+}
+function renderReviewItems(orderId){
+  const wrap=document.getElementById('review-items-'+orderId);if(!wrap)return;
+  const lines=getReviewLines(orderId);
+  if(!lines.length){wrap.innerHTML='<div style="color:#a0aec0;font-size:.85rem;padding:8px 0">No SKUs. Add one below.</div>';return;}
+  wrap.innerHTML=lines.map((l,idx)=>`
+    <div class="pack-item">
+      <div style="flex:2;min-width:140px"><span class="badge badge-blue">${esc(l.skuCode)}</span> ${esc(l.skuName)}</div>
+      <input type="number" class="pack-qty-input" style="width:60px" value="${l.qty}" min="1" oninput="onReviewLineChange('${orderId}',${idx},'qty',this.value)"/>
+      <input type="number" class="pack-qty-input" style="width:85px" value="${l.price}" min="0" oninput="onReviewLineChange('${orderId}',${idx},'price',this.value)"/>
+      <input type="text" class="pack-qty-input" style="width:120px;text-align:left" value="${esc(l.notes||'')}" placeholder="Notes" oninput="onReviewLineChange('${orderId}',${idx},'notes',this.value)"/>
+      <span style="min-width:70px;text-align:right;font-weight:600;color:#2b6cb0" id="rev-sub-${orderId}-${idx}">${fmt(l.subtotal)}</span>
+      <button class="btn btn-danger" style="padding:4px 8px" onclick="removeReviewLine('${orderId}',${idx})">✕</button>
+    </div>`).join('');
+}
+function buildReviewSkuOpts(orderId){
+  const opts=document.getElementById('sd-opts-review-'+orderId);if(!opts)return;
+  opts.innerHTML=skus.map(s=>`<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="addReviewLineSku('${orderId}','${s.id}')">
+    <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}
+    <span style="color:#38a169;font-size:.75rem;margin-left:auto">${fmt(s.price)}</span>
+  </div>`).join('');
+}
+window.addReviewLineSku=function(orderId,skuId){
+  const sku=skus.find(s=>s.id===skuId);if(!sku)return;
+  const lines=getReviewLines(orderId);
+  const existingIdx=lines.findIndex(l=>l.skuId===skuId);
+  if(existingIdx>=0){lines[existingIdx].qty=(parseFloat(lines[existingIdx].qty)||0)+1;}
+  else{lines.push({skuId:sku.id,skuCode:sku.code,skuName:sku.name,price:sku.price,qty:1,notes:'',subtotal:sku.price});}
+  recalcReviewLines(orderId);
+  closeAllSD();
+  renderReviewItems(orderId);
+  const totalEl=document.getElementById('review-total-'+orderId);
+  if(totalEl)totalEl.textContent='Total: '+fmt(reviewTotal(orderId));
+};
+window.onReviewLineChange=function(orderId,idx,field,value){
+  const lines=getReviewLines(orderId);
+  if(!lines[idx])return;
+  if(field==='notes')lines[idx][field]=value;
+  else lines[idx][field]=parseFloat(value)||0;
+  recalcReviewLines(orderId);
+  const sub=document.getElementById(`rev-sub-${orderId}-${idx}`);
+  if(sub)sub.textContent=fmt(lines[idx].subtotal);
+  const totalEl=document.getElementById('review-total-'+orderId);
+  if(totalEl)totalEl.textContent='Total: '+fmt(reviewTotal(orderId));
+};
+window.removeReviewLine=function(orderId,idx){
+  const lines=getReviewLines(orderId);
+  lines.splice(idx,1);
+  renderReviewItems(orderId);
+  const totalEl=document.getElementById('review-total-'+orderId);
+  if(totalEl)totalEl.textContent='Total: '+fmt(reviewTotal(orderId));
+};
+window.toggleReviewCard=function(orderId){
+  if(openReviewCards.has(orderId))openReviewCards.delete(orderId);else openReviewCards.add(orderId);
+  const body=document.getElementById('review-body-'+orderId);
+  if(body)body.classList.toggle('open',openReviewCards.has(orderId));
+};
+window.saveReviewOrder=async function(orderId){
+  const lines=getReviewLines(orderId);
+  if(!lines.length){toast('Order must have at least one SKU');return;}
+  recalcReviewLines(orderId);
+  const total=reviewTotal(orderId);
+  try{await updateDoc(doc(db,'orders',orderId),{lines,total});toast('Changes saved ✅');}
+  catch(e){toast('Error: '+e.message);}
+};
+window.packReviewOrder=async function(orderId,retailerName){
+  const lines=getReviewLines(orderId);
+  if(!lines.length){toast('Order must have at least one SKU');return;}
+  recalcReviewLines(orderId);
+  const total=reviewTotal(orderId);
+  try{
+    await updateDoc(doc(db,'orders',orderId),{lines,total,status:'packing'});
+    delete reviewEdits[orderId];
+    openReviewCards.delete(orderId);
+    toast('📦 Sent to Packing: '+retailerName);
   }catch(e){toast('Error: '+e.message);}
 };
 
 // ── PACKING ───────────────────────────────────────────────────
 function getMergedByRetailer(){
   const map={};
-  orders.forEach(o=>{
+  orders.filter(o=>(o.status||'packing')==='packing').forEach(o=>{
     if(!map[o.retailerId])map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};
     o.lines.forEach(l=>{
       if(!map[o.retailerId].skus[l.skuId])map[o.retailerId].skus[l.skuId]={skuId:l.skuId,skuCode:l.skuCode,skuName:l.skuName,price:l.price,orderedQty:0};
@@ -1075,7 +1255,7 @@ function getPackingDoc(retailerId){
 function renderPacking(){
   const wrap=document.getElementById('packing-list');if(!wrap)return;
   const merged=getMergedByRetailer();
-  if(!merged.length){wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>';return;}
+  if(!merged.length){wrap.innerHTML='<div class="card"><div class="empty">No orders ready for packing. Send orders from Review tab first.</div></div>';return;}
   wrap.innerHTML='';
   merged.forEach(outlet=>{
     const pDoc=getPackingDoc(outlet.retailerId);
@@ -1170,6 +1350,12 @@ window.confirmPacking=async function(retailerId,retailerName){
 };
 
 // ── HISTORY ───────────────────────────────────────────────────
+function getOrderStatusBadge(o,pDoc){
+  if(pDoc?.confirmed) return '<span class="badge badge-green" style="margin-left:6px">✅ Packed</span>';
+  const status=o.status||'packing';
+  if(status==='review') return '<span class="badge badge-orange" style="margin-left:6px">📝 Review</span>';
+  return '<span class="badge badge-blue" style="margin-left:6px">📦 To Pack</span>';
+}
 function renderHistory(){
   const wrap=document.getElementById('orders-list');
   const stats=document.getElementById('summary-stats');
@@ -1474,6 +1660,7 @@ function buildOrderCard(o,isArchive,pDoc){
       <div>
         <b>Order #${o.id.substr(0,6).toUpperCase()}</b>
         ${o.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(o.routeName)}</span>`:''}
+        ${!isArchive?getOrderStatusBadge(o,pDoc):''}
         <div class="order-meta">📅 ${o.date} | ${dateDisplay}</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
