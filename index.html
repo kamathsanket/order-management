@@ -122,7 +122,46 @@ tr:last-child td{border-bottom:none}
 .sku-lock-bar{background:#f0fff4;border:1.5px solid #9ae6b4;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .sku-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#276749}
 .sku-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#38a169;cursor:pointer}
-@media(max-width:600px){.row{flex-direction:column}.sku-line{flex-direction:column}.tab{padding:9px 8px;font-size:.72rem}}
+#sku-table-wrap,#ret-table-wrap{overflow-x:auto}
+@media(max-width:640px){
+  header{padding:10px 12px;gap:8px}
+  header h1{font-size:1rem}
+  .tabs{padding:0 4px}
+  .tab{padding:9px 8px;font-size:.7rem}
+  .content{padding:10px}
+  .card{padding:12px;border-radius:10px;margin-bottom:12px}
+  .card h2{font-size:.88rem;margin-bottom:10px}
+  .row{flex-direction:column;align-items:stretch;gap:8px}
+  .row .fg{min-width:0!important;width:100%}
+  .row>div[style*="padding-bottom"]{padding-bottom:0!important}
+  .row>div[style*="padding-bottom"] .btn{width:100%}
+  .sku-line{flex-direction:column;align-items:stretch;padding:10px}
+  .sku-line .fg{min-width:0!important;width:100%}
+  .sku-line>div:last-child{align-self:flex-end}
+  input,.sd-trigger{font-size:.85rem;padding:9px 10px}
+  .btn{font-size:.8rem;padding:9px 12px}
+  .btn-success,.btn-pdf,.btn-outline{width:100%}
+  .route-lock-bar,.sku-lock-bar{flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px}
+  .route-lock-bar .lock-info,.sku-lock-bar .lock-info{font-size:.75rem}
+  .summary-row{gap:8px}
+  .stat{min-width:0;padding:10px 8px}
+  .stat-val{font-size:1.2rem}
+  .stat-lbl{font-size:.68rem}
+  table{font-size:.75rem;min-width:480px}
+  #sku-table-wrap,#ret-table-wrap{margin:0 -12px;padding:0 12px;width:calc(100% + 24px)}
+  .order-header{flex-direction:column;align-items:flex-start}
+  .order-header>div:last-child{width:100%;display:flex;gap:6px}
+  .order-header .btn{flex:1}
+  .outlet-header,.bill-outlet-header,.group-header{padding:11px 12px;flex-wrap:wrap;gap:6px}
+  .outlet-body,.bill-outlet-body,.group-body{padding:0 12px 12px}
+  .pack-item{flex-wrap:wrap;gap:8px;padding:10px 0}
+  .pack-sku-name{flex-basis:100%}
+  .pack-ordered{flex-basis:100%}
+  .pack-qty-input{margin-left:auto}
+  .route-ret-item{padding:8px 10px}
+  .searchable-dropdown{max-height:180px}
+  .sync-dot{display:none}
+}
 </style>
 </head>
 <body>
