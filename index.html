@@ -122,6 +122,19 @@ tr:last-child td{border-bottom:none}
 .sku-lock-bar{background:#f0fff4;border:1.5px solid #9ae6b4;border-radius:10px;padding:11px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px}
 .sku-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#276749}
 .sku-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#38a169;cursor:pointer}
+/* Collection */
+.balance-note{margin-top:4px}
+.cash-table input.coll-input{width:90px}
+.cash-table select.coll-mode{width:100px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
+.modal-box{background:#fff;border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto}
+.denom-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.denom-row label{flex:0 0 60px;font-weight:700;color:#4a5568}
+.denom-row input{width:80px}
+.denom-row .denom-total{flex:1;text-align:right;color:#38a169;font-weight:600;font-size:.85rem}
+.cash-summary{margin-top:14px;border-top:1px solid #e2e8f0;padding-top:10px}
+.cash-summary-row{display:flex;justify-content:space-between;padding:5px 0;font-size:.88rem}
 #sku-table-wrap,#ret-table-wrap{overflow-x:auto}
 @media(max-width:640px){
   header{padding:10px 12px;gap:8px}
@@ -175,6 +188,7 @@ tr:last-child td{border-bottom:none}
   <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 Order</div>
   <div class="tab" data-tab="packing" onclick="switchTab('packing')">📦 Packing</div>
   <div class="tab" data-tab="finalbill" onclick="switchTab('finalbill')">🧾 Final Bill</div>
+  <div class="tab" data-tab="collection" onclick="switchTab('collection')">💰 Collection</div>
   <div class="tab" data-tab="history" onclick="switchTab('history')">📋 History</div>
   <div class="tab" data-tab="archives" onclick="switchTab('archives')">🗂️ Archives</div>
   <div class="tab" data-tab="routes" onclick="switchTab('routes')">🗺️ Routes</div>
@@ -212,6 +226,7 @@ tr:last-child td{border-bottom:none}
             </div>
           </div>
           <input type="hidden" id="val-order-retailer" value=""/>
+          <div id="retailer-balance-note" class="balance-note" style="display:none"></div>
         </div>
         <div class="fg" style="flex:1;min-width:140px">
           <label>Order Date</label>
@@ -245,6 +260,51 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="summary-row" id="bill-stats"></div>
     <div id="finalbill-list"></div>
+  </div>
+  <!-- COLLECTION -->
+  <div id="tab-collection" style="display:none">
+    <div class="card" style="background:linear-gradient(135deg,#fffff0,#fff);border-left:4px solid #d69e2e">
+      <b style="color:#975a16">💰 Collection</b>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Download the collection sheet for a route, fill bills offline, then import it back. Enter collected amounts below.</p>
+    </div>
+    <div class="card">
+      <h2>📥 Collection Sheet — Download / Import</h2>
+      <div class="row">
+        <div class="fg" style="flex:1;min-width:180px">
+          <label>Route</label>
+          <div class="searchable-wrap" id="sd-wrap-collection-route">
+            <button type="button" class="sd-trigger placeholder-style" id="sd-btn-collection-route" onclick="toggleSD('collection-route')">-- Select Route -- <span>▾</span></button>
+            <div class="searchable-dropdown" id="sd-dd-collection-route">
+              <div class="sd-search"><input placeholder="Search route..." oninput="filterSD('collection-route',this.value)" onclick="event.stopPropagation()"/></div>
+              <div class="sd-options" id="sd-opts-collection-route"></div>
+            </div>
+          </div>
+          <input type="hidden" id="val-collection-route" value=""/>
+        </div>
+        <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="downloadCollectionExcel()">⬇️ Download Excel</button></div>
+      </div>
+      <div class="row" style="margin-top:4px">
+        <div class="fg" style="flex:1;min-width:200px">
+          <label>Import Filled Excel</label>
+          <input type="file" id="collection-file-input" accept=".xlsx,.xls"/>
+        </div>
+        <div style="padding-bottom:1px"><button class="btn btn-success" onclick="confirmImportCollection()">✅ Confirm Import</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="order-header">
+        <h2 style="margin-bottom:0">📒 Today's Collection</h2>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline" onclick="toggleCollectionHistory()">🗂️ History</button>
+          <button class="btn btn-primary" onclick="openPhysicalCashModal()">💵 Physical Cash</button>
+        </div>
+      </div>
+      <div id="collection-list"></div>
+    </div>
+    <div class="card" id="collection-history-card" style="display:none">
+      <h2>🗂️ Collection History</h2>
+      <div id="collection-history-list"></div>
+    </div>
   </div>
   <!-- HISTORY -->
   <div id="tab-history" style="display:none">
@@ -339,7 +399,25 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="toast"></div>
 
+<!-- Physical Cash Modal -->
+<div class="modal-overlay" id="cash-modal-overlay" style="display:none" onclick="if(event.target===this)closePhysicalCashModal()">
+  <div class="modal-box">
+    <h2 style="margin-bottom:14px">💵 Physical Cash Denomination</h2>
+    <div id="denom-rows"></div>
+    <div class="cash-summary">
+      <div class="cash-summary-row"><span>Total Physical Cash</span><b id="phys-cash-total">₹0.00</b></div>
+      <div class="cash-summary-row"><span>Total Cash Collected (today)</span><b id="cash-collected-total">₹0.00</b></div>
+      <div class="cash-summary-row"><span>Difference</span><b id="cash-diff">₹0.00</b></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button class="btn btn-success" style="flex:1" onclick="savePhysicalCash()">Update</button>
+      <button class="btn btn-cancel" style="flex:1" onclick="closePhysicalCashModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -357,11 +435,13 @@ const db=getFirestore(app);
 
 // ── STATE ─────────────────────────────────────────────────────
 let skus=[], retailers=[], orders=[], archivedOrders=[], routes=[], packingDocs=[], groups=[];
-let lineCount=0, dragSrc=null;
+let collectionsData=[], physicalCashData=[];
+let lineCount=0, dragSrc=null, collectionHistoryOpen=false;
 const LOCK_KEY='routeLock_v2';
 const SKU_LOCK_KEY='skuGroupLock_v1';
 const openOutlets=new Set();
 const openGroups=new Set();
+const DENOMS=[500,200,100,50,20,10];
 
 // ── IST ───────────────────────────────────────────────────────
 function getISTDateStr(){return new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});}
@@ -440,6 +520,8 @@ function scheduleMidnightArchive(){
   setTimeout(async()=>{
     for(const o of orders){try{await updateDoc(doc(db,'orders',o.id),{archived:true,archivedAt:new Date().toISOString()});}catch{}}
     for(const p of packingDocs){try{await updateDoc(doc(db,'packing',p.id),{archived:true});}catch{}}
+    for(const c of collectionsData.filter(x=>!x.archived)){try{await updateDoc(doc(db,'collections',c.id),{archived:true});}catch{}}
+    for(const pc of physicalCashData.filter(x=>!x.archived)){try{await updateDoc(doc(db,'physicalCash',pc.id),{archived:true});}catch{}}
     toast('🌙 Midnight reset done');scheduleMidnightArchive();
   },msToISTMidnight());
 }
@@ -488,17 +570,36 @@ function onRouteSelect(routeId){
   document.getElementById('val-order-retailer').value='';
   const rb=document.getElementById('sd-btn-order-retailer');
   if(rb){rb.innerHTML='-- Select Retailer -- <span>▾</span>';rb.classList.add('placeholder-style');}
+  const note=document.getElementById('retailer-balance-note');
+  if(note)note.style.display='none';
 }
 window.onRouteSelect=onRouteSelect;
 function buildRetailerOpts(routeId){
   const opts=document.getElementById('sd-opts-order-retailer');if(!opts)return;
   let list=retailers;
   if(routeId){const route=routes.find(r=>r.id===routeId);const ids=(route?.retailers||[]).map(r=>r.id);list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);}
-  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --')">-- Select Retailer --</div>`+
-    list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}')">
+  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --',onOrderRetailerSelect)">-- Select Retailer --</div>`+
+    list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}',onOrderRetailerSelect)">
       ${esc(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.75rem">· ${esc(r.contact)}</span>`:''}
     </div>`).join('');
 }
+// Collection balance note in Orders tab
+function onOrderRetailerSelect(retId){
+  const note=document.getElementById('retailer-balance-note');
+  if(!note)return;
+  if(!retId){note.style.display='none';return;}
+  const today=getISTDateStr();
+  const c=collectionsData.find(x=>x.retailerId===retId&&x.date===today&&!x.archived);
+  if(c){
+    const pending=(c.grandTotal||0)-(c.collectedAmount||0);
+    note.style.display='block';
+    note.innerHTML=`<span class="badge badge-orange">💰 Grand Total: ${fmt(c.grandTotal)} &nbsp;|&nbsp; Pending: ${fmt(pending)}</span>`;
+  } else {
+    note.style.display='none';
+  }
+}
+window.onOrderRetailerSelect=onOrderRetailerSelect;
+
 function buildSkuOpts(lineId){
   const key='sku-'+lineId;
   const opts=document.getElementById('sd-opts-'+key);if(!opts)return;
@@ -536,8 +637,17 @@ window.filterRouteRetailerPicker=function(routeId,q){
   });
 };
 
+// Collection route SD (no callback needed)
+function buildCollectionRouteOpts(){
+  const opts=document.getElementById('sd-opts-collection-route');if(!opts)return;
+  opts.innerHTML=routes.length
+    ? routes.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('collection-route','${r.id}','${esc(r.name)}')">
+        ${esc(r.name)} <span style="color:#a0aec0;font-size:.75rem">· ${(r.retailers||[]).length} retailers</span></div>`).join('')
+    : '<div class="sd-empty">No routes yet</div>';
+}
+
 // ── TABS ──────────────────────────────────────────────────────
-const TABS=['orders','packing','finalbill','history','archives','routes','skus','retailers'];
+const TABS=['orders','packing','finalbill','collection','history','archives','routes','skus','retailers'];
 window.switchTab=function(t){
   TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
@@ -547,6 +657,7 @@ window.switchTab=function(t){
   if(t==='history')renderHistory();
   if(t==='packing')renderPacking();
   if(t==='finalbill')renderFinalBill();
+  if(t==='collection'){buildCollectionRouteOpts();renderCollectionList();if(collectionHistoryOpen)renderCollectionHistory();}
   if(t==='archives')renderArchives();
   if(t==='skus'){renderSkuTable();renderGroupsList();}
   if(t==='retailers')renderRetailerTable();
@@ -560,7 +671,6 @@ function initListeners(){
   onSnapshot(query(collection(db,'skuGroups'),orderBy('code')),snap=>{
     groups=snap.docs.map(d=>({id:d.id,...d.data()}));
     buildGroupOpts();renderGroupsList();renderSkuTable();
-    // re-apply lock label if locked group name changed
     const lock=getSkuLock();
     if(lock){const g=groups.find(x=>x.id===lock.id);if(g)saveSkuLock(g.id,g.code+' — '+g.name);}
     checkReady();
@@ -568,7 +678,10 @@ function initListeners(){
   onSnapshot(query(collection(db,'skus'),orderBy('code')),snap=>{
     skus=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderSkuTable();renderGroupsList();
-    document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{buildSkuOpts(el.id.replace('sd-opts-sku-',''));});
+    document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{
+      if(el.id.startsWith('sd-opts-sku-group'))return;
+      buildSkuOpts(el.id.replace('sd-opts-sku-',''));
+    });
     checkReady();
   });
   onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
@@ -578,7 +691,7 @@ function initListeners(){
   });
   onSnapshot(query(collection(db,'routes'),orderBy('name')),snap=>{
     routes=snap.docs.map(d=>({id:d.id,...d.data()}));
-    buildRouteOpts();renderRoutesTab();checkReady();
+    buildRouteOpts();renderRoutesTab();buildCollectionRouteOpts();checkReady();
   });
   onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),snap=>{
     const all=snap.docs.map(d=>({id:d.id,...d.data()}));
@@ -594,6 +707,16 @@ function initListeners(){
     const at=document.querySelector('.tab.active')?.dataset?.tab;
     if(at==='packing')renderPacking();
     if(at==='finalbill')renderFinalBill();
+  });
+  onSnapshot(query(collection(db,'collections'),orderBy('retailerName')),snap=>{
+    collectionsData=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const at=document.querySelector('.tab.active')?.dataset?.tab;
+    if(at==='collection'){renderCollectionList();if(collectionHistoryOpen)renderCollectionHistory();}
+  });
+  onSnapshot(query(collection(db,'physicalCash'),orderBy('date','desc')),snap=>{
+    physicalCashData=snap.docs.map(d=>({id:d.id,...d.data()}));
+    const at=document.querySelector('.tab.active')?.dataset?.tab;
+    if(at==='collection'&&collectionHistoryOpen)renderCollectionHistory();
   });
 }
 
@@ -612,7 +735,6 @@ window.addGroup=async function(){
 };
 window.deleteGroup=async function(id){
   if(!confirm('Delete this group? SKUs in this group will become ungrouped.'))return;
-  // ungroup SKUs
   const grouped=skus.filter(s=>s.groupId===id);
   for(const s of grouped){try{await updateDoc(doc(db,'skus',s.id),{groupId:'',groupCode:'',groupName:''});}catch{}}
   try{await deleteDoc(doc(db,'skuGroups',id));toast('Group deleted');}catch(e){toast('Error: '+e.message);}
@@ -632,7 +754,6 @@ window.saveGroupEdit=async function(id){
   if(!code||!name){toast('Required');return;}
   try{
     await updateDoc(doc(db,'skuGroups',id),{code,name});
-    // update group info on all SKUs in this group
     const grouped=skus.filter(s=>s.groupId===id);
     for(const s of grouped){try{await updateDoc(doc(db,'skus',s.id),{groupCode:code,groupName:name});}catch{}}
     toast('Group updated ✅');
@@ -676,7 +797,6 @@ function renderGroupsList(){
       </div>`;
     wrap.appendChild(card);
   });
-  // ungrouped
   const ungrouped=skus.filter(s=>!s.groupId);
   if(ungrouped.length){
     const card=document.createElement('div');card.className='group-card';
@@ -721,7 +841,6 @@ window.addSku=async function(){
   try{
     await addDoc(collection(db,'skus'),{code,name,price,groupId:groupId||'',groupCode:group?.code||'',groupName:group?.name||''});
     ['sku-code','sku-name','sku-price'].forEach(id=>document.getElementById(id).value='');
-    // don't reset group if locked
     if(!getSkuLock()){
       document.getElementById('val-sku-group').value='';
       const btn=document.getElementById('sd-btn-sku-group');
@@ -772,22 +891,6 @@ function renderSkuTable(){
     `</tbody></table><div style="font-size:.75rem;color:#a0aec0;margin-top:6px">Showing ${f.length} of ${skus.length} SKUs</div>`;
 }
 window.renderSkuTable=renderSkuTable;
-
-// ── AUTO-MIGRATE SKUS TO GROUPS ───────────────────────────────
-// Called once after groups created to assign existing SKUs
-window.migrateSkusToGroups=async function(){
-  let moved=0;
-  for(const sku of skus){
-    const code=sku.code.toUpperCase();
-    let targetGroup=null;
-    if(code.startsWith('A')) targetGroup=groups.find(g=>g.code==='AMUL');
-    else if(code.startsWith('N')) targetGroup=groups.find(g=>g.code==='NOODLES');
-    if(targetGroup&&sku.groupId!==targetGroup.id){
-      try{await updateDoc(doc(db,'skus',sku.id),{groupId:targetGroup.id,groupCode:targetGroup.code,groupName:targetGroup.name});moved++;}catch(e){console.error(e);}
-    }
-  }
-  toast(`Migrated ${moved} SKUs to groups ✅`);
-};
 
 // ── RETAILER MANAGEMENT ───────────────────────────────────────
 window.addRetailer=async function(){
@@ -946,6 +1049,8 @@ window.saveOrder=async function(){
     document.getElementById('val-order-retailer').value='';
     const rb=document.getElementById('sd-btn-order-retailer');
     if(rb){rb.innerHTML='-- Select Retailer -- <span>▾</span>';rb.classList.add('placeholder-style');}
+    const note=document.getElementById('retailer-balance-note');
+    if(note)note.style.display='none';
     document.getElementById('sku-lines').innerHTML='';
     lineCount=0;updateTotal();toast('Order saved! ✅');
   }catch(e){toast('Error: '+e.message);}
@@ -1059,7 +1164,6 @@ window.confirmPacking=async function(retailerId,retailerName){
   try{
     if(existing){await updateDoc(doc(db,'packing',existing.id),{items,confirmed:true,confirmedAt:new Date().toISOString()});}
     else{await addDoc(collection(db,'packing'),{retailerId,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items,confirmed:true,archived:false,createdAt:new Date().toISOString(),confirmedAt:new Date().toISOString()});}
-    // close after confirm
     openOutlets.delete(retailerId);
     toast('✅ Packing confirmed for '+retailerName);
   }catch(e){toast('Error: '+e.message);}
@@ -1116,7 +1220,7 @@ function renderFinalBill(){
     const outletTotal=packedItems.reduce((s,i)=>s+(i.packedQty*i.price),0);
     const card=document.createElement('div');card.className='bill-outlet-card';
     card.innerHTML=`
-      <div class="bill-outlet-header" onclick="toggleBillBody('bill-body-${p.retailerId}','${p.retailerId}')">
+      <div class="bill-outlet-header" onclick="toggleBillBody('bill-body-${p.retailerId}')">
         <div>
           <b>${esc(p.retailerName)}</b>
           ${p.routeName?`<span class="badge badge-purple" style="margin-left:6px">🗺️ ${esc(p.routeName)}</span>`:''}
@@ -1151,6 +1255,188 @@ function renderFinalBill(){
 window.toggleBillBody=function(id){
   const body=document.getElementById(id);if(!body)return;
   body.classList.toggle('open');
+};
+
+// ── COLLECTION ────────────────────────────────────────────────
+window.downloadCollectionExcel=function(){
+  const routeId=document.getElementById('val-collection-route').value;
+  if(!routeId){toast('Select a route first');return;}
+  const route=routes.find(r=>r.id===routeId);
+  const retList=(route?.retailers||[]).map(r=>retailers.find(x=>x.id===r.id)).filter(Boolean);
+  if(!retList.length){toast('No retailers in this route');return;}
+  const data=retList.map(r=>({'Retailer Name':r.name,'Bill 1':0,'Bill 2':0,'Bill 3':0,'Bill 4':0,'Bill 5':0,'Total':0,'Grand Total':0}));
+  const ws=XLSX.utils.json_to_sheet(data);
+  ws['!cols']=[{wch:24},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Collection');
+  XLSX.writeFile(wb,'Collection_'+route.name.replace(/\s+/g,'_')+'_'+getISTDateStr()+'.xlsx');
+  toast('Excel downloaded ✅');
+};
+window.confirmImportCollection=async function(){
+  const fileInput=document.getElementById('collection-file-input');
+  const file=fileInput.files[0];
+  if(!file){toast('Choose a file to import');return;}
+  const routeId=document.getElementById('val-collection-route').value;
+  const route=routes.find(r=>r.id===routeId);
+  try{
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf,{type:'array'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:0});
+    const today=getISTDateStr();
+    let count=0;
+    for(const row of rows){
+      const name=String(row['Retailer Name']||'').trim();
+      if(!name)continue;
+      const retailer=retailers.find(r=>r.name.toLowerCase()===name.toLowerCase());
+      if(!retailer)continue;
+      const bills=[1,2,3,4,5].map(i=>parseFloat(row['Bill '+i])||0);
+      const total=parseFloat(row['Total'])||bills.reduce((a,b)=>a+b,0);
+      const grandTotal=parseFloat(row['Grand Total'])||total;
+      const existing=collectionsData.find(c=>c.retailerId===retailer.id&&c.date===today&&!c.archived);
+      if(existing){
+        await updateDoc(doc(db,'collections',existing.id),{bills,total,grandTotal,routeId:routeId||existing.routeId||'',routeName:route?.name||existing.routeName||''});
+      }else{
+        await addDoc(collection(db,'collections'),{retailerId:retailer.id,retailerName:retailer.name,routeId:routeId||'',routeName:route?.name||'',date:today,bills,total,grandTotal,collectedAmount:0,mode:'Cash',archived:false,createdAt:new Date().toISOString()});
+      }
+      count++;
+    }
+    fileInput.value='';
+    toast(`Imported ${count} retailer(s) ✅`);
+  }catch(e){toast('Import error: '+e.message);}
+};
+window.updateCollection=async function(id){
+  const amt=parseFloat(document.getElementById('coll-amt-'+id).value)||0;
+  const mode=document.getElementById('coll-mode-'+id).value;
+  try{await updateDoc(doc(db,'collections',id),{collectedAmount:amt,mode,updatedAt:new Date().toISOString()});toast('Updated ✅');}
+  catch(e){toast('Error: '+e.message);}
+};
+function renderCollectionList(){
+  const wrap=document.getElementById('collection-list');if(!wrap)return;
+  const today=getISTDateStr();
+  const todays=collectionsData.filter(c=>c.date===today&&!c.archived);
+  if(!todays.length){wrap.innerHTML='<div class="empty">No collection data imported yet. Select a route, download the sheet, fill bills, then import it.</div>';return;}
+  const grandTotal=todays.reduce((s,c)=>s+(c.grandTotal||0),0);
+  const collectedTotal=todays.reduce((s,c)=>s+(c.collectedAmount||0),0);
+  wrap.innerHTML=`
+    <div class="summary-row">
+      <div class="stat"><div class="stat-val">${todays.length}</div><div class="stat-lbl">Retailers</div></div>
+      <div class="stat"><div class="stat-val">${fmt(grandTotal)}</div><div class="stat-lbl">Grand Total</div></div>
+      <div class="stat"><div class="stat-val">${fmt(collectedTotal)}</div><div class="stat-lbl">Collected</div></div>
+      <div class="stat"><div class="stat-val">${fmt(grandTotal-collectedTotal)}</div><div class="stat-lbl">Pending</div></div>
+    </div>
+    <div class="cash-table" style="overflow-x:auto"><table><thead><tr>
+      <th>Retailer</th><th>Bill 1</th><th>Bill 2</th><th>Bill 3</th><th>Bill 4</th><th>Bill 5</th><th>Total</th><th>Grand Total</th><th>Collected</th><th>Mode</th><th>Action</th>
+    </tr></thead><tbody>`+
+    todays.map(c=>{
+      const bills=c.bills&&c.bills.length===5?c.bills:[0,0,0,0,0];
+      return `<tr>
+        <td><b>${esc(c.retailerName)}</b>${c.routeName?`<br><span class="badge badge-purple" style="margin-top:2px">🗺️ ${esc(c.routeName)}</span>`:''}</td>
+        ${bills.map(b=>`<td>${fmt(b)}</td>`).join('')}
+        <td><b>${fmt(c.total)}</b></td>
+        <td><b style="color:#2b6cb0">${fmt(c.grandTotal)}</b></td>
+        <td><input type="number" class="coll-input" id="coll-amt-${c.id}" value="${c.collectedAmount||0}" min="0"/></td>
+        <td><select class="coll-mode" id="coll-mode-${c.id}">
+          ${['Cash','Gpay','Cheque'].map(m=>`<option value="${m}" ${(c.mode||'Cash')===m?'selected':''}>${m}</option>`).join('')}
+        </select></td>
+        <td><button class="btn btn-save" onclick="updateCollection('${c.id}')">Update</button></td>
+      </tr>`;
+    }).join('')+
+    `</tbody></table></div>`;
+}
+
+// ── COLLECTION HISTORY ────────────────────────────────────────
+window.toggleCollectionHistory=function(){
+  collectionHistoryOpen=!collectionHistoryOpen;
+  document.getElementById('collection-history-card').style.display=collectionHistoryOpen?'block':'none';
+  if(collectionHistoryOpen)renderCollectionHistory();
+};
+function renderCollectionHistory(){
+  const wrap=document.getElementById('collection-history-list');if(!wrap)return;
+  const archived=collectionsData.filter(c=>c.archived);
+  const archivedCash=physicalCashData.filter(p=>p.archived);
+  if(!archived.length&&!archivedCash.length){wrap.innerHTML='<div class="empty">No collection history yet.</div>';return;}
+  const byDate={};
+  archived.forEach(c=>{if(!byDate[c.date])byDate[c.date]={items:[],cash:null};byDate[c.date].items.push(c);});
+  archivedCash.forEach(p=>{if(!byDate[p.date])byDate[p.date]={items:[],cash:null};byDate[p.date].cash=p;});
+  wrap.innerHTML='';
+  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+    const grp=byDate[date];
+    const grand=grp.items.reduce((s,c)=>s+(c.grandTotal||0),0);
+    const collected=grp.items.reduce((s,c)=>s+(c.collectedAmount||0),0);
+    const sec=document.createElement('div');sec.className='retailer-section';
+    sec.innerHTML=`<div class="section-title">📅 ${date} <span class="badge badge-blue">${grp.items.length} retailers</span>
+      <span style="color:#2b6cb0;font-weight:600">Grand: ${fmt(grand)}</span>
+      <span style="color:#38a169;font-weight:600">Collected: ${fmt(collected)}</span></div>`;
+    if(grp.items.length){
+      const tblWrap=document.createElement('div');tblWrap.style.overflowX='auto';
+      tblWrap.innerHTML=`<table><thead><tr><th>Retailer</th><th>Grand Total</th><th>Collected</th><th>Mode</th></tr></thead><tbody>`+
+        grp.items.map(c=>`<tr><td>${esc(c.retailerName)}</td><td>${fmt(c.grandTotal)}</td><td>${fmt(c.collectedAmount||0)}</td><td>${esc(c.mode||'Cash')}</td></tr>`).join('')+
+        `</tbody></table>`;
+      sec.appendChild(tblWrap);
+    }
+    if(grp.cash){
+      const cashDiv=document.createElement('div');
+      cashDiv.style.cssText='margin-top:8px;padding:10px;background:#f7fafc;border-radius:8px;font-size:.85rem';
+      const diffColor=grp.cash.difference===0?'#38a169':(grp.cash.difference>0?'#3182ce':'#e53e3e');
+      cashDiv.innerHTML=`💵 Physical Cash: <b>${fmt(grp.cash.total)}</b> &nbsp;|&nbsp; Cash Collected: <b>${fmt(grp.cash.cashCollected)}</b> &nbsp;|&nbsp; Difference: <b style="color:${diffColor}">${fmt(grp.cash.difference)}</b>`;
+      sec.appendChild(cashDiv);
+    }
+    wrap.appendChild(sec);
+  });
+}
+
+// ── PHYSICAL CASH MODAL ───────────────────────────────────────
+window.openPhysicalCashModal=function(){
+  const rows=document.getElementById('denom-rows');
+  const today=getISTDateStr();
+  const existing=physicalCashData.find(p=>p.date===today&&!p.archived);
+  rows.innerHTML=DENOMS.map(d=>{
+    const count=existing?.denominations?.[d]||0;
+    return `<div class="denom-row">
+      <label>₹${d}</label> ×
+      <input type="number" id="denom-${d}" min="0" value="${count}" oninput="calcPhysicalCash()"/>
+      <span class="denom-total" id="denom-${d}-total">${fmt(d*count)}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('cash-modal-overlay').style.display='flex';
+  calcPhysicalCash();
+};
+window.closePhysicalCashModal=function(){document.getElementById('cash-modal-overlay').style.display='none';};
+window.calcPhysicalCash=function(){
+  let total=0;
+  DENOMS.forEach(d=>{
+    const count=parseFloat(document.getElementById('denom-'+d)?.value)||0;
+    const sub=d*count;total+=sub;
+    const el=document.getElementById('denom-'+d+'-total');
+    if(el)el.textContent=fmt(sub);
+  });
+  document.getElementById('phys-cash-total').textContent=fmt(total);
+  const today=getISTDateStr();
+  const cashCollected=collectionsData.filter(c=>c.date===today&&!c.archived&&(c.mode||'Cash')==='Cash').reduce((s,c)=>s+(c.collectedAmount||0),0);
+  document.getElementById('cash-collected-total').textContent=fmt(cashCollected);
+  const diff=total-cashCollected;
+  const diffEl=document.getElementById('cash-diff');
+  diffEl.textContent=fmt(diff);
+  diffEl.style.color=diff===0?'#38a169':(diff>0?'#3182ce':'#e53e3e');
+};
+window.savePhysicalCash=async function(){
+  const denominations={};
+  let total=0;
+  DENOMS.forEach(d=>{
+    const count=parseFloat(document.getElementById('denom-'+d)?.value)||0;
+    denominations[d]=count;total+=d*count;
+  });
+  const today=getISTDateStr();
+  const cashCollected=collectionsData.filter(c=>c.date===today&&!c.archived&&(c.mode||'Cash')==='Cash').reduce((s,c)=>s+(c.collectedAmount||0),0);
+  const difference=total-cashCollected;
+  const existing=physicalCashData.find(p=>p.date===today&&!p.archived);
+  try{
+    if(existing){await updateDoc(doc(db,'physicalCash',existing.id),{denominations,total,cashCollected,difference,updatedAt:new Date().toISOString()});}
+    else{await addDoc(collection(db,'physicalCash'),{date:today,denominations,total,cashCollected,difference,archived:false,createdAt:new Date().toISOString()});}
+    toast('Physical cash updated ✅');
+    closePhysicalCashModal();
+  }catch(e){toast('Error: '+e.message);}
 };
 
 // ── ARCHIVES ──────────────────────────────────────────────────
@@ -1362,37 +1648,6 @@ applySkuLockUI();
 initListeners();
 scheduleMidnightArchive();
 scheduleLockReset();
-
-// Auto-create Amul & Noodles groups and migrate SKUs on first load
-async function setupDefaultGroups(){
-  // wait a moment for groups to load
-  await new Promise(r=>setTimeout(r,2500));
-  const hasAmul=groups.find(g=>g.code==='AMUL');
-  const hasNoodles=groups.find(g=>g.code==='NOODLES');
-  let amulId=hasAmul?.id, noodlesId=hasNoodles?.id;
-  if(!hasAmul){
-    const ref=await addDoc(collection(db,'skuGroups'),{code:'AMUL',name:'Amul',createdAt:new Date().toISOString()});
-    amulId=ref.id;
-  }
-  if(!hasNoodles){
-    const ref=await addDoc(collection(db,'skuGroups'),{code:'NOODLES',name:'Noodles',createdAt:new Date().toISOString()});
-    noodlesId=ref.id;
-  }
-  // wait for listener to update groups
-  await new Promise(r=>setTimeout(r,1000));
-  let moved=0;
-  for(const sku of skus){
-    const c=sku.code.toUpperCase();
-    let targetId=null, targetCode='', targetName='';
-    if(c.startsWith('A')&&sku.groupId!==amulId){targetId=amulId;targetCode='AMUL';targetName='Amul';}
-    else if(c.startsWith('N')&&sku.groupId!==noodlesId){targetId=noodlesId;targetCode='NOODLES';targetName='Noodles';}
-    if(targetId){
-      try{await updateDoc(doc(db,'skus',sku.id),{groupId:targetId,groupCode:targetCode,groupName:targetName});moved++;}catch{}
-    }
-  }
-  if(moved>0) toast(`✅ Auto-grouped ${moved} SKUs (Amul & Noodles)`);
-}
-setupDefaultGroups();
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 </script>
 </body>
