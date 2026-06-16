@@ -251,6 +251,29 @@ tr:last-child td{border-bottom:none}
         </div>
       </div>
     </div>
+    <!-- Inline Collection -->
+    <div class="card" id="inline-collection-card" style="display:none;background:linear-gradient(135deg,#fffff0,#fff);border-left:4px solid #d69e2e">
+      <h2 style="color:#975a16;margin-bottom:12px">💰 Quick Collection</h2>
+      <div id="inline-collection-info" style="margin-bottom:10px"></div>
+      <div class="row" style="align-items:flex-end;gap:10px">
+        <div class="fg" style="flex:1;min-width:100px">
+          <label>Amount (₹)</label>
+          <input type="number" id="inline-coll-amt" placeholder="0.00" min="0"/>
+        </div>
+        <div class="fg" style="flex:1;min-width:110px">
+          <label>Mode</label>
+          <select id="inline-coll-mode">
+            <option value="Cash">Cash</option>
+            <option value="Gpay">Gpay</option>
+            <option value="Cheque">Cheque</option>
+          </select>
+        </div>
+        <div style="padding-bottom:1px">
+          <button class="btn btn-success" onclick="submitInlineCollection()">Submit</button>
+        </div>
+      </div>
+      <div id="inline-coll-result" style="display:none;margin-top:10px;padding:10px;border-radius:8px;background:#f0fff4;border:1.5px solid #9ae6b4;font-size:.88rem"></div>
+    </div>
     <div class="card">
       <h2>Add SKU Lines</h2>
       <div id="sku-lines"></div>
@@ -651,7 +674,10 @@ function buildSkuOpts(lineId){
   opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
     skus.map(s=>`<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
       <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}
-      <span style="color:#38a169;font-size:.75rem;margin-left:auto">${fmt(s.price)}</span>
+      <span style="margin-left:auto;text-align:right;font-size:.75rem">
+        <span style="color:#38a169">${fmt(s.price)}</span>
+        ${s.mrp?`<br><span style="color:#a0aec0">MRP ${fmt(s.mrp)}</span>`:''}
+      </span>
     </div>`).join('');
 }
 function selectSkuOpt(lineId,skuId,label){
