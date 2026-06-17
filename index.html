@@ -654,10 +654,78 @@ function buildRetailerOpts(routeId){
 // Collection balance note in Orders tab
 function onOrderRetailerSelect(retId){
   const note=document.getElementById('retailer-balance-note');
-  if(!note)return;
-  if(!retId){note.style.display='none';return;}
+  const collCard=document.getElementById('inline-collection-card');
+  const collInfo=document.getElementById('inline-collection-info');
+  const collResult=document.getElementById('inline-coll-result');
+  const collAmt=document.getElementById('inline-coll-amt');
+
+  if(!retId){
+    if(note)note.style.display='none';
+    if(collCard)collCard.style.display='none';
+    return;
+  }
+
+  // Show balance note
   const today=getISTDateStr();
   const c=collectionsData.find(x=>x.retailerId===retId&&x.date===today&&!x.archived);
+  if(c){
+    const pending=(c.grandTotal||0)-(c.collectedAmount||0);
+    if(note){
+      note.style.display='block';
+      note.innerHTML=`<span class="badge badge-orange">💰 Grand Total: ${fmt(c.grandTotal)} &nbsp;|&nbsp; Pending: ${fmt(pending)}</span>`;
+    }
+    // Show inline collection card
+    if(collCard)collCard.style.display='block';
+    if(collInfo){
+      collInfo.innerHTML=`
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <span><b>Grand Total:</b> <span style="color:#2b6cb0;font-weight:700">${fmt(c.grandTotal)}</span></span>
+          <span><b>Already Collected:</b> <span style="color:#38a169;font-weight:700">${fmt(c.collectedAmount||0)}</span></span>
+          <span><b>Pending:</b> <span style="color:#e53e3e;font-weight:700">${fmt(pending)}</span></span>
+        </div>`;
+    }
+    if(collAmt)collAmt.value=pending>0?pending:'';
+    if(collResult)collResult.style.display='none';
+  } else {
+    if(note)note.style.display='none';
+    if(collCard)collCard.style.display='none';
+  }
+}
+window.onOrderRetailerSelect=onOrderRetailerSelect;
+
+window.submitInlineCollection=async function(){
+  const retId=document.getElementById('val-order-retailer').value;
+  if(!retId){toast('Select a retailer first');return;}
+  const amt=parseFloat(document.getElementById('inline-coll-amt').value)||0;
+  const mode=document.getElementById('inline-coll-mode').value;
+  if(amt<=0){toast('Enter a valid amount');return;}
+  const today=getISTDateStr();
+  const existing=collectionsData.find(c=>c.retailerId===retId&&c.date===today&&!c.archived);
+  if(!existing){toast('No collection record found for this retailer. Import collection sheet first.');return;}
+  try{
+    await updateDoc(doc(db,'collections',existing.id),{collectedAmount:amt,mode,updatedAt:new Date().toISOString()});
+    const pending=(existing.grandTotal||0)-amt;
+    const resultEl=document.getElementById('inline-coll-result');
+    const collInfo=document.getElementById('inline-collection-info');
+    if(resultEl){
+      resultEl.style.display='block';
+      resultEl.style.background=pending<=0?'#f0fff4':'#fffaf0';
+      resultEl.style.borderColor=pending<=0?'#9ae6b4':'#fbd38d';
+      resultEl.innerHTML=pending<=0
+        ? `✅ <b>Collection complete!</b> Collected ${fmt(amt)} via ${mode}. No pending balance.`
+        : `✅ Collected <b>${fmt(amt)}</b> via <b>${mode}</b>. Balance pending: <b style="color:#e53e3e">${fmt(pending)}</b>`;
+    }
+    if(collInfo){
+      collInfo.innerHTML=`
+        <div style="display:flex;gap:16px;flex-wrap:wrap">
+          <span><b>Grand Total:</b> <span style="color:#2b6cb0;font-weight:700">${fmt(existing.grandTotal)}</span></span>
+          <span><b>Collected:</b> <span style="color:#38a169;font-weight:700">${fmt(amt)}</span></span>
+          <span><b>Pending:</b> <span style="color:${pending<=0?'#38a169':'#e53e3e'};font-weight:700">${fmt(Math.max(0,pending))}</span></span>
+        </div>`;
+    }
+    toast('Collection updated ✅');
+  }catch(e){toast('Error: '+e.message);}
+};
   if(c){
     const pending=(c.grandTotal||0)-(c.collectedAmount||0);
     note.style.display='block';
