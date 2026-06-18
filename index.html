@@ -738,6 +738,17 @@ function buildSkuOpts(lineId){
     </div>`).join('');
 }
 function selectSkuOpt(lineId,skuId,label){
+  if(skuId){
+    // Check if this SKU is already added in another line
+    const alreadyAdded=[...document.querySelectorAll('.line-sku-val')]
+      .filter(el=>el.id!=='val-sku-'+lineId)
+      .some(el=>el.value===skuId);
+    if(alreadyAdded){
+      toast('⚠️ SKU already added in another line');
+      closeAllSD();
+      return;
+    }
+  }
   selectSD('sku-'+lineId,skuId,label);
   if(skuId){const sku=skus.find(s=>s.id===skuId);if(sku){document.querySelector('#line-'+lineId+' .line-price').value=sku.price;updateTotal();}}
 }
