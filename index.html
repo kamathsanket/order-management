@@ -644,15 +644,15 @@ function buildRetailerOpts(routeId){
   let list=retailers;
   if(routeId){const route=routes.find(r=>r.id===routeId);const ids=(route?.retailers||[]).map(r=>r.id);list=ids.map(id=>retailers.find(r=>r.id===id)).filter(Boolean);}
   list=list.filter(r=>!orderedIds.has(r.id));
-  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --',onOrderRetailerSelect)">-- Select Retailer --</div>`+
+  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('order-retailer','','-- Select Retailer --',window.onOrderRetailerSelect)">-- Select Retailer --</div>`+
     (list.length
-      ? list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}',onOrderRetailerSelect)">
+      ? list.map(r=>`<div class="sd-option" data-label="${esc(r.name)}" onclick="selectSD('order-retailer','${r.id}','${esc(r.name)}',window.onOrderRetailerSelect)">
           ${esc(r.name)}${r.contact?` <span style="color:#a0aec0;font-size:.75rem">· ${esc(r.contact)}</span>`:''}
         </div>`).join('')
       : '<div class="sd-empty">All retailers already have an order today</div>');
 }
 // Collection balance note in Orders tab
-function onOrderRetailerSelect(retId){
+window.onOrderRetailerSelect=function(retId){
   const note=document.getElementById('retailer-balance-note');
   const collCard=document.getElementById('inline-collection-card');
   const collInfo=document.getElementById('inline-collection-info');
