@@ -691,8 +691,6 @@ function onOrderRetailerSelect(retId){
     if(collCard)collCard.style.display='none';
   }
 }
-window.onOrderRetailerSelect=onOrderRetailerSelect;
-
 window.submitInlineCollection=async function(){
   const retId=document.getElementById('val-order-retailer').value;
   if(!retId){toast('Select a retailer first');return;}
@@ -726,15 +724,6 @@ window.submitInlineCollection=async function(){
     toast('Collection updated ✅');
   }catch(e){toast('Error: '+e.message);}
 };
-  if(c){
-    const pending=(c.grandTotal||0)-(c.collectedAmount||0);
-    note.style.display='block';
-    note.innerHTML=`<span class="badge badge-orange">💰 Grand Total: ${fmt(c.grandTotal)} &nbsp;|&nbsp; Pending: ${fmt(pending)}</span>`;
-  } else {
-    note.style.display='none';
-  }
-}
-window.onOrderRetailerSelect=onOrderRetailerSelect;
 
 function buildSkuOpts(lineId){
   const key='sku-'+lineId;
