@@ -232,6 +232,7 @@ tr:last-child td{border-bottom:none}
             </div>
           </div>
           <input type="hidden" id="val-order-route" value=""/>
+          <div id="route-outlet-info" style="display:none;margin-top:6px"></div>
         </div>
         <div class="fg" style="flex:1;min-width:170px">
           <label>Retailer</label>
@@ -829,6 +830,9 @@ function initListeners(){
   onSnapshot(query(collection(db,'retailers'),orderBy('name')),snap=>{
     retailers=snap.docs.map(d=>({id:d.id,...d.data()}));
     buildRetailerOpts(getLock()?.id||document.getElementById('val-order-route').value||'');
+    // Refresh route outlet info if a route is selected
+    const curRoute=document.getElementById('val-order-route').value;
+    if(curRoute) onRouteSelect(curRoute);
     renderRetailerTable();checkReady();
   });
   onSnapshot(query(collection(db,'routes'),orderBy('name')),snap=>{
