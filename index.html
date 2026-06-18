@@ -165,6 +165,7 @@ tr:last-child td{border-bottom:none}
 </header>
 <div class="tabs">
   <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 Order</div>
+  <div class="tab" data-tab="summary" onclick="switchTab('summary')">📊 Summary</div>
   <div class="tab" data-tab="review" onclick="switchTab('review')">📝 Review</div>
   <div class="tab" data-tab="packing" onclick="switchTab('packing')">📦 Packing</div>
   <div class="tab" data-tab="finalbill" onclick="switchTab('finalbill')">🧾 Final Bill</div>
@@ -176,6 +177,59 @@ tr:last-child td{border-bottom:none}
   <div class="tab" data-tab="retailers" onclick="switchTab('retailers')">🏪 Retailers</div>
 </div>
 <div class="content">
+  <!-- SUMMARY -->
+  <div id="tab-summary" style="display:none">
+    <!-- Daily Summary -->
+    <div class="card" style="background:linear-gradient(135deg,#ebf8ff,#fff);border-left:4px solid #3182ce">
+      <b style="color:#2b6cb0">📊 Daily Summary</b>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Today's data only. Resets at midnight IST.</p>
+    </div>
+    <div class="summary-row" id="daily-stat-row"></div>
+    <!-- Daily Orders -->
+    <div class="card">
+      <h2>🏪 Outlet Orders — Today</h2>
+      <div style="overflow-x:auto"><div id="daily-outlet-table"></div></div>
+    </div>
+    <!-- Daily SKUs -->
+    <div class="card">
+      <h2>🏷️ SKU Summary — Today</h2>
+      <div style="overflow-x:auto"><div id="daily-sku-table"></div></div>
+    </div>
+    <!-- Overall Report -->
+    <div class="card" style="background:linear-gradient(135deg,#faf5ff,#fff);border-left:4px solid #805ad5;margin-top:8px">
+      <b style="color:#6b46c1">📈 Overall Report</b>
+      <p style="font-size:.82rem;color:#718096;margin-top:4px">Select a date range and generate detailed sales reports.</p>
+    </div>
+    <div class="card">
+      <h2>📅 Date Range</h2>
+      <div class="row">
+        <div class="fg" style="flex:1;min-width:140px"><label>From</label><input type="date" id="report-from"/></div>
+        <div class="fg" style="flex:1;min-width:140px"><label>To</label><input type="date" id="report-to"/></div>
+        <div style="padding-bottom:1px"><button class="btn btn-primary" onclick="generateReports()">Generate Report</button></div>
+        <div style="padding-bottom:1px"><button class="btn btn-pdf" onclick="exportReportPDF()">📄 Export PDF</button></div>
+      </div>
+    </div>
+    <!-- Outlet-wise -->
+    <div class="card" id="rpt-outlet-card" style="display:none">
+      <h2>🏪 Outlet-wise Sales</h2>
+      <div style="overflow-x:auto"><div id="rpt-outlet-table"></div></div>
+    </div>
+    <!-- SKU-wise -->
+    <div class="card" id="rpt-sku-card" style="display:none">
+      <h2>🏷️ SKU-wise Sales</h2>
+      <div style="overflow-x:auto"><div id="rpt-sku-table"></div></div>
+    </div>
+    <!-- Route-wise -->
+    <div class="card" id="rpt-route-card" style="display:none">
+      <h2>🗺️ Route-wise Sales</h2>
+      <div style="overflow-x:auto"><div id="rpt-route-table"></div></div>
+    </div>
+    <!-- Collection Summary -->
+    <div class="card" id="rpt-collection-card" style="display:none">
+      <h2>💰 Collection Summary</h2>
+      <div style="overflow-x:auto"><div id="rpt-collection-table"></div></div>
+    </div>
+  </div>
   <!-- ORDER -->
   <div id="tab-orders">
     <div class="card">
@@ -639,12 +693,13 @@ window.filterRouteRetailerPicker=function(routeId,q){
 };
 
 // ── TABS ───────────────────────────────────────────────────
-const TABS=['orders','review','packing','finalbill','collection','history','archives','routes','skus','retailers'];
+const TABS=['orders','summary','review','packing','finalbill','collection','history','archives','routes','skus','retailers'];
 window.switchTab=function(t){
   TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
     const el=document.querySelectorAll('.tab')[i];if(el){el.classList.toggle('active',x===t);el.dataset.tab=x;}
   });
+  if(t==='summary')renderSummaryTab();
   if(t==='review')renderReview();
   if(t==='history')renderHistory();
   if(t==='packing')renderPacking();
@@ -1496,7 +1551,319 @@ function exportFinalBillPDF(confirmed){
   pdfFtr(d,pw);d.save('Final_Bill_'+getISTDateStr()+'.pdf');toast('Final Bill PDF downloaded ✅');
 }
 
-// ── INIT ────────────────────────────────────────────────────
+// ── SUMMARY TAB ────────────────────────────────────────────
+function renderSummaryTab(){
+  renderDailySummary();
+  // set default date range if empty
+  const today=getISTDateStr();
+  if(!document.getElementById('report-from').value){
+    const d30=new Date();d30.setDate(d30.getDate()-30);
+    document.getElementById('report-from').value=d30.toLocaleDateString('en-CA',{timeZone:'Asia/Kolkata'});
+  }
+  if(!document.getElementById('report-to').value)document.getElementById('report-to').value=today;
+}
+
+function renderDailySummary(){
+  const today=getISTDateStr();
+  const todayOrders=orders; // already filtered to today
+  const todayPacking=packingDocs.filter(p=>p.date===today&&!p.archived&&p.confirmed);
+
+  // ── Stats row
+  const totalOutlets=[...new Set(todayOrders.map(o=>o.retailerId))].length;
+  const orderedVal=todayOrders.reduce((s,o)=>s+o.total,0);
+  const packedVal=todayPacking.reduce((s,p)=>s+p.items.filter(i=>i.packed).reduce((ss,i)=>ss+(i.packedQty*i.price),0),0);
+  const sr=document.getElementById('daily-stat-row');
+  if(sr)sr.innerHTML=`
+    <div class="stat"><div class="stat-val">${totalOutlets}</div><div class="stat-lbl">Outlets Today</div></div>
+    <div class="stat"><div class="stat-val">${fmt(orderedVal)}</div><div class="stat-lbl">Ordered Value</div></div>
+    <div class="stat"><div class="stat-val">${fmt(packedVal)}</div><div class="stat-lbl">Packed Value</div></div>
+    <div class="stat"><div class="stat-val">${todayPacking.length}</div><div class="stat-lbl">Outlets Packed</div></div>`;
+
+  // ── Outlet Orders table
+  const outletWrap=document.getElementById('daily-outlet-table');
+  if(outletWrap){
+    if(!todayOrders.length){outletWrap.innerHTML='<div class="empty">No orders today.</div>';}
+    else{
+      // merge by retailer
+      const map={};
+      todayOrders.forEach(o=>{
+        if(!map[o.retailerId])map[o.retailerId]={name:o.retailerName,route:o.routeName||'—',orderedVal:0,packedVal:0,packed:false};
+        map[o.retailerId].orderedVal+=o.total;
+      });
+      todayPacking.forEach(p=>{
+        if(map[p.retailerId]){map[p.retailerId].packedVal=p.items.filter(i=>i.packed).reduce((s,i)=>s+(i.packedQty*i.price),0);map[p.retailerId].packed=true;}
+      });
+      const rows=Object.values(map).sort((a,b)=>a.name.localeCompare(b.name));
+      outletWrap.innerHTML=`<table><thead><tr><th>Outlet</th><th>Route</th><th>Ordered (₹)</th><th>Packed (₹)</th><th>Status</th></tr></thead><tbody>`+
+        rows.map(r=>`<tr>
+          <td><b>${esc(r.name)}</b></td>
+          <td>${r.route!=='—'?`<span class="badge badge-purple">${esc(r.route)}</span>`:'—'}</td>
+          <td>${fmt(r.orderedVal)}</td>
+          <td>${fmt(r.packedVal)}</td>
+          <td>${r.packed?'<span class="badge badge-green">✅ Packed</span>':'<span class="badge badge-orange">⏳ Pending</span>'}</td>
+        </tr>`).join('')+
+        `<tr style="background:#f7fafc;font-weight:700">
+          <td colspan="2">Total</td><td>${fmt(orderedVal)}</td><td>${fmt(packedVal)}</td><td></td>
+        </tr></tbody></table>`;
+    }
+  }
+
+  // ── SKU summary table
+  const skuWrap=document.getElementById('daily-sku-table');
+  if(skuWrap){
+    if(!todayOrders.length){skuWrap.innerHTML='<div class="empty">No orders today.</div>';}
+    else{
+      const skuMap={};
+      todayOrders.forEach(o=>o.lines.forEach(l=>{
+        if(!skuMap[l.skuId])skuMap[l.skuId]={code:l.skuCode,name:l.skuName,price:l.price,ordQty:0,ordAmt:0,pkQty:0,pkAmt:0};
+        skuMap[l.skuId].ordQty+=l.qty;skuMap[l.skuId].ordAmt+=l.subtotal;
+      }));
+      todayPacking.forEach(p=>p.items.filter(i=>i.packed).forEach(i=>{
+        if(skuMap[i.skuId]){skuMap[i.skuId].pkQty+=i.packedQty;skuMap[i.skuId].pkAmt+=i.packedQty*i.price;}
+        else{skuMap[i.skuId]={code:i.skuCode,name:i.skuName,price:i.price,ordQty:0,ordAmt:0,pkQty:i.packedQty,pkAmt:i.packedQty*i.price};}
+      }));
+      const rows=Object.values(skuMap).sort((a,b)=>a.code.localeCompare(b.code));
+      const totOQ=rows.reduce((s,r)=>s+r.ordQty,0),totOA=rows.reduce((s,r)=>s+r.ordAmt,0);
+      const totPQ=rows.reduce((s,r)=>s+r.pkQty,0),totPA=rows.reduce((s,r)=>s+r.pkAmt,0);
+      skuWrap.innerHTML=`<table><thead><tr><th>SKU Code</th><th>Product</th><th>Price</th><th>Ord Qty</th><th>Ord Amt</th><th>Pkd Qty</th><th>Pkd Amt</th></tr></thead><tbody>`+
+        rows.map(r=>`<tr>
+          <td><span class="badge badge-blue">${esc(r.code)}</span></td>
+          <td>${esc(r.name)}</td><td>${fmt(r.price)}</td>
+          <td>${r.ordQty}</td><td>${fmt(r.ordAmt)}</td>
+          <td>${r.pkQty}</td><td>${fmt(r.pkAmt)}</td>
+        </tr>`).join('')+
+        `<tr style="background:#f7fafc;font-weight:700"><td colspan="3">Total</td>
+          <td>${totOQ}</td><td>${fmt(totOA)}</td><td>${totPQ}</td><td>${fmt(totPA)}</td>
+        </tr></tbody></table>`;
+    }
+  }
+}
+
+// ── OVERALL REPORTS ────────────────────────────────────────
+window.generateReports=function(){
+  const from=document.getElementById('report-from').value;
+  const to=document.getElementById('report-to').value;
+  if(!from||!to){toast('Select a date range');return;}
+  if(from>to){toast('From date must be before To date');return;}
+
+  const allOrders=[...orders,...archivedOrders].filter(o=>o.date>=from&&o.date<=to);
+  const allPacking=packingDocs.filter(p=>p.confirmed&&p.date>=from&&p.date<=to);
+  const allCollections=collectionsData.filter(c=>c.date>=from&&c.date<=to);
+
+  renderOutletReport(allOrders,allPacking,from,to);
+  renderSkuReport(allOrders,allPacking);
+  renderRouteReport(allOrders,allPacking);
+  renderCollectionReport(allCollections,from,to);
+
+  ['rpt-outlet-card','rpt-sku-card','rpt-route-card','rpt-collection-card'].forEach(id=>{
+    const el=document.getElementById(id);if(el)el.style.display='block';
+  });
+  toast('Report generated ✅');
+};
+
+function renderOutletReport(allOrders,allPacking,from,to){
+  const wrap=document.getElementById('rpt-outlet-table');if(!wrap)return;
+  const map={};
+  allOrders.forEach(o=>{
+    if(!map[o.retailerId])map[o.retailerId]={name:o.retailerName,route:o.routeName||'—',days:new Set(),ordVal:0,pkVal:0};
+    map[o.retailerId].ordVal+=o.total;map[o.retailerId].days.add(o.date);
+  });
+  allPacking.forEach(p=>{
+    if(!map[p.retailerId])map[p.retailerId]={name:p.retailerName,route:p.routeName||'—',days:new Set(),ordVal:0,pkVal:0};
+    map[p.retailerId].pkVal+=p.items.filter(i=>i.packed).reduce((s,i)=>s+(i.packedQty*i.price),0);
+  });
+  const rows=Object.values(map).sort((a,b)=>b.ordVal-a.ordVal);
+  if(!rows.length){wrap.innerHTML='<div class="empty">No data in this range.</div>';return;}
+  const tOrd=rows.reduce((s,r)=>s+r.ordVal,0),tPkd=rows.reduce((s,r)=>s+r.pkVal,0);
+  wrap.innerHTML=`<table><thead><tr><th>#</th><th>Outlet</th><th>Route</th><th>Order Days</th><th>Ordered (₹)</th><th>Packed (₹)</th><th>Difference</th></tr></thead><tbody>`+
+    rows.map((r,i)=>`<tr>
+      <td style="color:#a0aec0">${i+1}</td>
+      <td><b>${esc(r.name)}</b></td>
+      <td>${r.route!=='—'?`<span class="badge badge-purple">${esc(r.route)}</span>`:'—'}</td>
+      <td>${r.days.size}</td>
+      <td>${fmt(r.ordVal)}</td><td>${fmt(r.pkVal)}</td>
+      <td style="color:${r.ordVal-r.pkVal>0?'#e53e3e':'#38a169'}">${fmt(r.ordVal-r.pkVal)}</td>
+    </tr>`).join('')+
+    `<tr style="background:#f7fafc;font-weight:700"><td colspan="4">Total</td><td>${fmt(tOrd)}</td><td>${fmt(tPkd)}</td><td style="color:${tOrd-tPkd>0?'#e53e3e':'#38a169'}">${fmt(tOrd-tPkd)}</td></tr>
+    </tbody></table>`;
+}
+
+function renderSkuReport(allOrders,allPacking){
+  const wrap=document.getElementById('rpt-sku-table');if(!wrap)return;
+  const map={};
+  allOrders.forEach(o=>o.lines.forEach(l=>{
+    if(!map[l.skuId])map[l.skuId]={code:l.skuCode,name:l.skuName,price:l.price,ordQty:0,ordAmt:0,pkQty:0,pkAmt:0,outlets:new Set()};
+    map[l.skuId].ordQty+=l.qty;map[l.skuId].ordAmt+=l.subtotal;map[l.skuId].outlets.add(o.retailerId);
+  }));
+  allPacking.forEach(p=>p.items.filter(i=>i.packed).forEach(i=>{
+    if(!map[i.skuId])map[i.skuId]={code:i.skuCode,name:i.skuName,price:i.price,ordQty:0,ordAmt:0,pkQty:0,pkAmt:0,outlets:new Set()};
+    map[i.skuId].pkQty+=i.packedQty;map[i.skuId].pkAmt+=i.packedQty*i.price;
+  }));
+  const rows=Object.values(map).sort((a,b)=>b.pkAmt-a.pkAmt);
+  if(!rows.length){wrap.innerHTML='<div class="empty">No data in this range.</div>';return;}
+  const tOQ=rows.reduce((s,r)=>s+r.ordQty,0),tOA=rows.reduce((s,r)=>s+r.ordAmt,0);
+  const tPQ=rows.reduce((s,r)=>s+r.pkQty,0),tPA=rows.reduce((s,r)=>s+r.pkAmt,0);
+  wrap.innerHTML=`<table><thead><tr><th>#</th><th>SKU</th><th>Product</th><th>Price</th><th>Outlets</th><th>Ord Qty</th><th>Ord Amt</th><th>Pkd Qty</th><th>Pkd Amt</th></tr></thead><tbody>`+
+    rows.map((r,i)=>`<tr>
+      <td style="color:#a0aec0">${i+1}</td>
+      <td><span class="badge badge-blue">${esc(r.code)}</span></td>
+      <td>${esc(r.name)}</td><td>${fmt(r.price)}</td>
+      <td>${r.outlets.size}</td>
+      <td>${r.ordQty}</td><td>${fmt(r.ordAmt)}</td>
+      <td>${r.pkQty}</td><td><b style="color:#276749">${fmt(r.pkAmt)}</b></td>
+    </tr>`).join('')+
+    `<tr style="background:#f7fafc;font-weight:700"><td colspan="5">Total</td>
+      <td>${tOQ}</td><td>${fmt(tOA)}</td><td>${tPQ}</td><td>${fmt(tPA)}</td>
+    </tr></tbody></table>`;
+}
+
+function renderRouteReport(allOrders,allPacking){
+  const wrap=document.getElementById('rpt-route-table');if(!wrap)return;
+  const map={};
+  allOrders.forEach(o=>{
+    const key=o.routeId||'__no_route__',name=o.routeName||'No Route';
+    if(!map[key])map[key]={name,outlets:new Set(),ordVal:0,pkVal:0};
+    map[key].ordVal+=o.total;map[key].outlets.add(o.retailerId);
+  });
+  allPacking.forEach(p=>{
+    const key=p.routeId||'__no_route__',name=p.routeName||'No Route';
+    if(!map[key])map[key]={name,outlets:new Set(),ordVal:0,pkVal:0};
+    map[key].pkVal+=p.items.filter(i=>i.packed).reduce((s,i)=>s+(i.packedQty*i.price),0);
+  });
+  const rows=Object.values(map).sort((a,b)=>b.ordVal-a.ordVal);
+  if(!rows.length){wrap.innerHTML='<div class="empty">No data in this range.</div>';return;}
+  const tOrd=rows.reduce((s,r)=>s+r.ordVal,0),tPkd=rows.reduce((s,r)=>s+r.pkVal,0);
+  wrap.innerHTML=`<table><thead><tr><th>#</th><th>Route</th><th>Outlets</th><th>Ordered (₹)</th><th>Packed (₹)</th><th>% Fulfillment</th></tr></thead><tbody>`+
+    rows.map((r,i)=>{
+      const pct=r.ordVal>0?Math.round((r.pkVal/r.ordVal)*100):0;
+      return`<tr>
+        <td style="color:#a0aec0">${i+1}</td>
+        <td><b>${esc(r.name)}</b></td>
+        <td>${r.outlets.size}</td>
+        <td>${fmt(r.ordVal)}</td><td>${fmt(r.pkVal)}</td>
+        <td><span class="badge ${pct>=80?'badge-green':pct>=50?'badge-orange':'badge-blue'}">${pct}%</span></td>
+      </tr>`;
+    }).join('')+
+    `<tr style="background:#f7fafc;font-weight:700"><td colspan="3">Total</td><td>${fmt(tOrd)}</td><td>${fmt(tPkd)}</td>
+      <td><span class="badge badge-blue">${tOrd>0?Math.round((tPkd/tOrd)*100):0}%</span></td>
+    </tr></tbody></table>`;
+}
+
+function renderCollectionReport(allCollections,from,to){
+  const wrap=document.getElementById('rpt-collection-table');if(!wrap)return;
+  if(!allCollections.length){wrap.innerHTML='<div class="empty">No collection data in this range.</div>';return;}
+  // merge by retailer
+  const map={};
+  allCollections.forEach(c=>{
+    if(!map[c.retailerId])map[c.retailerId]={name:c.retailerName,route:c.routeName||'—',grand:0,collected:0,days:new Set()};
+    map[c.retailerId].grand+=c.grandTotal||0;map[c.retailerId].collected+=c.collectedAmount||0;map[c.retailerId].days.add(c.date);
+  });
+  const rows=Object.values(map).sort((a,b)=>b.grand-a.grand);
+  const tGrand=rows.reduce((s,r)=>s+r.grand,0),tColl=rows.reduce((s,r)=>s+r.collected,0);
+  wrap.innerHTML=`<p style="font-size:.78rem;color:#a0aec0;margin-bottom:8px">📅 ${from} → ${to}</p>
+    <table><thead><tr><th>#</th><th>Outlet</th><th>Route</th><th>Days</th><th>Grand Total</th><th>Collected</th><th>Pending</th><th>% Collected</th></tr></thead><tbody>`+
+    rows.map((r,i)=>{
+      const pending=r.grand-r.collected,pct=r.grand>0?Math.round((r.collected/r.grand)*100):0;
+      return`<tr>
+        <td style="color:#a0aec0">${i+1}</td>
+        <td><b>${esc(r.name)}</b></td>
+        <td>${r.route!=='—'?`<span class="badge badge-purple">${esc(r.route)}</span>`:'—'}</td>
+        <td>${r.days.size}</td>
+        <td>${fmt(r.grand)}</td>
+        <td style="color:#38a169;font-weight:600">${fmt(r.collected)}</td>
+        <td style="color:${pending>0?'#e53e3e':'#38a169'};font-weight:600">${fmt(pending)}</td>
+        <td><span class="badge ${pct>=90?'badge-green':pct>=50?'badge-orange':'badge-blue'}">${pct}%</span></td>
+      </tr>`;
+    }).join('')+
+    `<tr style="background:#f7fafc;font-weight:700"><td colspan="4">Total</td>
+      <td>${fmt(tGrand)}</td><td style="color:#38a169">${fmt(tColl)}</td>
+      <td style="color:${tGrand-tColl>0?'#e53e3e':'#38a169'}">${fmt(tGrand-tColl)}</td>
+      <td><span class="badge badge-blue">${tGrand>0?Math.round((tColl/tGrand)*100):0}%</span></td>
+    </tr></tbody></table>`;
+}
+
+// ── REPORT PDF ─────────────────────────────────────────────
+window.exportReportPDF=function(){
+  const from=document.getElementById('report-from').value,to=document.getElementById('report-to').value;
+  if(!from||!to){toast('Generate report first');return;}
+  const {jsPDF}=window.jspdf,d=new jsPDF(),m=13,pw=210;
+  let y=0;
+
+  function rHdr(title){
+    if(y>0){d.addPage();y=0;}
+    d.setFillColor(43,108,176);d.rect(0,0,pw,22,'F');
+    d.setTextColor(255,255,255);d.setFontSize(11);d.setFont('helvetica','bold');d.text(title,m,9);
+    d.setFontSize(7);d.setFont('helvetica','normal');d.text(`Period: ${from} to ${to}`,m,16);
+    d.setTextColor(44,62,80);y=28;
+  }
+  function rTableHdr(headers,cols){
+    d.setFillColor(240,244,248);d.rect(m,y-3,pw-2*m,7,'F');
+    d.setFont('helvetica','bold');d.setFontSize(7);d.setTextColor(80,80,80);
+    headers.forEach((h,i)=>d.text(h,cols[i],y));y+=5;
+    d.setFont('helvetica','normal');d.setFontSize(6.5);
+  }
+  function rRow(vals,cols,isTotal){
+    if(y>278){d.addPage();y=14;}
+    if(isTotal){d.setFillColor(245,247,250);d.rect(m,y-3,pw-2*m,7,'F');d.setFont('helvetica','bold');}
+    else d.setFont('helvetica','normal');
+    d.setTextColor(44,62,80);
+    vals.forEach((v,i)=>d.text(String(v||''),cols[i],y,{maxWidth:cols[i+1]?cols[i+1]-cols[i]-1:pw-m-cols[i]}));
+    y+=6;d.setFont('helvetica','normal');
+  }
+
+  const allOrders=[...orders,...archivedOrders].filter(o=>o.date>=from&&o.date<=to);
+  const allPacking=packingDocs.filter(p=>p.confirmed&&p.date>=from&&p.date<=to);
+  const allCollections=collectionsData.filter(c=>c.date>=from&&c.date<=to);
+
+  // 1. Outlet-wise
+  rHdr('OUTLET-WISE SALES REPORT');
+  const outMap={};
+  allOrders.forEach(o=>{if(!outMap[o.retailerId])outMap[o.retailerId]={name:o.retailerName,route:o.routeName||'—',days:new Set(),ordVal:0,pkVal:0};outMap[o.retailerId].ordVal+=o.total;outMap[o.retailerId].days.add(o.date);});
+  allPacking.forEach(p=>{if(!outMap[p.retailerId])outMap[p.retailerId]={name:p.retailerName,route:p.routeName||'—',days:new Set(),ordVal:0,pkVal:0};outMap[p.retailerId].pkVal+=p.items.filter(i=>i.packed).reduce((s,i)=>s+(i.packedQty*i.price),0);});
+  const outRows=Object.values(outMap).sort((a,b)=>b.ordVal-a.ordVal);
+  const oc=[m,m+40,m+80,m+105,m+130,m+158];
+  rTableHdr(['#','Outlet','Route','Days','Ordered','Packed'],oc);
+  outRows.forEach((r,i)=>rRow([(i+1)+'.',r.name.substring(0,20),r.route.substring(0,18),String(r.days.size),fmt(r.ordVal),fmt(r.pkVal)],oc));
+  rRow(['','Total','','',fmt(outRows.reduce((s,r)=>s+r.ordVal,0)),fmt(outRows.reduce((s,r)=>s+r.pkVal,0))],oc,true);
+
+  // 2. SKU-wise
+  rHdr('SKU-WISE SALES REPORT');
+  const skuMap2={};
+  allOrders.forEach(o=>o.lines.forEach(l=>{if(!skuMap2[l.skuId])skuMap2[l.skuId]={code:l.skuCode,name:l.skuName,ordQty:0,ordAmt:0,pkQty:0,pkAmt:0};skuMap2[l.skuId].ordQty+=l.qty;skuMap2[l.skuId].ordAmt+=l.subtotal;}));
+  allPacking.forEach(p=>p.items.filter(i=>i.packed).forEach(i=>{if(!skuMap2[i.skuId])skuMap2[i.skuId]={code:i.skuCode,name:i.skuName,ordQty:0,ordAmt:0,pkQty:0,pkAmt:0};skuMap2[i.skuId].pkQty+=i.packedQty;skuMap2[i.skuId].pkAmt+=i.packedQty*i.price;}));
+  const skuRows2=Object.values(skuMap2).sort((a,b)=>b.pkAmt-a.pkAmt);
+  const sc=[m,m+16,m+65,m+90,m+112,m+138,m+162];
+  rTableHdr(['#','Code','Product','Ord Qty','Ord Amt','Pkd Qty','Pkd Amt'],sc);
+  skuRows2.forEach((r,i)=>rRow([(i+1)+'.',r.code,r.name.substring(0,22),String(r.ordQty),fmt(r.ordAmt),String(r.pkQty),fmt(r.pkAmt)],sc));
+  rRow(['','','Total',String(skuRows2.reduce((s,r)=>s+r.ordQty,0)),fmt(skuRows2.reduce((s,r)=>s+r.ordAmt,0)),String(skuRows2.reduce((s,r)=>s+r.pkQty,0)),fmt(skuRows2.reduce((s,r)=>s+r.pkAmt,0))],sc,true);
+
+  // 3. Route-wise
+  rHdr('ROUTE-WISE SALES REPORT');
+  const rtMap={};
+  allOrders.forEach(o=>{const k=o.routeId||'__',n=o.routeName||'No Route';if(!rtMap[k])rtMap[k]={name:n,outlets:new Set(),ordVal:0,pkVal:0};rtMap[k].ordVal+=o.total;rtMap[k].outlets.add(o.retailerId);});
+  allPacking.forEach(p=>{const k=p.routeId||'__',n=p.routeName||'No Route';if(!rtMap[k])rtMap[k]={name:n,outlets:new Set(),ordVal:0,pkVal:0};rtMap[k].pkVal+=p.items.filter(i=>i.packed).reduce((s,i)=>s+(i.packedQty*i.price),0);});
+  const rtRows=Object.values(rtMap).sort((a,b)=>b.ordVal-a.ordVal);
+  const rc=[m,m+45,m+70,m+110,m+148];
+  rTableHdr(['#','Route','Outlets','Ordered','Packed'],rc);
+  rtRows.forEach((r,i)=>rRow([(i+1)+'.',r.name.substring(0,22),String(r.outlets.size),fmt(r.ordVal),fmt(r.pkVal)],rc));
+  rRow(['','Total','',fmt(rtRows.reduce((s,r)=>s+r.ordVal,0)),fmt(rtRows.reduce((s,r)=>s+r.pkVal,0))],rc,true);
+
+  // 4. Collection
+  rHdr('COLLECTION SUMMARY REPORT');
+  const cMap={};
+  allCollections.forEach(c=>{if(!cMap[c.retailerId])cMap[c.retailerId]={name:c.retailerName,route:c.routeName||'—',grand:0,collected:0};cMap[c.retailerId].grand+=c.grandTotal||0;cMap[c.retailerId].collected+=c.collectedAmount||0;});
+  const cRows=Object.values(cMap).sort((a,b)=>b.grand-a.grand);
+  const cc=[m,m+42,m+80,m+115,m+145,m+175];
+  rTableHdr(['#','Outlet','Route','Grand Total','Collected','Pending'],cc);
+  cRows.forEach((r,i)=>rRow([(i+1)+'.',r.name.substring(0,18),r.route.substring(0,16),fmt(r.grand),fmt(r.collected),fmt(r.grand-r.collected)],cc));
+  const tG=cRows.reduce((s,r)=>s+r.grand,0),tC=cRows.reduce((s,r)=>s+r.collected,0);
+  rRow(['','Total','',fmt(tG),fmt(tC),fmt(tG-tC)],cc,true);
+
+  d.setFontSize(6.5);d.setTextColor(180,180,180);d.setFont('helvetica','normal');
+  d.text('Generated by Retailer Order Management App',pw/2,291,{align:'center'});
+  d.save('Sales_Report_'+from+'_to_'+to+'.pdf');
+  toast('Report PDF downloaded ✅');
+};
 showLoader('Connecting to cloud...');
 document.getElementById('order-date').value=getISTDateStr();
 window.addSkuLine();
