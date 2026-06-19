@@ -1186,7 +1186,21 @@ window.saveReviewOrder=async function(orderId){
   try{await updateDoc(doc(db,'orders',orderId),{lines,total:reviewTotal(orderId)});toast('Changes saved ✅');}
   catch(e){toast('Error: '+e.message);}
 };
-window.packReviewOrder=async function(orderId,retailerName){
+window.acceptAllReview=async function(){
+  const ro=getReviewOrders();
+  if(!ro.length){toast('No orders pending review');return;}
+  if(!confirm(`Move all ${ro.length} order(s) to Packing?`))return;
+  let done=0;
+  for(const o of ro){
+    const lines=getReviewLines(o.id);
+    recalcReview(o.id);
+    try{
+      await updateDoc(doc(db,'orders',o.id),{lines,total:reviewTotal(o.id),status:'packing'});
+      delete reviewEdits[o.id];openReviewCards.delete(o.id);done++;
+    }catch(e){console.error('Accept all error',e);}
+  }
+  toast(`📦 ${done} order(s) sent to Packing ✅`);
+};
   const lines=getReviewLines(orderId);if(!lines.length){toast('Add at least one SKU');return;}
   recalcReview(orderId);
   try{
@@ -1509,10 +1523,23 @@ function renderArchivesContent(){
   if(!dayOrders.length){wrap.innerHTML='<div class="card"><div class="empty">No orders for this date.</div></div>';return;}
   const dayTotal=dayOrders.reduce((s,o)=>s+o.total,0);
   wrap.innerHTML='';
-  const sec=document.createElement('div');sec.className='retailer-section';
-  sec.innerHTML=`<div class="section-title">📅 ${archivesDate} <span class="badge badge-blue">${dayOrders.length} orders</span> <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span></div>`;
-  dayOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
-  wrap.appendChild(sec);
+  // group by retailer
+  const grouped={};
+  dayOrders.forEach(o=>{
+    const key=o.retailerId||o.retailerName;
+    if(!grouped[key])grouped[key]=[];
+    grouped[key].push(o);
+  });
+  const header=document.createElement('div');header.className='section-title';
+  header.innerHTML=`📅 ${archivesDate} <span class="badge badge-blue">${dayOrders.length} orders</span> <span style="color:#38a169;font-weight:600">${fmt(dayTotal)}</span>`;
+  wrap.appendChild(header);
+  Object.entries(grouped).forEach(([,rOrders])=>{
+    const rName=rOrders[0].retailerName||'Unknown Retailer';
+    const sec=document.createElement('div');sec.className='retailer-section';
+    sec.innerHTML=`<div class="section-title" style="font-size:.88rem;margin-bottom:8px">🏪 ${esc(rName)}</div>`;
+    rOrders.forEach(o=>sec.appendChild(buildOrderCard(o,true,null)));
+    wrap.appendChild(sec);
+  });
 }
 
 // ── ORDER CARD ─────────────────────────────────────────────
