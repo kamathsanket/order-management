@@ -577,6 +577,10 @@ window.onRouteSelect=function(routeId){
 };
 
 window.onRetailerSelect=function(retId){
+  // Rebuild all existing SKU line dropdowns with retailer-ranked SKUs
+  document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(el=>{
+    if(!el.id.includes('group'))buildSkuOpts(el.id.replace('sd-opts-sku-',''));
+  });
   const note=document.getElementById('retailer-balance-note');
   const collCard=document.getElementById('inline-collection-card');
   const collInfo=document.getElementById('inline-collection-info');
@@ -626,7 +630,41 @@ window.submitInlineCollection=async function(){
   }catch(e){toast('Error: '+e.message);}
 };
 
-// ── DROPDOWN BUILDERS ──────────────────────────────────────
+// ── ANALYTICS HELPERS ──────────────────────────────────────
+// Returns SKU ids sorted by how frequently a retailer has ordered them
+function getSkuRankForRetailer(retailerId){
+  const freq={};
+  [...orders,...archivedOrders].filter(o=>o.retailerId===retailerId).forEach(o=>{
+    o.lines.forEach(l=>{freq[l.skuId]=(freq[l.skuId]||0)+1;});
+  });
+  return freq; // {skuId: count}
+}
+
+// Returns retailer ids sorted by their average visit sequence within a route
+// Lower average position = visited earlier more often
+function getRetailerVisitRankForRoute(routeId){
+  // Look at archived orders grouped by date for this route
+  const allForRoute=[...orders,...archivedOrders].filter(o=>o.routeId===routeId);
+  // Group by date
+  const byDate={};
+  allForRoute.forEach(o=>{
+    if(!byDate[o.date])byDate[o.date]=[];
+    byDate[o.date].push({retailerId:o.retailerId,createdAt:o.createdAt||o.date});
+  });
+  // For each date, rank retailers by createdAt time (earliest = position 1)
+  const posSum={},posCount={};
+  Object.values(byDate).forEach(dayOrders=>{
+    const sorted=[...dayOrders].sort((a,b)=>(a.createdAt||'').localeCompare(b.createdAt||''));
+    sorted.forEach((o,idx)=>{
+      posSum[o.retailerId]=(posSum[o.retailerId]||0)+(idx+1);
+      posCount[o.retailerId]=(posCount[o.retailerId]||0)+1;
+    });
+  });
+  // avg position per retailer (lower = visited earlier)
+  const avg={};
+  Object.keys(posSum).forEach(id=>{avg[id]=posSum[id]/posCount[id];});
+  return avg; // {retailerId: avgPosition}
+}
 function buildGroupOpts(){
   const opts=document.getElementById('sd-opts-sku-group');if(!opts)return;
   opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSD('sku-group','','-- No Group --','')">-- No Group --</div>`+
@@ -658,11 +696,38 @@ function buildCollectionRouteOpts(){
 }
 function buildSkuOpts(lineId){
   const key='sku-'+lineId,opts=document.getElementById('sd-opts-'+key);if(!opts)return;
-  opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
-    skus.map(s=>`<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
-      <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}
-      <span style="margin-left:auto;text-align:right;font-size:.75rem"><span style="color:#38a169">${fmt(s.price)}</span>${s.mrp?`<br><span style="color:#a0aec0">MRP ${fmt(s.mrp)}</span>`:''}</span>
-    </div>`).join('');
+  // Get current selected retailer for ranking
+  const retailerId=document.getElementById('val-order-retailer')?.value||'';
+  let sortedSkus=[...skus];
+  if(retailerId){
+    const freq=getSkuRankForRetailer(retailerId);
+    const hasHistory=Object.keys(freq).length>0;
+    if(hasHistory){
+      sortedSkus.sort((a,b)=>{
+        const fa=freq[a.id]||0,fb=freq[b.id]||0;
+        if(fb!==fa)return fb-fa; // most frequent first
+        return a.code.localeCompare(b.code); // tie-break alphabetically
+      });
+    }
+    opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
+      sortedSkus.map((s,i)=>{
+        const rank=freq[s.id]||0;
+        const rankBadge=hasHistory&&rank>0?`<span style="background:#ebf8ff;color:#2b6cb0;border-radius:10px;padding:1px 6px;font-size:.68rem;margin-left:4px">×${rank}</span>`:'';
+        const divider=hasHistory&&i>0&&rank===0&&(freq[sortedSkus[i-1].id]||0)>0
+          ?'<div style="border-top:1px dashed #e2e8f0;margin:4px 0;padding-top:4px;font-size:.7rem;color:#a0aec0;padding-left:4px">Other SKUs</div>':''
+        ;
+        return `${divider}<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
+          <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}${rankBadge}
+          <span style="margin-left:auto;text-align:right;font-size:.75rem"><span style="color:#38a169">${fmt(s.price)}</span>${s.mrp?`<br><span style="color:#a0aec0">MRP ${fmt(s.mrp)}</span>`:''}</span>
+        </div>`;
+      }).join('');
+  } else {
+    opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
+      sortedSkus.map(s=>`<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
+        <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}
+        <span style="margin-left:auto;text-align:right;font-size:.75rem"><span style="color:#38a169">${fmt(s.price)}</span>${s.mrp?`<br><span style="color:#a0aec0">MRP ${fmt(s.mrp)}</span>`:''}</span>
+      </div>`).join('');
+  }
 }
 window.selectSkuOpt=function(lineId,skuId,label){
   if(skuId){
@@ -693,7 +758,7 @@ window.filterRouteRetailerPicker=function(routeId,q){
 };
 
 // ── TABS ───────────────────────────────────────────────────
-const TABS=['orders','summary','review','packing','finalbill','collection','history','archives','routes','skus','retailers'];
+const TABS=['orders','review','packing','finalbill','collection','summary','history','archives','routes','skus','retailers'];
 window.switchTab=function(t){
   TABS.forEach((x,i)=>{
     document.getElementById('tab-'+x).style.display=x===t?'block':'none';
