@@ -701,38 +701,33 @@ function buildCollectionRouteOpts(){
 }
 function buildSkuOpts(lineId){
   const key='sku-'+lineId,opts=document.getElementById('sd-opts-'+key);if(!opts)return;
-  // Get current selected retailer for ranking
   const retailerId=document.getElementById('val-order-retailer')?.value||'';
-  let sortedSkus=[...skus];
-  if(retailerId){
-    const freq=getSkuRankForRetailer(retailerId);
-    const hasHistory=Object.keys(freq).length>0;
-    if(hasHistory){
-      sortedSkus.sort((a,b)=>{
-        const fa=freq[a.id]||0,fb=freq[b.id]||0;
-        if(fb!==fa)return fb-fa; // most frequent first
-        return a.code.localeCompare(b.code); // tie-break alphabetically
-      });
-    }
-    opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
-      sortedSkus.map((s,i)=>{
-        const rank=freq[s.id]||0;
-        const rankBadge=hasHistory&&rank>0?`<span style="background:#ebf8ff;color:#2b6cb0;border-radius:10px;padding:1px 6px;font-size:.68rem;margin-left:4px">×${rank}</span>`:'';
-        const divider=hasHistory&&i>0&&rank===0&&(freq[sortedSkus[i-1].id]||0)>0
-          ?'<div style="border-top:1px dashed #e2e8f0;margin:4px 0;padding-top:4px;font-size:.7rem;color:#a0aec0;padding-left:4px">Other SKUs</div>':''
-        ;
-        return `${divider}<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
-          <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}${rankBadge}
-          <span style="margin-left:auto;text-align:right;font-size:.75rem"><span style="color:#38a169">${fmt(s.price)}</span>${s.mrp?`<br><span style="color:#a0aec0">MRP ${fmt(s.mrp)}</span>`:''}</span>
-        </div>`;
-      }).join('');
-  } else {
-    opts.innerHTML=`<div class="sd-option placeholder-opt" onclick="selectSkuOpt('${lineId}','','-- Select SKU --')">-- Select SKU --</div>`+
-      sortedSkus.map(s=>`<div class="sd-option" data-label="${esc(s.code)} ${esc(s.name)}" onclick="selectSkuOpt('${lineId}','${s.id}','${esc(s.code)} — ${esc(s.name)}')">
-        <span class="badge badge-blue" style="margin-right:4px">${esc(s.code)}</span>${esc(s.name)}
-        <span style="margin-left:auto;text-align:right;font-size:.75rem"><span style="color:#38a169">${fmt(s.price)}</span>${s.mrp?`<br><span style="color:#a0aec0">MRP ${fmt(s.mrp)}</span>`:''}</span>
-      </div>`).join('');
+  const freq=retailerId?getSkuRankForRetailer(retailerId):{};
+  const hasHistory=Object.keys(freq).length>0;
+  let sorted=[...skus];
+  if(hasHistory){
+    sorted.sort((a,b)=>{
+      const fa=freq[a.id]||0,fb=freq[b.id]||0;
+      if(fb!==fa)return fb-fa;
+      return a.code.localeCompare(b.code);
+    });
   }
+  let html='<div class="sd-option placeholder-opt" onclick="selectSkuOpt(\''+lineId+'\',\'\',\'-- Select SKU --\')">-- Select SKU --</div>';
+  let passedRanked=false;
+  sorted.forEach(function(s){
+    const rank=freq[s.id]||0;
+    if(hasHistory&&!passedRanked&&rank===0){
+      html+='<div style="border-top:1px dashed #e2e8f0;padding:4px 8px;font-size:.7rem;color:#a0aec0">Other SKUs</div>';
+      passedRanked=true;
+    }
+    const rankBadge=hasHistory&&rank>0?'<span style="background:#ebf8ff;color:#2b6cb0;border-radius:10px;padding:1px 6px;font-size:.68rem;margin-left:4px">x'+rank+'</span>':'';
+    const mrpHtml=s.mrp?'<br><span style="color:#a0aec0">MRP '+fmt(s.mrp)+'</span>':'';
+    html+='<div class="sd-option" data-label="'+esc(s.code)+' '+esc(s.name)+'" onclick="selectSkuOpt(\''+lineId+'\',\''+s.id+'\',\''+esc(s.code)+' \u2014 '+esc(s.name)+'\')">'
+      +'<span class="badge badge-blue" style="margin-right:4px">'+esc(s.code)+'</span>'+esc(s.name)+rankBadge
+      +'<span style="margin-left:auto;text-align:right;font-size:.75rem"><span style="color:#38a169">'+fmt(s.price)+'</span>'+mrpHtml+'</span>'
+      +'</div>';
+  });
+  opts.innerHTML=html;
 }
 window.selectSkuOpt=function(lineId,skuId,label){
   if(skuId){
