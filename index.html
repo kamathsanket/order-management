@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
 <title>Order Management</title>
 <link rel="manifest" href="manifest.json"/>
 <meta name="theme-color" content="#2b6cb0"/>
@@ -10,13 +10,15 @@
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-title" content="Order Mgmt"/>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
-header{background:linear-gradient(135deg,#2b6cb0,#3182ce);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:10px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%;overflow-x:hidden}
+body{font-family:'Segoe UI',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh;overflow-x:hidden}
+.topbar{background:#fff}
+header{background:linear-gradient(135deg,#2b6cb0,#3182ce);color:#fff;padding:14px 20px;padding-top:calc(14px + env(safe-area-inset-top));display:flex;align-items:center;gap:10px}
 header h1{font-size:1.2rem;font-weight:700}
-.sync-dot{width:9px;height:9px;border-radius:50%;background:#68d391;margin-left:auto;box-shadow:0 0 6px #68d391;animation:pulse 2s infinite}
+.sync-dot{width:9px;height:9px;border-radius:50%;background:#68d391;margin-left:auto;box-shadow:0 0 6px #68d391;animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 8px;overflow-x:auto}
+.tabs{display:flex;background:#fff;border-bottom:2px solid #e2e8f0;padding:0 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
 .tab{padding:11px 12px;cursor:pointer;font-weight:600;font-size:.78rem;border-bottom:3px solid transparent;color:#718096;transition:.2s;white-space:nowrap}
 .tab.active{border-bottom-color:#3182ce;color:#3182ce}
 .content{padding:16px;max-width:1100px;margin:0 auto}
@@ -138,26 +140,68 @@ tr:last-child td{border-bottom:none}
 .archive-day-count{font-size:.6rem;background:#e53e3e;color:#fff;border-radius:8px;padding:0 4px;margin-top:2px;line-height:1.4}
 .archive-day-cell.selected .archive-day-count{background:#fff;color:#e53e3e}
 #sku-table-wrap,#ret-table-wrap{overflow-x:auto}
+
+/* Touch-target sizing — any touchscreen device (phone or tablet), regardless of width */
+@media (hover:none) and (pointer:coarse){
+  .btn{min-height:42px}
+  .btn-save,.btn-cancel{min-height:36px}
+  .tab{min-height:46px;display:flex;align-items:center;justify-content:center}
+  input[type=checkbox]{width:22px;height:22px}
+  .sd-trigger{min-height:42px}
+  .sd-option{min-height:42px;display:flex;align-items:center}
+  .outlet-header,.bill-outlet-header,.group-header{min-height:50px}
+  .archive-day-cell,.archive-month-cell{min-height:40px}
+  button,.tab,.sd-option,.sd-trigger,.archive-day-cell,.archive-month-cell,.outlet-header,.bill-outlet-header,.group-header,.pack-checkbox{touch-action:manipulation}
+}
+
+/* Tablet — up to 1024px (iPad portrait and similar) */
+@media(max-width:1024px){
+  .topbar{position:sticky;top:0;z-index:100}
+  .content{padding:14px}
+  table{min-width:560px}
+  [style*="overflow-x:auto"]::-webkit-scrollbar{height:6px}
+  [style*="overflow-x:auto"]::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:3px}
+  [style*="overflow-x:auto"]::-webkit-scrollbar-track{background:transparent}
+}
+
+/* Phone — up to 640px */
 @media(max-width:640px){
-  header{padding:10px 12px}header h1{font-size:1rem}
+  header{padding:10px 12px;padding-top:calc(10px + env(safe-area-inset-top))}header h1{font-size:1rem}
   .tabs{padding:0 4px}.tab{padding:9px 8px;font-size:.7rem}
-  .content{padding:10px}.card{padding:12px;margin-bottom:12px}
+  .content{padding:10px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}.card{padding:12px;margin-bottom:12px}
   .card h2{font-size:.88rem;margin-bottom:10px}
   .row{flex-direction:column;gap:8px}
   .sku-line{flex-direction:column}.sku-line>div:last-child{align-self:flex-end}
-  input,.sd-trigger{font-size:.85rem;padding:9px 10px}
-  .btn{font-size:.8rem;padding:9px 12px}
+  input,select,.sd-trigger{font-size:16px;padding:10px 11px}
+  .btn{font-size:.8rem;padding:10px 12px}
   .route-lock-bar,.sku-lock-bar{flex-direction:column;gap:8px;padding:10px 12px}
   .summary-row{gap:8px}.stat{min-width:0;padding:10px 8px}.stat-val{font-size:1.2rem}
   table{font-size:.75rem;min-width:480px}
   .outlet-header,.bill-outlet-header,.group-header{padding:11px 12px;flex-wrap:wrap;gap:6px}
   .outlet-body,.bill-outlet-body,.group-body{padding:0 12px 12px}
   .sync-dot{display:none}
+  /* Modal becomes a bottom sheet — easier thumb reach for Save/Close */
+  .modal-overlay{align-items:flex-end;padding:0}
+  .modal-box{width:100%;max-width:100%;border-radius:16px 16px 0 0;max-height:85vh;max-height:85dvh;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+  .denom-row label{flex:0 0 52px}
+  .archive-month-grid{grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+  #toast{left:12px;right:12px;bottom:calc(20px + env(safe-area-inset-bottom));text-align:center}
+}
+
+/* Small phones — narrow widths like iPhone SE / older Androids */
+@media(max-width:380px){
+  header h1{font-size:.92rem}
+  .tab{font-size:.65rem;padding:8px 6px}
+  .stat-val{font-size:1.05rem}
+  .archive-month-grid{grid-template-columns:repeat(auto-fill,minmax(58px,1fr))}
+  .archive-day-grid{gap:4px}
+  .denom-row label{flex:0 0 46px;font-size:.85rem}
 }
 </style>
 </head>
 <body>
 <div id="global-loader"><div class="spinner"></div><div id="loader-msg">Connecting to cloud...</div></div>
+<div class="topbar">
 <header>
   <span style="font-size:1.4rem">📦</span>
   <h1>Retailer Order Management</h1>
@@ -175,6 +219,7 @@ tr:last-child td{border-bottom:none}
   <div class="tab" data-tab="routes" onclick="switchTab('routes')">🗺️ Routes</div>
   <div class="tab" data-tab="skus" onclick="switchTab('skus')">🏷️ SKUs</div>
   <div class="tab" data-tab="retailers" onclick="switchTab('retailers')">🏪 Retailers</div>
+</div>
 </div>
 <div class="content">
   <!-- ORDER -->
