@@ -740,10 +740,24 @@ window.selectSkuOpt=function(lineId,skuId,label){
     if(sku){
       var p=document.querySelector('#line-'+lineId+' .line-price'); if(p) p.value=sku.price;
       var u=document.querySelector('#line-'+lineId+' .line-unit'); if(u) u.value='ea';
+      var lineEl=document.getElementById('line-'+lineId); if(lineEl) lineEl.dataset.prevUnit='ea';
       var lbl=document.getElementById('unit-lbl-'+lineId); if(lbl) lbl.textContent=sku.unitsPerBox&&sku.unitsPerBox>1?'Unit (1bx='+sku.unitsPerBox+')':'Unit';
       updateTotal();
     }
   }
+};
+window.onUnitChange=function(lineId){
+  var line=document.getElementById('line-'+lineId); if(!line) return;
+  var sel=line.querySelector('.line-unit'), priceInput=line.querySelector('.line-price');
+  var newUnit=sel.value, prevUnit=line.dataset.prevUnit||'ea';
+  var skuId=(line.querySelector('.line-sku-val')||{}).value, sku=skus.find(function(s){ return s.id===skuId; });
+  var upb=sku&&sku.unitsPerBox>1?sku.unitsPerBox:1;
+  var p=parseFloat(priceInput.value)||0;
+  if(newUnit!==prevUnit&&upb>1){
+    priceInput.value=newUnit==='box'?Math.ceil(p*upb):Math.ceil(p/upb);
+  }
+  line.dataset.prevUnit=newUnit;
+  updateTotal();
 };
 function buildRouteRetailerPicker(routeId){
   var opts=document.getElementById('rrp-opts-'+routeId); if(!opts) return;
@@ -1061,10 +1075,10 @@ function renderRoutesTab(){
 // ORDER LINES
 window.addSkuLine=function(){
   lineCount++; var lineId=''+lineCount, key='sku-'+lineId;
-  var div=document.createElement('div'); div.className='sku-line'; div.id='line-'+lineId;
+  var div=document.createElement('div'); div.className='sku-line'; div.id='line-'+lineId; div.dataset.prevUnit='ea';
   div.innerHTML='<div class="fg" style="flex:3;min-width:190px"><label>SKU</label><div class="searchable-wrap" id="sd-wrap-'+key+'"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-'+key+'" onclick="toggleSD(\''+key+'\')">-- Select SKU -- <span>&#9660;</span></button><div class="searchable-dropdown" id="sd-dd-'+key+'"><div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD(\''+key+'\',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-'+key+'"></div></div></div><input type="hidden" id="val-'+key+'" class="line-sku-val" value=""/></div>'
     +'<div class="fg" style="flex:1;min-width:65px"><label>Qty</label><input type="number" class="line-qty" min="1" value="1" oninput="updateTotal()"/></div>'
-    +'<div class="fg" style="flex:1;min-width:80px"><label id="unit-lbl-'+lineId+'">Unit</label><select class="line-unit" onchange="updateTotal()"><option value="ea">EA</option><option value="box">Box</option></select></div>'
+    +'<div class="fg" style="flex:1;min-width:80px"><label id="unit-lbl-'+lineId+'">Unit</label><select class="line-unit" onchange="onUnitChange(\''+lineId+'\')"><option value="ea">EA</option><option value="box">Box</option></select></div>'
     +'<div class="fg" style="flex:1;min-width:90px"><label>Price</label><input type="number" class="line-price" min="0" placeholder="0.00" oninput="updateTotal()"/></div>'
     +'<div class="fg" style="flex:2;min-width:130px"><label>Notes</label><input type="text" class="line-notes" placeholder="Optional"/></div>'
     +'<div style="padding-bottom:1px"><button class="btn btn-danger" onclick="removeLine(\''+lineId+'\')">&#10005;</button></div>';
@@ -1076,10 +1090,7 @@ window.updateTotal=function(){
   var t=0;
   document.querySelectorAll('.sku-line').forEach(function(l){
     var qty=parseFloat(l.querySelector('.line-qty').value)||0, price=parseFloat(l.querySelector('.line-price').value)||0;
-    var unit=(l.querySelector('.line-unit')||{}).value||'ea';
-    var skuId=(l.querySelector('.line-sku-val')||{}).value, sku=skus.find(function(s){ return s.id===skuId; });
-    var upb=sku&&sku.unitsPerBox>1?sku.unitsPerBox:1;
-    t+=(unit==='box'?qty*upb:qty)*price;
+    t+=qty*price;
   });
   document.getElementById('running-total').textContent='Order Total: '+fmt(t);
 };
@@ -1092,13 +1103,14 @@ window.saveOrder=async function(){
   var lines=[], valid=true;
   document.querySelectorAll('.sku-line').forEach(function(line){
     var skuId=line.querySelector('.line-sku-val').value; if(!skuId){ valid=false; return; }
-    var enteredQty=parseFloat(line.querySelector('.line-qty').value)||1, price=parseFloat(line.querySelector('.line-price').value)||0;
+    var enteredQty=parseFloat(line.querySelector('.line-qty').value)||1, enteredPrice=parseFloat(line.querySelector('.line-price').value)||0;
     var unit=(line.querySelector('.line-unit')||{}).value||'ea';
     var notes=line.querySelector('.line-notes').value.trim();
     var sku=skus.find(function(s){ return s.id===skuId; });
     var upb=sku&&sku.unitsPerBox>1?sku.unitsPerBox:1;
     var qty=unit==='box'?enteredQty*upb:enteredQty;
-    lines.push({skuId:skuId,skuCode:sku.code,skuName:sku.name,qty:qty,price:price,notes:notes,subtotal:qty*price,enteredQty:enteredQty,enteredUnit:unit});
+    var price=unit==='box'?enteredPrice/upb:enteredPrice;
+    lines.push({skuId:skuId,skuCode:sku.code,skuName:sku.name,qty:qty,price:price,notes:notes,subtotal:enteredQty*enteredPrice,enteredQty:enteredQty,enteredUnit:unit,enteredPrice:enteredPrice});
   });
   if(!valid){ toast('Select SKU for each line'); return; }
   if(!lines.length){ toast('Add at least one SKU line'); return; }
