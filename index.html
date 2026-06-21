@@ -121,6 +121,13 @@ tr:last-child td{border-bottom:none}
 .sku-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#38a169;cursor:pointer}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
 .modal-box{background:#fff;border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto}
+#gateway-screen{min-height:100vh;background:#f0f4f8}
+.gateway-wrap{max-width:560px;margin:0 auto;padding:48px 16px}
+.gateway-hero{text-align:center;margin-bottom:24px}
+.gateway-hero h1{font-size:1.4rem;color:#2d3748;margin:8px 0 4px}
+.gateway-hero p{color:#718096;font-size:.88rem}
+.company-card{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border:1.5px solid #e2e8f0;border-radius:10px;margin-bottom:10px;cursor:pointer;transition:.15s;background:#fff}
+.company-card:hover{border-color:#3182ce;background:#f7fafc}
 .denom-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .denom-row label{flex:0 0 60px;font-weight:700;color:#4a5568}
 .denom-row input{width:80px}
@@ -216,11 +223,27 @@ tr:last-child td{border-bottom:none}
 </head>
 <body>
 <div id="global-loader"><div class="spinner"></div><div id="loader-msg">Connecting to cloud...</div></div>
-<div class="topbar">
+<div id="gateway-screen" style="display:none">
+  <div class="gateway-wrap">
+    <div class="gateway-hero"><span style="font-size:2.6rem">&#128230;</span><h1>Retailer Order Management</h1><p>Select a company to continue, or create a new one.</p></div>
+    <div class="card" id="legacy-migrate-card" style="display:none;border:1.5px solid #f6ad55;background:#fffaf0">
+      <h2>Existing Data Found</h2>
+      <p style="color:#718096;font-size:.85rem;margin-bottom:10px">We found orders, SKUs or retailers saved before companies existed. Move all of it into a company called <b>Shantadurga Sales</b>? Nothing is deleted &#8212; this only copies your data into the new structure.</p>
+      <button class="btn btn-primary" id="migrate-btn" onclick="migrateLegacyData()">Migrate to "Shantadurga Sales"</button>
+    </div>
+    <div class="card"><h2>Your Companies</h2><div id="company-list"><div class="empty">Loading...</div></div></div>
+    <div class="card"><h2>Create New Company</h2>
+      <div class="row"><div class="fg" style="flex:1;min-width:200px"><label>Company Name</label><input id="new-company-name" placeholder="e.g. Shantadurga Sales"/></div></div>
+      <button class="btn btn-primary" id="create-company-btn" onclick="createCompany()">+ Create Company</button>
+    </div>
+  </div>
+</div>
+<div class="topbar" style="display:none">
 <header>
   <span style="font-size:1.4rem">📦</span>
   <h1>Retailer Order Management</h1>
-  <div class="sync-dot"></div>
+  <button class="btn" id="switch-company-btn" onclick="exitToGateway()" style="margin-left:auto;background:rgba(255,255,255,.18);color:#fff;font-size:.75rem;padding:6px 10px;white-space:nowrap">&#127970; <span id="current-company-name"></span> &#9660;</button>
+  <div class="sync-dot" style="margin-left:8px"></div>
 </header>
 <div class="tabs">
   <div class="tab active" data-tab="orders" onclick="switchTab('orders')">🛒 Order</div>
@@ -236,7 +259,7 @@ tr:last-child td{border-bottom:none}
   <div class="tab" data-tab="retailers" onclick="switchTab('retailers')">🏪 Retailers</div>
 </div>
 </div>
-<div class="content">
+<div class="content" style="display:none">
   <!-- ORDER -->
   <div id="tab-orders">
     <div class="card">
@@ -492,7 +515,7 @@ tr:last-child td{border-bottom:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore,collection,doc,addDoc,updateDoc,deleteDoc,onSnapshot,query,orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore,collection,doc,addDoc,setDoc,getDoc,getDocs,updateDoc,deleteDoc,onSnapshot,query,orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const FB = {
   apiKey:"AIzaSyCg5jegmaB8-DVY5i2HYCNpk7oBs-8fjWc",
@@ -504,6 +527,13 @@ const FB = {
 };
 const app = initializeApp(FB);
 const db  = getFirestore(app);
+
+// MULTI-COMPANY SCOPING
+var COMPANY_ID=null, COMPANY_NAME='';
+function tcol(name){ return collection(db,'companies/'+COMPANY_ID+'/'+name); }
+function tdoc(name,id){ return doc(db,'companies/'+COMPANY_ID+'/'+name,id); }
+function getStoredCompanyId(){ try{ return localStorage.getItem('lastCompanyId'); }catch(e){ return null; } }
+function setStoredCompanyId(id){ try{ localStorage.setItem('lastCompanyId',id); }catch(e){} }
 
 // STATE
 var skus=[],retailers=[],orders=[],archivedOrders=[],routes=[],packingDocs=[],groups=[],collectionsData=[],physicalCashData=[];
@@ -566,10 +596,10 @@ window.onSkuLockChange=function(){
 function scheduleLockReset(){ setTimeout(function(){ clearLock(); clearSkuLock(); applyLockUI(); applySkuLockUI(); toast('Locks cleared'); scheduleLockReset(); }, msToMidnight()); }
 function scheduleMidnightArchive(){
   setTimeout(async function(){
-    for(var i=0;i<orders.length;i++){ try{ await updateDoc(doc(db,'orders',orders[i].id),{archived:true,archivedAt:new Date().toISOString()}); }catch(e){} }
-    for(var i=0;i<packingDocs.length;i++){ if(!packingDocs[i].archived) try{ await updateDoc(doc(db,'packing',packingDocs[i].id),{archived:true}); }catch(e){} }
-    for(var i=0;i<collectionsData.length;i++){ if(!collectionsData[i].archived) try{ await updateDoc(doc(db,'collections',collectionsData[i].id),{archived:true}); }catch(e){} }
-    for(var i=0;i<physicalCashData.length;i++){ if(!physicalCashData[i].archived) try{ await updateDoc(doc(db,'physicalCash',physicalCashData[i].id),{archived:true}); }catch(e){} }
+    for(var i=0;i<orders.length;i++){ try{ await updateDoc(tdoc('orders',orders[i].id),{archived:true,archivedAt:new Date().toISOString()}); }catch(e){} }
+    for(var i=0;i<packingDocs.length;i++){ if(!packingDocs[i].archived) try{ await updateDoc(tdoc('packing',packingDocs[i].id),{archived:true}); }catch(e){} }
+    for(var i=0;i<collectionsData.length;i++){ if(!collectionsData[i].archived) try{ await updateDoc(tdoc('collections',collectionsData[i].id),{archived:true}); }catch(e){} }
+    for(var i=0;i<physicalCashData.length;i++){ if(!physicalCashData[i].archived) try{ await updateDoc(tdoc('physicalCash',physicalCashData[i].id),{archived:true}); }catch(e){} }
     toast('Midnight reset done'); scheduleMidnightArchive();
   }, msToMidnight());
 }
@@ -819,7 +849,7 @@ window.submitInlineCollection=async function(){
   var existing=collectionsData.find(function(c){ return c.retailerId===retId&&c.date===today&&!c.archived; });
   if(!existing){ toast('No collection record found. Import collection sheet first.'); return; }
   try{
-    await updateDoc(doc(db,'collections',existing.id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()});
+    await updateDoc(tdoc('collections',existing.id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()});
     var pending=(existing.grandTotal||0)-amt;
     var r=document.getElementById('inline-coll-result');
     r.style.display='block'; r.style.background=pending<=0?'#f0fff4':'#fffaf0';
@@ -853,27 +883,27 @@ window.switchTab=function(t){
 var readyCount=0;
 function checkReady(){ if(++readyCount>=4) hideLoader(); }
 function initListeners(){
-  onSnapshot(query(collection(db,'skuGroups'),orderBy('code')),function(snap){
+  onSnapshot(query(tcol('skuGroups'),orderBy('code')),function(snap){
     groups=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     buildGroupOpts(); renderGroupsList(); renderSkuTable(); checkReady();
   });
-  onSnapshot(query(collection(db,'skus'),orderBy('code')),function(snap){
+  onSnapshot(query(tcol('skus'),orderBy('code')),function(snap){
     skus=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     renderSkuTable(); renderGroupsList();
     document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(function(el){ if(!el.id.includes('group')) buildSkuOpts(el.id.replace('sd-opts-sku-','')); });
     var at=document.querySelector('.tab.active'); if(at&&at.dataset.tab==='review') renderReview();
     checkReady();
   });
-  onSnapshot(query(collection(db,'retailers'),orderBy('name')),function(snap){
+  onSnapshot(query(tcol('retailers'),orderBy('name')),function(snap){
     retailers=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var lock=getLock(); buildRetailerOpts(lock?lock.id:(document.getElementById('val-order-route')||{}).value||'');
     renderRetailerTable(); checkReady();
   });
-  onSnapshot(query(collection(db,'routes'),orderBy('name')),function(snap){
+  onSnapshot(query(tcol('routes'),orderBy('name')),function(snap){
     routes=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     buildRouteOpts(); renderRoutesTab(); buildCollectionRouteOpts(); checkReady();
   });
-  onSnapshot(query(collection(db,'orders'),orderBy('createdAt','desc')),function(snap){
+  onSnapshot(query(tcol('orders'),orderBy('createdAt','desc')),function(snap){
     var all=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var today=getISTDateStr();
     orders=all.filter(function(o){ return !o.archived&&o.date===today; });
@@ -883,17 +913,17 @@ function initListeners(){
     var at=document.querySelector('.tab.active');
     if(at){ if(at.dataset.tab==='history') renderHistory(); if(at.dataset.tab==='packing') renderPacking(); if(at.dataset.tab==='review') renderReview(); }
   });
-  onSnapshot(query(collection(db,'packing'),orderBy('retailerName')),function(snap){
+  onSnapshot(query(tcol('packing'),orderBy('retailerName')),function(snap){
     packingDocs=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var at=document.querySelector('.tab.active');
     if(at){ if(at.dataset.tab==='packing') renderPacking(); if(at.dataset.tab==='finalbill') renderFinalBill(); }
   });
-  onSnapshot(query(collection(db,'collections'),orderBy('retailerName')),function(snap){
+  onSnapshot(query(tcol('collections'),orderBy('retailerName')),function(snap){
     collectionsData=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var at=document.querySelector('.tab.active');
     if(at&&at.dataset.tab==='collection'){ renderCollectionList(); if(collectionHistoryOpen) renderCollectionHistory(); }
   });
-  onSnapshot(query(collection(db,'physicalCash'),orderBy('date','desc')),function(snap){
+  onSnapshot(query(tcol('physicalCash'),orderBy('date','desc')),function(snap){
     physicalCashData=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var at=document.querySelector('.tab.active');
     if(at&&at.dataset.tab==='collection'&&collectionHistoryOpen) renderCollectionHistory();
@@ -905,13 +935,13 @@ window.addGroup=async function(){
   var code=document.getElementById('grp-code').value.trim().toUpperCase(), name=document.getElementById('grp-name').value.trim();
   if(!code||!name){ toast('Enter code and name'); return; }
   if(groups.find(function(g){ return g.code===code; })){ toast('Code exists'); return; }
-  try{ await addDoc(collection(db,'skuGroups'),{code:code,name:name,createdAt:new Date().toISOString()}); document.getElementById('grp-code').value=''; document.getElementById('grp-name').value=''; toast('Group created'); }
+  try{ await addDoc(tcol('skuGroups'),{code:code,name:name,createdAt:new Date().toISOString()}); document.getElementById('grp-code').value=''; document.getElementById('grp-name').value=''; toast('Group created'); }
   catch(e){ toast('Error: '+e.message); }
 };
 window.deleteGroup=async function(id){
   if(!confirm('Delete group?')) return;
-  for(var i=0;i<skus.length;i++){ if(skus[i].groupId===id) try{ await updateDoc(doc(db,'skus',skus[i].id),{groupId:'',groupCode:'',groupName:''}); }catch(e){} }
-  try{ await deleteDoc(doc(db,'skuGroups',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); }
+  for(var i=0;i<skus.length;i++){ if(skus[i].groupId===id) try{ await updateDoc(tdoc('skus',skus[i].id),{groupId:'',groupCode:'',groupName:''}); }catch(e){} }
+  try{ await deleteDoc(tdoc('skuGroups',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); }
 };
 window.editGroupRow=function(id){
   var g=groups.find(function(x){ return x.id===id; }); if(!g) return;
@@ -922,8 +952,8 @@ window.saveGroupEdit=async function(id){
   var code=document.getElementById('eg-code-'+id).value.trim().toUpperCase(), name=document.getElementById('eg-name-'+id).value.trim();
   if(!code||!name){ toast('Required'); return; }
   try{
-    await updateDoc(doc(db,'skuGroups',id),{code:code,name:name});
-    for(var i=0;i<skus.length;i++){ if(skus[i].groupId===id) try{ await updateDoc(doc(db,'skus',skus[i].id),{groupCode:code,groupName:name}); }catch(e){} }
+    await updateDoc(tdoc('skuGroups',id),{code:code,name:name});
+    for(var i=0;i<skus.length;i++){ if(skus[i].groupId===id) try{ await updateDoc(tdoc('skus',skus[i].id),{groupCode:code,groupName:name}); }catch(e){} }
     toast('Updated');
   }catch(e){ toast('Error: '+e.message); }
 };
@@ -971,13 +1001,13 @@ window.addSku=async function(){
   if(!code||!name){ toast('Enter code and name'); return; }
   var group=groups.find(function(g){ return g.id===groupId; });
   try{
-    await addDoc(collection(db,'skus'),{code:code,name:name,price:price,mrp:mrp,unitsPerBox:unitsPerBox,groupId:groupId||'',groupCode:group?group.code:'',groupName:group?group.name:''});
+    await addDoc(tcol('skus'),{code:code,name:name,price:price,mrp:mrp,unitsPerBox:unitsPerBox,groupId:groupId||'',groupCode:group?group.code:'',groupName:group?group.name:''});
     ['sku-code','sku-name','sku-price','sku-mrp','sku-units-per-box'].forEach(function(id){ document.getElementById(id).value=''; });
     if(!getSkuLock()){ document.getElementById('val-sku-group').value=''; var btn=document.getElementById('sd-btn-sku-group'); if(btn){ btn.innerHTML='-- Select Group -- <span>&#9660;</span>'; btn.classList.add('placeholder-style'); } }
     toast('SKU saved');
   }catch(e){ toast('Error: '+e.message); }
 };
-window.deleteSku=async function(id){ if(!confirm('Delete SKU?')) return; try{ await deleteDoc(doc(db,'skus',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } };
+window.deleteSku=async function(id){ if(!confirm('Delete SKU?')) return; try{ await deleteDoc(tdoc('skus',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } };
 window.editSkuRow=function(id,ctx){
   var s=skus.find(function(x){ return x.id===id; }); if(!s) return;
   var row=document.getElementById('sku-row-'+ctx+'-'+id); if(!row) return;
@@ -995,7 +1025,7 @@ window.saveSkuEdit=async function(id,ctx){
   var groupId=document.getElementById('esk-grp-'+ctx+'-'+id).value;
   if(!code||!name){ toast('Required'); return; }
   var group=groups.find(function(g){ return g.id===groupId; });
-  try{ await updateDoc(doc(db,'skus',id),{code:code,name:name,price:price,mrp:mrp,unitsPerBox:unitsPerBox,groupId:groupId||'',groupCode:group?group.code:'',groupName:group?group.name:''}); toast('Updated'); }
+  try{ await updateDoc(tdoc('skus',id),{code:code,name:name,price:price,mrp:mrp,unitsPerBox:unitsPerBox,groupId:groupId||'',groupCode:group?group.code:'',groupName:group?group.name:''}); toast('Updated'); }
   catch(e){ toast('Error: '+e.message); }
 };
 function renderSkuTable(){
@@ -1014,10 +1044,10 @@ window.renderSkuTable=renderSkuTable;
 window.addRetailer=async function(){
   var name=document.getElementById('ret-name').value.trim(), contact=document.getElementById('ret-contact').value.trim();
   if(!name){ toast('Enter name'); return; }
-  try{ await addDoc(collection(db,'retailers'),{name:name,contact:contact}); document.getElementById('ret-name').value=''; document.getElementById('ret-contact').value=''; toast('Saved'); }
+  try{ await addDoc(tcol('retailers'),{name:name,contact:contact}); document.getElementById('ret-name').value=''; document.getElementById('ret-contact').value=''; toast('Saved'); }
   catch(e){ toast('Error: '+e.message); }
 };
-window.deleteRetailer=async function(id){ if(!confirm('Delete?')) return; try{ await deleteDoc(doc(db,'retailers',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } };
+window.deleteRetailer=async function(id){ if(!confirm('Delete?')) return; try{ await deleteDoc(tdoc('retailers',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } };
 window.editRetailerRow=function(id){
   var r=retailers.find(function(x){ return x.id===id; }); if(!r) return;
   var row=document.getElementById('ret-row-'+id); if(!row) return;
@@ -1026,7 +1056,7 @@ window.editRetailerRow=function(id){
 window.saveRetailerEdit=async function(id){
   var name=document.getElementById('ert-name-'+id).value.trim(), contact=document.getElementById('ert-contact-'+id).value.trim();
   if(!name){ toast('Required'); return; }
-  try{ await updateDoc(doc(db,'retailers',id),{name:name,contact:contact}); toast('Updated'); }catch(e){ toast('Error: '+e.message); }
+  try{ await updateDoc(tdoc('retailers',id),{name:name,contact:contact}); toast('Updated'); }catch(e){ toast('Error: '+e.message); }
 };
 function renderRetailerTable(){
   var wrap=document.getElementById('ret-table-wrap'); if(!wrap) return;
@@ -1039,18 +1069,18 @@ function renderRetailerTable(){
 // ROUTES
 window.addRoute=async function(){
   var name=document.getElementById('route-name').value.trim(); if(!name){ toast('Enter name'); return; }
-  try{ await addDoc(collection(db,'routes'),{name:name,retailers:[]}); document.getElementById('route-name').value=''; toast('Route created'); }catch(e){ toast('Error: '+e.message); }
+  try{ await addDoc(tcol('routes'),{name:name,retailers:[]}); document.getElementById('route-name').value=''; toast('Route created'); }catch(e){ toast('Error: '+e.message); }
 };
-window.deleteRoute=async function(id){ if(!confirm('Delete route?')) return; try{ await deleteDoc(doc(db,'routes',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } };
+window.deleteRoute=async function(id){ if(!confirm('Delete route?')) return; try{ await deleteDoc(tdoc('routes',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } };
 window.addRetailerToRoute=async function(routeId,retId,retName){
   var route=routes.find(function(r){ return r.id===routeId; });
   var list=(route&&route.retailers||[]).concat([{id:retId,name:retName}]);
-  try{ await updateDoc(doc(db,'routes',routeId),{retailers:list}); closeAllSD(); toast(retName+' added'); }catch(e){ toast('Error: '+e.message); }
+  try{ await updateDoc(tdoc('routes',routeId),{retailers:list}); closeAllSD(); toast(retName+' added'); }catch(e){ toast('Error: '+e.message); }
 };
 window.removeRetailerFromRoute=async function(routeId,retId){
   var route=routes.find(function(r){ return r.id===routeId; });
   var list=(route&&route.retailers||[]).filter(function(r){ return r.id!==retId; });
-  try{ await updateDoc(doc(db,'routes',routeId),{retailers:list}); toast('Removed'); }catch(e){ toast('Error: '+e.message); }
+  try{ await updateDoc(tdoc('routes',routeId),{retailers:list}); toast('Removed'); }catch(e){ toast('Error: '+e.message); }
 };
 window.onDragStart=function(e,routeId,idx){ dragSrc={routeId:routeId,idx:idx}; e.dataTransfer.effectAllowed='move'; };
 window.onDragOver=function(e){ e.preventDefault(); };
@@ -1058,7 +1088,7 @@ window.onDrop=async function(e,routeId,dropIdx){
   e.preventDefault(); if(!dragSrc||dragSrc.routeId!==routeId||dragSrc.idx===dropIdx) return;
   var route=routes.find(function(r){ return r.id===routeId; }), list=(route&&route.retailers||[]).slice();
   var moved=list.splice(dragSrc.idx,1)[0]; list.splice(dropIdx,0,moved); dragSrc=null;
-  try{ await updateDoc(doc(db,'routes',routeId),{retailers:list}); }catch(e){ toast('Error'); }
+  try{ await updateDoc(tdoc('routes',routeId),{retailers:list}); }catch(e){ toast('Error'); }
 };
 function renderRoutesTab(){
   var wrap=document.getElementById('routes-list'); if(!wrap) return;
@@ -1118,7 +1148,7 @@ window.saveOrder=async function(){
   var route=routes.find(function(r){ return r.id===routeId; });
   var total=lines.reduce(function(s,l){ return s+l.subtotal; },0);
   try{
-    await addDoc(collection(db,'orders'),{retailerId:retId,retailerName:retailer.name,routeId:routeId||'',routeName:route?route.name:'',date:date,lines:lines,total:total,archived:false,status:'review',createdAt:new Date().toISOString()});
+    await addDoc(tcol('orders'),{retailerId:retId,retailerName:retailer.name,routeId:routeId||'',routeName:route?route.name:'',date:date,lines:lines,total:total,archived:false,status:'review',createdAt:new Date().toISOString()});
     document.getElementById('val-order-retailer').value='';
     var rb=document.getElementById('sd-btn-order-retailer'); if(rb){ rb.innerHTML='-- Select Retailer -- <span>&#9660;</span>'; rb.classList.add('placeholder-style'); }
     document.getElementById('retailer-balance-note').style.display='none';
@@ -1199,14 +1229,14 @@ window.toggleReviewCard=function(orderId){
 window.saveReviewOrder=async function(orderId){
   var lines=getReviewLines(orderId); if(!lines.length){ toast('Add at least one SKU'); return; }
   recalcReview(orderId);
-  try{ await updateDoc(doc(db,'orders',orderId),{lines:lines,total:reviewTotal(orderId)}); toast('Changes saved'); }
+  try{ await updateDoc(tdoc('orders',orderId),{lines:lines,total:reviewTotal(orderId)}); toast('Changes saved'); }
   catch(e){ toast('Error: '+e.message); }
 };
 window.packReviewOrder=async function(orderId,retailerName){
   var lines=getReviewLines(orderId); if(!lines.length){ toast('Add at least one SKU'); return; }
   recalcReview(orderId);
   try{
-    await updateDoc(doc(db,'orders',orderId),{lines:lines,total:reviewTotal(orderId),status:'packing'});
+    await updateDoc(tdoc('orders',orderId),{lines:lines,total:reviewTotal(orderId),status:'packing'});
     delete reviewEdits[orderId]; openReviewCards.delete(orderId);
     toast('Sent to Packing: '+retailerName);
   }catch(e){ toast('Error: '+e.message); }
@@ -1218,7 +1248,7 @@ window.acceptAllReview=async function(){
   var done=0;
   for(var i=0;i<ro.length;i++){
     var o=ro[i]; recalcReview(o.id); var lines=getReviewLines(o.id);
-    try{ await updateDoc(doc(db,'orders',o.id),{lines:lines,total:reviewTotal(o.id),status:'packing'}); delete reviewEdits[o.id]; openReviewCards.delete(o.id); done++; }
+    try{ await updateDoc(tdoc('orders',o.id),{lines:lines,total:reviewTotal(o.id),status:'packing'}); delete reviewEdits[o.id]; openReviewCards.delete(o.id); done++; }
     catch(e){ console.error(e); }
   }
   toast(done+' order(s) sent to Packing');
@@ -1285,8 +1315,8 @@ async function autoSavePacking(rid){
   var items=outlet.skus.map(function(sku){ return {skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,orderedQty:sku.orderedQty,packed:(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false,packedQty:parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value||0)||0}; });
   var today=getISTDateStr(), existing=getPackingDoc(rid);
   try{
-    if(existing) await updateDoc(doc(db,'packing',existing.id),{items:items,updatedAt:new Date().toISOString()});
-    else await addDoc(collection(db,'packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:false,archived:false,createdAt:new Date().toISOString()});
+    if(existing) await updateDoc(tdoc('packing',existing.id),{items:items,updatedAt:new Date().toISOString()});
+    else await addDoc(tcol('packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:false,archived:false,createdAt:new Date().toISOString()});
   }catch(e){ console.error(e); }
 }
 window.confirmPacking=async function(rid,retailerName){
@@ -1295,8 +1325,8 @@ window.confirmPacking=async function(rid,retailerName){
   if(!items.filter(function(i){ return i.packed; }).length){ toast('Tick at least one SKU'); return; }
   var today=getISTDateStr(), existing=getPackingDoc(rid);
   try{
-    if(existing) await updateDoc(doc(db,'packing',existing.id),{items:items,confirmed:true,confirmedAt:new Date().toISOString()});
-    else await addDoc(collection(db,'packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:true,archived:false,createdAt:new Date().toISOString()});
+    if(existing) await updateDoc(tdoc('packing',existing.id),{items:items,confirmed:true,confirmedAt:new Date().toISOString()});
+    else await addDoc(tcol('packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:true,archived:false,createdAt:new Date().toISOString()});
     openOutlets.delete(rid); toast('Packing confirmed for '+retailerName);
   }catch(e){ toast('Error: '+e.message); }
 };
@@ -1373,8 +1403,8 @@ window.confirmImportCollection=async function(){
       var total=parseFloat(row['Total'])||bills.reduce(function(a,b){ return a+b; },0);
       var grandTotal=parseFloat(row['Grand Total'])||total;
       var existing=collectionsData.find(function(c){ return c.retailerId===retailer.id&&c.date===today&&!c.archived; });
-      if(existing) await updateDoc(doc(db,'collections',existing.id),{bills:bills,total:total,grandTotal:grandTotal,routeId:routeId||'',routeName:route?route.name:''});
-      else await addDoc(collection(db,'collections'),{retailerId:retailer.id,retailerName:retailer.name,routeId:routeId||'',routeName:route?route.name:'',date:today,bills:bills,total:total,grandTotal:grandTotal,collectedAmount:0,mode:'Cash',archived:false,createdAt:new Date().toISOString()});
+      if(existing) await updateDoc(tdoc('collections',existing.id),{bills:bills,total:total,grandTotal:grandTotal,routeId:routeId||'',routeName:route?route.name:''});
+      else await addDoc(tcol('collections'),{retailerId:retailer.id,retailerName:retailer.name,routeId:routeId||'',routeName:route?route.name:'',date:today,bills:bills,total:total,grandTotal:grandTotal,collectedAmount:0,mode:'Cash',archived:false,createdAt:new Date().toISOString()});
       count++;
     }
     fi.value=''; toast('Imported '+count+' retailer(s)');
@@ -1382,7 +1412,7 @@ window.confirmImportCollection=async function(){
 };
 window.updateCollection=async function(id){
   var amt=parseFloat(document.getElementById('coll-amt-'+id).value)||0, mode=document.getElementById('coll-mode-'+id).value;
-  try{ await updateDoc(doc(db,'collections',id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()}); toast('Updated'); }catch(e){ toast('Error: '+e.message); }
+  try{ await updateDoc(tdoc('collections',id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()}); toast('Updated'); }catch(e){ toast('Error: '+e.message); }
 };
 function renderCollectionList(){
   var wrap=document.getElementById('collection-list'); if(!wrap) return;
@@ -1450,8 +1480,8 @@ window.savePhysicalCash=async function(){
   var today=getISTDateStr(), cc=collectionsData.filter(function(c){ return c.date===today&&!c.archived&&(c.mode||'Cash')==='Cash'; }).reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
   var diff=total-cc, ex=physicalCashData.find(function(p){ return p.date===today&&!p.archived; });
   try{
-    if(ex) await updateDoc(doc(db,'physicalCash',ex.id),{denominations:denoms,total:total,cashCollected:cc,difference:diff,updatedAt:new Date().toISOString()});
-    else await addDoc(collection(db,'physicalCash'),{date:today,denominations:denoms,total:total,cashCollected:cc,difference:diff,archived:false,createdAt:new Date().toISOString()});
+    if(ex) await updateDoc(tdoc('physicalCash',ex.id),{denominations:denoms,total:total,cashCollected:cc,difference:diff,updatedAt:new Date().toISOString()});
+    else await addDoc(tcol('physicalCash'),{date:today,denominations:denoms,total:total,cashCollected:cc,difference:diff,archived:false,createdAt:new Date().toISOString()});
     toast('Physical cash updated'); closePhysicalCashModal();
   }catch(e){ toast('Error: '+e.message); }
 };
@@ -1650,7 +1680,7 @@ function buildOrderCard(o,isArchive,pDoc){
   if(!isArchive) card.querySelector('.del-order-btn').addEventListener('click',function(){ deleteOrder(o.id); });
   return card;
 }
-async function deleteOrder(id){ if(!confirm('Delete?')) return; try{ await deleteDoc(doc(db,'orders',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } }
+async function deleteOrder(id){ if(!confirm('Delete?')) return; try{ await deleteDoc(tdoc('orders',id)); toast('Deleted'); }catch(e){ toast('Error: '+e.message); } }
 
 // PDF
 function pdfHdr(d,pw,title){ d.setFillColor(43,108,176); d.rect(0,0,pw,24,'F'); d.setTextColor(255,255,255); d.setFontSize(12); d.setFont('helvetica','bold'); d.text(title,13,10); d.setFontSize(7.5); d.setFont('helvetica','normal'); d.text('Retailer Order Management System',13,18); d.setTextColor(44,62,80); }
@@ -1713,14 +1743,95 @@ function exportFinalBillPDF(confirmed){
   pdfFtr(d,pw); d.save('Final_Bill_'+getISTDateStr()+'.pdf'); toast('Final Bill PDF downloaded');
 }
 
+// COMPANY GATEWAY
+function startCompanyApp(){
+  document.querySelector('.topbar').style.display='';
+  document.querySelector('.content').style.display='';
+  document.getElementById('gateway-screen').style.display='none';
+  document.getElementById('current-company-name').textContent=COMPANY_NAME;
+  showLoader('Connecting to cloud...');
+  document.getElementById('order-date').value=getISTDateStr();
+  window.addSkuLine();
+  applyLockUI(); applySkuLockUI();
+  initListeners();
+  scheduleMidnightArchive(); scheduleLockReset();
+  if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+window.enterCompany=function(id,name){
+  COMPANY_ID=id; COMPANY_NAME=name||'';
+  setStoredCompanyId(id);
+  var u=new URL(location.href); u.searchParams.set('company',id); history.replaceState(null,'',u);
+  startCompanyApp();
+};
+window.exitToGateway=function(){
+  COMPANY_ID=null;
+  try{ localStorage.removeItem('lastCompanyId'); }catch(e){}
+  var u=new URL(location.href); u.searchParams.delete('company'); history.replaceState(null,'',u);
+  location.reload();
+};
+window.createCompany=async function(){
+  var name=document.getElementById('new-company-name').value.trim();
+  if(!name){ toast('Enter a company name'); return; }
+  var btn=document.getElementById('create-company-btn'); btn.disabled=true;
+  try{
+    var ref=await addDoc(collection(db,'companies'),{name:name,createdAt:new Date().toISOString()});
+    toast('Company created'); enterCompany(ref.id,name);
+  }catch(e){ toast('Error: '+e.message); btn.disabled=false; }
+};
+async function loadCompanyList(){
+  var wrap=document.getElementById('company-list');
+  try{
+    var snap=await getDocs(collection(db,'companies'));
+    if(snap.empty){ wrap.innerHTML='<div class="empty">No companies yet. Create one below.</div>'; checkLegacyData(); return; }
+    var items=[]; snap.forEach(function(d){ items.push(Object.assign({id:d.id},d.data())); });
+    items.sort(function(a,b){ return (a.name||'').localeCompare(b.name||''); });
+    wrap.innerHTML=items.map(function(c){ return '<div class="company-card" onclick="enterCompany(\''+c.id+'\',\''+esc(c.name).replace(/'/g,"\\'")+'\')"><div><b>'+esc(c.name)+'</b><div style="font-size:.75rem;color:#a0aec0">Created '+(c.createdAt?new Date(c.createdAt).toLocaleDateString():'')+'</div></div><span style="color:#3182ce;font-weight:600">Enter &#8594;</span></div>'; }).join('');
+  }catch(e){ wrap.innerHTML='<div class="empty">Error loading companies: '+e.message+'</div>'; }
+}
+async function checkLegacyData(){
+  try{
+    var snap=await getDocs(query(collection(db,'orders')));
+    var hasLegacy=!snap.empty;
+    if(!hasLegacy){ var s2=await getDocs(collection(db,'skus')); hasLegacy=!s2.empty; }
+    if(!hasLegacy){ var s3=await getDocs(collection(db,'retailers')); hasLegacy=!s3.empty; }
+    if(hasLegacy) document.getElementById('legacy-migrate-card').style.display='';
+  }catch(e){}
+}
+window.migrateLegacyData=async function(){
+  var btn=document.getElementById('migrate-btn'); btn.disabled=true; btn.textContent='Migrating... please wait';
+  try{
+    var ref=await addDoc(collection(db,'companies'),{name:'Shantadurga Sales',createdAt:new Date().toISOString()});
+    var newId=ref.id;
+    var legacyCols=['orders','packing','collections','physicalCash','skuGroups','skus','retailers','routes'];
+    for(var i=0;i<legacyCols.length;i++){
+      var colName=legacyCols[i];
+      var snap=await getDocs(collection(db,colName));
+      var docsArr=[]; snap.forEach(function(d){ docsArr.push({id:d.id,data:d.data()}); });
+      for(var j=0;j<docsArr.length;j++){ await setDoc(doc(db,'companies/'+newId+'/'+colName,docsArr[j].id),docsArr[j].data); }
+    }
+    toast('Migration complete!');
+    enterCompany(newId,'Shantadurga Sales');
+  }catch(e){ toast('Migration error: '+e.message); btn.disabled=false; btn.textContent='Migrate to "Shantadurga Sales"'; }
+};
+
 // INIT
-showLoader('Connecting to cloud...');
-document.getElementById('order-date').value=getISTDateStr();
-window.addSkuLine();
-applyLockUI(); applySkuLockUI();
-initListeners();
-scheduleMidnightArchive(); scheduleLockReset();
-if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
+(function(){
+  var urlCompany=new URLSearchParams(location.search).get('company');
+  var initial=urlCompany||getStoredCompanyId();
+  if(initial){
+    COMPANY_ID=initial;
+    getDoc(doc(db,'companies',initial)).then(function(snap){
+      if(snap.exists()){ COMPANY_NAME=snap.data().name||''; startCompanyApp(); }
+      else { toast('Company not found'); exitToGateway(); }
+    }).catch(function(e){ toast('Error: '+e.message); exitToGateway(); });
+  } else {
+    document.querySelector('.topbar').style.display='none';
+    document.querySelector('.content').style.display='none';
+    document.getElementById('gateway-screen').style.display='';
+    hideLoader();
+    loadCompanyList();
+  }
+})();
 </script>
 </body>
 </html>
