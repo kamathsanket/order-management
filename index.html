@@ -120,6 +120,8 @@ tr:last-child td{border-bottom:none}
 .sku-lock-bar label{display:flex;align-items:center;gap:7px;cursor:pointer;font-weight:600;font-size:.88rem;color:#276749}
 .sku-lock-bar input[type=checkbox]{width:16px;height:16px;accent-color:#38a169;cursor:pointer}
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:2000;padding:16px}
+.route-group-hdr{background:linear-gradient(135deg,#553c9a,#805ad5);color:#fff;padding:8px 14px;border-radius:8px;margin:14px 0 6px;font-weight:700;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.route-group-hdr:first-child{margin-top:0}
 .modal-box{background:#fff;border-radius:12px;padding:20px;max-width:420px;width:100%;max-height:90vh;overflow-y:auto}
 #gateway-screen{min-height:100vh;background:#f0f4f8}
 .gateway-wrap{max-width:560px;margin:0 auto;padding:48px 16px}
@@ -392,10 +394,7 @@ tr:last-child td{border-bottom:none}
     <div class="card">
       <div class="order-header">
         <h2 style="margin-bottom:0">Today's Collection</h2>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline" onclick="toggleCollectionHistory()">&#128193; History</button>
-          <button class="btn btn-primary" onclick="openPhysicalCashModal()">&#128181; Physical Cash</button>
-        </div>
+        <button class="btn btn-outline" onclick="toggleCollectionHistory()">&#128193; History</button>
       </div>
       <div id="collection-list"></div>
     </div>
@@ -513,16 +512,16 @@ tr:last-child td{border-bottom:none}
 <div id="toast"></div>
 <div class="modal-overlay" id="cash-modal-overlay" style="display:none" onclick="if(event.target===this)closePhysicalCashModal()">
   <div class="modal-box">
-    <h2 style="margin-bottom:14px">Physical Cash Denomination</h2>
+    <h2 id="cash-modal-title" style="margin-bottom:14px">Physical Cash</h2>
     <div id="denom-rows"></div>
     <div class="cash-summary">
       <div class="cash-summary-row"><span>Total Physical Cash</span><b id="phys-cash-total">&#8377;0.00</b></div>
-      <div class="cash-summary-row"><span>Cash Collected (today)</span><b id="cash-collected-total">&#8377;0.00</b></div>
+      <div class="cash-summary-row"><span>Cash Collected (this route)</span><b id="cash-collected-total">&#8377;0.00</b></div>
       <div class="cash-summary-row"><span>Difference</span><b id="cash-diff">&#8377;0.00</b></div>
     </div>
     <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn btn-success" style="flex:1" onclick="savePhysicalCash()">Update</button>
-      <button class="btn btn-cancel" style="flex:1" onclick="closePhysicalCashModal()">Close</button>
+      <button class="btn btn-success" style="flex:1" onclick="savePhysicalCash()">&#10003; Confirm &amp; Close Route</button>
+      <button class="btn btn-cancel" style="flex:1" onclick="closePhysicalCashModal()">Cancel</button>
     </div>
   </div>
 </div>
@@ -553,7 +552,7 @@ function setStoredCompanyId(id){ try{ localStorage.setItem('lastCompanyId',id); 
 
 // STATE
 var skus=[],retailers=[],orders=[],noOrders=[],archivedOrders=[],routes=[],packingDocs=[],groups=[],collectionsData=[],physicalCashData=[];
-var lineCount=0,dragSrc=null,collectionHistoryOpen=false;
+var lineCount=0,dragSrc=null,collectionHistoryOpen=false,currentCashRouteId=null,currentCashRouteName='';
 var archivesYear=null,archivesMonth=null,archivesDate=null;
 var openOutlets=new Set(),openGroups=new Set(),openReviewCards=new Set(),reviewEdits={};
 var LOCK_KEY='routeLock_v2',SKU_LOCK_KEY='skuGroupLock_v1';
@@ -603,6 +602,37 @@ window.onSkuLockChange=function(){
   if(chk.checked){ if(!id){chk.checked=false;toast('Select a group first');return;} saveSkuLock(id,name); } else clearSkuLock();
   applySkuLockUI();
 };
+
+// MIDNIGHT
+function msToMidnight(){
+  var n=new Date(), i=new Date(n.toLocaleString('en-US',{timeZone:'Asia/Kolkata'})), m=new Date(i);
+  m.setHours(24,0,0,0); return m-i;
+}
+function getYesterdayISTStr(){
+  var d=new Date(); d.setTime(d.getTime()-msToMidnight()-1000);
+  return new Date(d.toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toLocaleDateString('en-CA');
+}
+function scheduleLockReset(){ setTimeout(function(){ clearLock(); clearSkuLock(); applyLockUI(); applySkuLockUI(); scheduleLockReset(); }, msToMidnight()); }
+function scheduleMidnightArchive(){
+  setTimeout(async function(){
+    var yesterday=getYesterdayISTStr(), now=new Date().toISOString();
+    // Archive yesterday's fully-processed orders (not review/packing)
+    var toArchive=orders.filter(function(o){ return o.date===yesterday&&o.status!=='review'&&o.status!=='packing'; });
+    var noToArchive=noOrders.filter(function(o){ return o.date===yesterday; });
+    for(var i=0;i<toArchive.length;i++){ try{ await updateDoc(tdoc('orders',toArchive[i].id),{archived:true,archivedAt:now}); }catch(e){} }
+    for(var i=0;i<noToArchive.length;i++){ try{ await updateDoc(tdoc('orders',noToArchive[i].id),{archived:true,archivedAt:now}); }catch(e){} }
+    // Archive confirmed packing docs + their linked orders so packed retailers leave the Packing tab
+    var confirmedPacks=packingDocs.filter(function(p){ return p.confirmed&&!p.archived; });
+    for(var i=0;i<confirmedPacks.length;i++){
+      var p=confirmedPacks[i];
+      try{ await updateDoc(tdoc('packing',p.id),{archived:true,archivedAt:now}); }catch(e){}
+      var linked=orders.filter(function(o){ return o.retailerId===p.retailerId&&o.status==='packing'; });
+      for(var j=0;j<linked.length;j++){ try{ await updateDoc(tdoc('orders',linked[j].id),{archived:true,archivedAt:now}); }catch(e){} }
+    }
+    if(toArchive.length+noToArchive.length+confirmedPacks.length) toast('Day closed \u2014 data moved to Archives');
+    scheduleMidnightArchive();
+  }, msToMidnight());
+}
 
 // SEARCHABLE DROPDOWN
 function toggleSD(key){
@@ -828,7 +858,7 @@ window.onRetailerSelect=function(retId){
   var collAmt=document.getElementById('inline-coll-amt');
   if(!retId){ note.style.display='none'; collCard.style.display='none'; return; }
   var today=getISTDateStr();
-  var c=collectionsData.find(function(x){ return x.retailerId===retId&&x.date===today&&!x.archived; });
+  var c=collectionsData.find(function(x){ return x.retailerId===retId&&!x.archived; });
   if(c){
     var pending=(c.grandTotal||0)-(c.collectedAmount||0);
     note.style.display='block';
@@ -846,7 +876,7 @@ window.submitInlineCollection=async function(){
   var mode=document.getElementById('inline-coll-mode').value;
   if(amt<=0){ toast('Enter a valid amount'); return; }
   var today=getISTDateStr();
-  var existing=collectionsData.find(function(c){ return c.retailerId===retId&&c.date===today&&!c.archived; });
+  var existing=collectionsData.find(function(c){ return c.retailerId===retId&&!c.archived; });
   if(!existing){ toast('No collection record found. Import collection sheet first.'); return; }
   try{
     await updateDoc(tdoc('collections',existing.id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()});
@@ -906,9 +936,9 @@ function initListeners(){
   onSnapshot(query(tcol('orders'),orderBy('createdAt','desc')),function(snap){
     var all=snap.docs.map(function(d){ return Object.assign({id:d.id},d.data()); });
     var today=getISTDateStr();
-    orders=all.filter(function(o){ return !o.archived&&o.date===today&&!o.noOrder; });
-    archivedOrders=all.filter(function(o){ return (o.archived||(o.date&&o.date<today))&&!o.noOrder; });
-    noOrders=all.filter(function(o){ return o.noOrder&&!o.archived&&o.date===today; });
+    orders=all.filter(function(o){ return !o.archived&&!o.noOrder; });
+    archivedOrders=all.filter(function(o){ return o.archived&&!o.noOrder; });
+    noOrders=all.filter(function(o){ return o.noOrder&&!o.archived; });
     var lock=getLock(); buildRetailerOpts(lock?lock.id:(document.getElementById('val-order-route')||{}).value||'');
     updateRouteOutletInfo();
     var at=document.querySelector('.tab.active');
@@ -1187,36 +1217,51 @@ function recalcReview(orderId){
   getReviewLines(orderId).forEach(function(l){ l.subtotal=(parseFloat(l.qty)||0)*(parseFloat(l.price)||0); });
 }
 function reviewTotal(orderId){ return getReviewLines(orderId).reduce(function(s,l){ return s+(l.subtotal||0); },0); }
+// ROUTE GROUPING HELPER
+function groupByRoute(arr,getRoute){
+  var map={},order=[];
+  arr.forEach(function(item){ var r=getRoute(item)||''; if(!map[r]){ map[r]=[]; order.push(r); } map[r].push(item); });
+  return {map:map,order:order,multi:order.length>1};
+}
+function makeRouteHdr(wrap,routeName,count){
+  var hdr=document.createElement('div'); hdr.className='route-group-hdr';
+  hdr.innerHTML='<span>&#128506; '+(routeName||'No Route')+'</span><span>'+count+' outlet'+(count!==1?'s':'')+'</span>';
+  wrap.appendChild(hdr);
+}
 function renderReview(){
   var wrap=document.getElementById('review-list'); if(!wrap) return;
   var ro=getReviewOrders();
   if(!ro.length){ wrap.innerHTML='<div class="card"><div class="empty">No orders pending review.</div></div>'; return; }
   wrap.innerHTML='';
-  ro.forEach(function(o){
-    recalcReview(o.id); var lines=getReviewLines(o.id), total=reviewTotal(o.id), isOpen=openReviewCards.has(o.id);
-    var card=document.createElement('div'); card.className='outlet-card';
-    var itemsHtml=lines.map(function(l,idx){
-      return '<div class="pack-item"><div class="ri-name"><span class="badge badge-blue">'+esc(l.skuCode)+'</span> '+esc(l.skuName)+'</div>'
-        +'<div class="ri-qty"><label>Qty</label><input type="number" class="pack-qty-input" style="width:60px" value="'+l.qty+'" min="1" oninput="onReviewChange(\''+o.id+'\','+idx+',\'qty\',this.value)"/></div>'
-        +'<div class="ri-price"><label>Price</label><input type="number" class="pack-qty-input" style="width:85px" value="'+l.price+'" min="0" oninput="onReviewChange(\''+o.id+'\','+idx+',\'price\',this.value)"/></div>'
-        +'<input type="text" class="pack-qty-input ri-notes" style="width:120px;text-align:left" value="'+esc(l.notes||'')+'" placeholder="Notes" oninput="onReviewChange(\''+o.id+'\','+idx+',\'notes\',this.value)"/>'
-        +'<span class="ri-sub" style="min-width:70px;text-align:right;font-weight:600;color:#2b6cb0" id="rev-sub-'+o.id+'-'+idx+'">'+fmt(l.subtotal)+'</span>'
-        +'<button class="btn btn-danger" style="padding:4px 8px" onclick="removeReviewLine(\''+o.id+'\','+idx+')">&#10005;</button></div>';
-    }).join('');
-    var addSkuHtml='<div class="row" style="margin-top:10px" onclick="event.stopPropagation()"><div class="searchable-wrap" style="flex:1;min-width:180px" id="sd-wrap-review-'+o.id+'"><button type="button" class="sd-trigger placeholder-style" onclick="toggleSD(\'review-'+o.id+'\')">+ Add SKU &#9660;</button><div class="searchable-dropdown" id="sd-dd-review-'+o.id+'"><div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD(\'review-'+o.id+'\',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-review-'+o.id+'"></div></div></div></div>';
-    card.innerHTML='<div class="outlet-header" onclick="toggleReviewCard(\''+o.id+'\')">'
-      +'<div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="review-card-check" data-id="'+o.id+'" onclick="event.stopPropagation()" onchange="onReviewCheckChange()" style="width:18px;height:18px;flex-shrink:0"><div><b>'+esc(o.retailerName)+'</b> <span class="badge badge-orange">Review</span>'+(o.routeName?'<span class="badge badge-purple" style="margin-left:6px">'+esc(o.routeName)+'</span>':'')
-      +'<div class="order-meta">'+lines.length+' SKUs | Total: '+fmt(total)+'</div></div></div>'
-      +'<span style="color:#a0aec0;font-size:1.1rem">&#9660;</span></div>'
-      +'<div class="outlet-body'+(isOpen?' open':'')+'" id="review-body-'+o.id+'">'
-      +'<div id="review-items-'+o.id+'">'+itemsHtml+'</div>'
-      +addSkuHtml
-      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">'
-      +'<div class="total" id="review-total-'+o.id+'">Total: '+fmt(total)+'</div>'
-      +'<div style="display:flex;gap:8px"><button class="btn btn-save" onclick="saveReviewOrder(\''+o.id+'\')">Save</button>'
-      +'<button class="btn-confirm" style="margin-top:0;width:auto;padding:8px 16px" onclick="packReviewOrder(\''+o.id+'\',\''+esc(o.retailerName)+'\')">Pack</button></div></div></div>';
-    wrap.appendChild(card);
-    buildReviewSkuOpts(o.id);
+  var grp=groupByRoute(ro,function(o){ return o.routeName; });
+  grp.order.forEach(function(routeName){
+    if(grp.multi) makeRouteHdr(wrap,routeName,grp.map[routeName].length);
+    grp.map[routeName].forEach(function(o){
+      recalcReview(o.id); var lines=getReviewLines(o.id), total=reviewTotal(o.id), isOpen=openReviewCards.has(o.id);
+      var card=document.createElement('div'); card.className='outlet-card';
+      var itemsHtml=lines.map(function(l,idx){
+        return '<div class="pack-item"><div class="ri-name"><span class="badge badge-blue">'+esc(l.skuCode)+'</span> '+esc(l.skuName)+'</div>'
+          +'<div class="ri-qty"><label>Qty</label><input type="number" class="pack-qty-input" style="width:60px" value="'+l.qty+'" min="1" oninput="onReviewChange(\''+o.id+'\','+idx+',\'qty\',this.value)"/></div>'
+          +'<div class="ri-price"><label>Price</label><input type="number" class="pack-qty-input" style="width:85px" value="'+l.price+'" min="0" oninput="onReviewChange(\''+o.id+'\','+idx+',\'price\',this.value)"/></div>'
+          +'<input type="text" class="pack-qty-input ri-notes" style="width:120px;text-align:left" value="'+esc(l.notes||'')+'" placeholder="Notes" oninput="onReviewChange(\''+o.id+'\','+idx+',\'notes\',this.value)"/>'
+          +'<span class="ri-sub" style="min-width:70px;text-align:right;font-weight:600;color:#2b6cb0" id="rev-sub-'+o.id+'-'+idx+'">'+fmt(l.subtotal)+'</span>'
+          +'<button class="btn btn-danger" style="padding:4px 8px" onclick="removeReviewLine(\''+o.id+'\','+idx+')">&#10005;</button></div>';
+      }).join('');
+      var addSkuHtml='<div class="row" style="margin-top:10px" onclick="event.stopPropagation()"><div class="searchable-wrap" style="flex:1;min-width:180px" id="sd-wrap-review-'+o.id+'"><button type="button" class="sd-trigger placeholder-style" onclick="toggleSD(\'review-'+o.id+'\')">+ Add SKU &#9660;</button><div class="searchable-dropdown" id="sd-dd-review-'+o.id+'"><div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD(\'review-'+o.id+'\',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-review-'+o.id+'"></div></div></div></div>';
+      card.innerHTML='<div class="outlet-header" onclick="toggleReviewCard(\''+o.id+'\')">'
+        +'<div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="review-card-check" data-id="'+o.id+'" onclick="event.stopPropagation()" onchange="onReviewCheckChange()" style="width:18px;height:18px;flex-shrink:0"><div><b>'+esc(o.retailerName)+'</b> <span class="badge badge-orange">Review</span>'+(o.routeName&&!grp.multi?'<span class="badge badge-purple" style="margin-left:6px">'+esc(o.routeName)+'</span>':'')
+        +'<div class="order-meta">'+lines.length+' SKUs | Total: '+fmt(total)+'</div></div></div>'
+        +'<span style="color:#a0aec0;font-size:1.1rem">&#9660;</span></div>'
+        +'<div class="outlet-body'+(isOpen?' open':'')+'" id="review-body-'+o.id+'">'
+        +'<div id="review-items-'+o.id+'">'+itemsHtml+'</div>'
+        +addSkuHtml
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:8px">'
+        +'<div class="total" id="review-total-'+o.id+'">Total: '+fmt(total)+'</div>'
+        +'<div style="display:flex;gap:8px"><button class="btn btn-save" onclick="saveReviewOrder(\''+o.id+'\')">Save</button>'
+        +'<button class="btn-confirm" style="margin-top:0;width:auto;padding:8px 16px" onclick="packReviewOrder(\''+o.id+'\',\''+esc(o.retailerName)+'\')">Pack</button></div></div></div>';
+      wrap.appendChild(card);
+      buildReviewSkuOpts(o.id);
+    });
   });
 }
 function buildReviewSkuOpts(orderId){
@@ -1333,25 +1378,29 @@ function getMergedByRetailer(){
   });
   return Object.values(map).map(function(r){ return Object.assign({},r,{skus:Object.values(r.skus)}); });
 }
-function getPackingDoc(retailerId){ return packingDocs.find(function(p){ return p.retailerId===retailerId&&p.date===getISTDateStr()&&!p.archived; })||null; }
+function getPackingDoc(retailerId){ return packingDocs.find(function(p){ return p.retailerId===retailerId&&!p.archived; })||null; }
 function renderPacking(){
   var wrap=document.getElementById('packing-list'); if(!wrap) return;
   var merged=getMergedByRetailer();
   if(!merged.length){ wrap.innerHTML='<div class="card"><div class="empty">No orders ready for packing. Send from Review tab first.</div></div>'; return; }
   wrap.innerHTML='';
-  merged.forEach(function(outlet){
-    var pDoc=getPackingDoc(outlet.retailerId), confirmed=pDoc&&pDoc.confirmed||false, isOpen=openOutlets.has(outlet.retailerId);
-    var card=document.createElement('div'); card.className='outlet-card';
-    card.innerHTML='<div class="outlet-header'+(confirmed?' confirmed':'')+'" onclick="toggleOutletBody(\'pack-body-'+outlet.retailerId+'\')">'
-      +'<div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="pack-card-check" data-id="'+outlet.retailerId+'" onclick="event.stopPropagation()" onchange="onPackCheckChange()" style="width:18px;height:18px;flex-shrink:0">'
-      +'<div><b>'+esc(outlet.retailerName)+'</b>'+(confirmed?'<span class="badge badge-green" style="margin-left:8px">Packed</span>':'<span class="badge badge-orange" style="margin-left:8px">Pending</span>')+(outlet.routeName?'<span class="badge badge-purple" style="margin-left:6px">'+esc(outlet.routeName)+'</span>':'')
-      +'<div class="order-meta">'+outlet.skus.length+' SKUs</div></div></div>'
-      +'<span style="color:#a0aec0;font-size:1.1rem">&#9660;</span></div>'
-      +'<div class="outlet-body'+(isOpen?' open':'')+'" id="pack-body-'+outlet.retailerId+'">'
-      +'<div id="pack-items-'+outlet.retailerId+'"></div>'
-      +(!confirmed?'<button class="btn-confirm" onclick="confirmPacking(\''+outlet.retailerId+'\',\''+esc(outlet.retailerName)+'\')">Confirm Packing</button>':'<div style="text-align:center;color:#38a169;font-weight:600;padding:8px">Packing Confirmed</div>')
-      +'</div>';
-    wrap.appendChild(card); renderPackItems(outlet,pDoc,confirmed);
+  var grp=groupByRoute(merged,function(o){ return o.routeName; });
+  grp.order.forEach(function(routeName){
+    if(grp.multi) makeRouteHdr(wrap,routeName,grp.map[routeName].length);
+    grp.map[routeName].forEach(function(outlet){
+      var pDoc=getPackingDoc(outlet.retailerId), confirmed=pDoc&&pDoc.confirmed||false, isOpen=openOutlets.has(outlet.retailerId);
+      var card=document.createElement('div'); card.className='outlet-card';
+      card.innerHTML='<div class="outlet-header'+(confirmed?' confirmed':'')+'" onclick="toggleOutletBody(\'pack-body-'+outlet.retailerId+'\')">'
+        +'<div style="display:flex;align-items:center;gap:10px"><input type="checkbox" class="pack-card-check" data-id="'+outlet.retailerId+'" onclick="event.stopPropagation()" onchange="onPackCheckChange()" style="width:18px;height:18px;flex-shrink:0">'
+        +'<div><b>'+esc(outlet.retailerName)+'</b>'+(confirmed?'<span class="badge badge-green" style="margin-left:8px">Packed</span>':'<span class="badge badge-orange" style="margin-left:8px">Pending</span>')+(outlet.routeName&&!grp.multi?'<span class="badge badge-purple" style="margin-left:6px">'+esc(outlet.routeName)+'</span>':'')
+        +'<div class="order-meta">'+outlet.skus.length+' SKUs</div></div></div>'
+        +'<span style="color:#a0aec0;font-size:1.1rem">&#9660;</span></div>'
+        +'<div class="outlet-body'+(isOpen?' open':'')+'" id="pack-body-'+outlet.retailerId+'">'
+        +'<div id="pack-items-'+outlet.retailerId+'"></div>'
+        +(!confirmed?'<button class="btn-confirm" onclick="confirmPacking(\''+outlet.retailerId+'\',\''+esc(outlet.retailerName)+'\')">Confirm Packing</button>':'<div style="text-align:center;color:#38a169;font-weight:600;padding:8px">Packing Confirmed</div>')
+        +'</div>';
+      wrap.appendChild(card); renderPackItems(outlet,pDoc,confirmed);
+    });
   });
 }
 function renderPackItems(outlet,pDoc,confirmed){
@@ -1402,15 +1451,17 @@ window.confirmPacking=async function(rid,retailerName){
 // HISTORY
 function renderHistory(){
   var wrap=document.getElementById('orders-list'), stats=document.getElementById('summary-stats');
-  if(!orders.length){ wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>'; stats.innerHTML=''; return; }
-  var totalAmt=orders.reduce(function(s,o){ return s+orderDisplayTotal(o,getPackingDoc(o.retailerId)); },0);
-  stats.innerHTML='<div class="stat"><div class="stat-val">'+orders.length+'</div><div class="stat-lbl">Orders</div></div><div class="stat"><div class="stat-val">'+([...new Set(orders.map(function(o){ return o.retailerName; }))].length)+'</div><div class="stat-lbl">Retailers</div></div><div class="stat"><div class="stat-val">'+fmt(totalAmt)+'</div><div class="stat-lbl">Total</div></div>';
+  var today=getISTDateStr();
+  var todayOrders=orders.filter(function(o){ return o.date===today; });
+  if(!todayOrders.length){ wrap.innerHTML='<div class="card"><div class="empty">No orders today.</div></div>'; stats.innerHTML=''; return; }
+  var totalAmt=todayOrders.reduce(function(s,o){ return s+orderDisplayTotal(o,getPackingDoc(o.retailerId)); },0);
+  stats.innerHTML='<div class="stat"><div class="stat-val">'+todayOrders.length+'</div><div class="stat-lbl">Orders</div></div><div class="stat"><div class="stat-val">'+([...new Set(todayOrders.map(function(o){ return o.retailerName; }))].length)+'</div><div class="stat-lbl">Retailers</div></div><div class="stat"><div class="stat-val">'+fmt(totalAmt)+'</div><div class="stat-lbl">Total</div></div>';
   wrap.innerHTML='';
   var ed=document.createElement('div'); ed.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
   ed.innerHTML='<button class="btn btn-pdf" id="export-all-btn">Export All PDF</button>';
   wrap.appendChild(ed); document.getElementById('export-all-btn').addEventListener('click',exportAllPDF);
   var grouped={};
-  orders.slice().sort(function(a,b){ return (a.createdAt||'').localeCompare(b.createdAt||''); }).forEach(function(o){ if(!grouped[o.retailerName]) grouped[o.retailerName]=[]; grouped[o.retailerName].push(o); });
+  todayOrders.slice().sort(function(a,b){ return (a.createdAt||'').localeCompare(b.createdAt||''); }).forEach(function(o){ if(!grouped[o.retailerName]) grouped[o.retailerName]=[]; grouped[o.retailerName].push(o); });
   Object.entries(grouped).forEach(function(e){
     var rName=e[0], rOrders=e[1], sec=document.createElement('div'); sec.className='retailer-section';
     sec.innerHTML='<div class="section-title">'+esc(rName)+' <span class="badge badge-blue">'+rOrders.length+' order'+(rOrders.length>1?'s':'')+'</span></div>';
@@ -1422,7 +1473,7 @@ function renderHistory(){
 // FINAL BILL
 function renderFinalBill(){
   var wrap=document.getElementById('finalbill-list'), stats=document.getElementById('bill-stats'); if(!wrap) return;
-  var today=getISTDateStr(), confirmed=packingDocs.filter(function(p){ return p.confirmed&&p.date===today&&!p.archived; });
+  var confirmed=packingDocs.filter(function(p){ return p.confirmed&&!p.archived; });
   if(!confirmed.length){ wrap.innerHTML='<div class="card"><div class="empty">No confirmed packing yet.</div></div>'; stats.innerHTML=''; return; }
   var grand=confirmed.reduce(function(s,p){ return s+p.items.filter(function(i){ return i.packed; }).reduce(function(ss,i){ return ss+(i.packedQty*i.price); },0); },0);
   stats.innerHTML='<div class="stat"><div class="stat-val">'+confirmed.length+'</div><div class="stat-lbl">Outlets</div></div><div class="stat"><div class="stat-val">'+fmt(grand)+'</div><div class="stat-lbl">Grand Total</div></div>';
@@ -1430,17 +1481,21 @@ function renderFinalBill(){
   var bd=document.createElement('div'); bd.style.cssText='display:flex;justify-content:flex-end;margin-bottom:14px';
   bd.innerHTML='<button class="btn btn-pdf" id="bill-pdf-btn">Export Final Bill PDF</button>';
   wrap.appendChild(bd); document.getElementById('bill-pdf-btn').addEventListener('click',function(){ exportFinalBillPDF(confirmed); });
-  confirmed.forEach(function(p){
-    var pi=p.items.filter(function(i){ return i.packed; }), ot=pi.reduce(function(s,i){ return s+(i.packedQty*i.price); },0);
-    var card=document.createElement('div'); card.className='bill-outlet-card';
-    card.innerHTML='<div class="bill-outlet-header" onclick="toggleBillBody(\'bill-body-'+p.retailerId+'\')">'
-      +'<div><b>'+esc(p.retailerName)+'</b>'+(p.routeName?'<span class="badge badge-purple" style="margin-left:6px">'+esc(p.routeName)+'</span>':'')+'<div class="order-meta">'+pi.length+' SKUs packed</div></div>'
-      +'<div style="display:flex;align-items:center;gap:10px"><b style="color:#276749">'+fmt(ot)+'</b><span style="color:#a0aec0">&#9660;</span></div></div>'
-      +'<div class="bill-outlet-body" id="bill-body-'+p.retailerId+'">'
-      +'<div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>SKU</th><th>Product</th><th>Packed Qty</th><th>Price</th><th>Amount</th></tr></thead><tbody>'
-      +pi.map(function(i){ return '<tr><td><span class="badge badge-blue">'+esc(i.skuCode)+'</span></td><td>'+esc(i.skuName)+'</td><td><b>'+i.packedQty+'</b></td><td>'+fmt(i.price)+'</td><td><b style="color:#276749">'+fmt(i.packedQty*i.price)+'</b></td></tr>'; }).join('')
-      +'</tbody></table></div><div style="text-align:right;margin-top:10px;font-weight:700;color:#276749">Outlet Total: '+fmt(ot)+'</div></div>';
-    wrap.appendChild(card);
+  var grp=groupByRoute(confirmed,function(p){ return p.routeName; });
+  grp.order.forEach(function(routeName){
+    if(grp.multi) makeRouteHdr(wrap,routeName,grp.map[routeName].length);
+    grp.map[routeName].forEach(function(p){
+      var pi=p.items.filter(function(i){ return i.packed; }), ot=pi.reduce(function(s,i){ return s+(i.packedQty*i.price); },0);
+      var card=document.createElement('div'); card.className='bill-outlet-card';
+      card.innerHTML='<div class="bill-outlet-header" onclick="toggleBillBody(\'bill-body-'+p.retailerId+'\')">'
+        +'<div><b>'+esc(p.retailerName)+'</b>'+(p.routeName&&!grp.multi?'<span class="badge badge-purple" style="margin-left:6px">'+esc(p.routeName)+'</span>':'')+'<div class="order-meta">'+pi.length+' SKUs packed</div></div>'
+        +'<div style="display:flex;align-items:center;gap:10px"><b style="color:#276749">'+fmt(ot)+'</b><span style="color:#a0aec0">&#9660;</span></div></div>'
+        +'<div class="bill-outlet-body" id="bill-body-'+p.retailerId+'">'
+        +'<div style="overflow-x:auto;margin-top:8px"><table><thead><tr><th>SKU</th><th>Product</th><th>Ordered</th><th>Packed</th><th>Price</th><th>Amount</th></tr></thead><tbody>'
+        +pi.map(function(i){ return '<tr><td><span class="badge badge-blue">'+esc(i.skuCode)+'</span></td><td>'+esc(i.skuName)+'</td><td style="color:#718096">'+i.orderedQty+'</td><td><b>'+i.packedQty+'</b>'+(i.packedQty<i.orderedQty?'<span style="color:#e53e3e;font-size:.75rem;margin-left:4px">&#9660;'+(i.orderedQty-i.packedQty)+'</span>':'')+'</td><td>'+fmt(i.price)+'</td><td><b style="color:#276749">'+fmt(i.packedQty*i.price)+'</b></td></tr>'; }).join('')
+        +'</tbody></table></div><div style="text-align:right;margin-top:10px;font-weight:700;color:#276749">Outlet Total: '+fmt(ot)+'</div></div>';
+      wrap.appendChild(card);
+    });
   });
   var gt=document.createElement('div'); gt.style.cssText='background:#276749;color:#fff;border-radius:10px;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:1rem;margin-top:8px';
   gt.innerHTML='<span>GRAND TOTAL</span><span>'+fmt(grand)+'</span>'; wrap.appendChild(gt);
@@ -1470,7 +1525,7 @@ window.confirmImportCollection=async function(){
       var bills=[1,2,3,4,5].map(function(n){ return parseFloat(row['Bill '+n])||0; });
       var total=parseFloat(row['Total'])||bills.reduce(function(a,b){ return a+b; },0);
       var grandTotal=parseFloat(row['Grand Total'])||total;
-      var existing=collectionsData.find(function(c){ return c.retailerId===retailer.id&&c.date===today&&!c.archived; });
+      var existing=collectionsData.find(function(c){ return c.retailerId===retailer.id&&!c.archived; });
       if(existing) await updateDoc(tdoc('collections',existing.id),{bills:bills,total:total,grandTotal:grandTotal,routeId:routeId||'',routeName:route?route.name:''});
       else await addDoc(tcol('collections'),{retailerId:retailer.id,retailerName:retailer.name,routeId:routeId||'',routeName:route?route.name:'',date:today,bills:bills,total:total,grandTotal:grandTotal,collectedAmount:0,mode:'Cash',archived:false,createdAt:new Date().toISOString()});
       count++;
@@ -1484,15 +1539,34 @@ window.updateCollection=async function(id){
 };
 function renderCollectionList(){
   var wrap=document.getElementById('collection-list'); if(!wrap) return;
-  var today=getISTDateStr(), todays=collectionsData.filter(function(c){ return c.date===today&&!c.archived; });
+  var todays=collectionsData.filter(function(c){ return !c.archived; });
   if(!todays.length){ wrap.innerHTML='<div class="empty">No collection data. Import a collection sheet first.</div>'; return; }
   var grand=todays.reduce(function(s,c){ return s+(c.grandTotal||0); },0), collected=todays.reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
-  var html='<div class="summary-row"><div class="stat"><div class="stat-val">'+todays.length+'</div><div class="stat-lbl">Retailers</div></div><div class="stat"><div class="stat-val">'+fmt(grand)+'</div><div class="stat-lbl">Grand Total</div></div><div class="stat"><div class="stat-val">'+fmt(collected)+'</div><div class="stat-lbl">Collected</div></div><div class="stat"><div class="stat-val">'+fmt(grand-collected)+'</div><div class="stat-lbl">Pending</div></div></div><div style="overflow-x:auto"><table><thead><tr><th>Retailer</th><th>Bill 1</th><th>Bill 2</th><th>Bill 3</th><th>Bill 4</th><th>Bill 5</th><th>Total</th><th>Grand Total</th><th>Collected</th><th>Mode</th><th>Action</th></tr></thead><tbody>';
-  todays.forEach(function(c){
-    var bills=c.bills&&c.bills.length===5?c.bills:[0,0,0,0,0];
-    html+='<tr><td><b>'+esc(c.retailerName)+'</b>'+(c.routeName?'<br><span class="badge badge-purple">'+esc(c.routeName)+'</span>':'')+'</td>'+bills.map(function(b){ return '<td>'+fmt(b)+'</td>'; }).join('')+'<td><b>'+fmt(c.total)+'</b></td><td><b style="color:#2b6cb0">'+fmt(c.grandTotal)+'</b></td><td><input type="number" id="coll-amt-'+c.id+'" value="'+(c.collectedAmount||0)+'" min="0" style="width:90px;padding:6px 8px"/></td><td><select id="coll-mode-'+c.id+'" style="width:100px;padding:6px 8px">'+['Cash','Gpay','Cheque'].map(function(m){ return '<option value="'+m+'"'+((c.mode||'Cash')===m?' selected':'')+'>'+m+'</option>'; }).join('')+'</select></td><td><button class="btn btn-save" onclick="updateCollection(\''+c.id+'\')">Update</button></td></tr>';
+  var html='<div class="summary-row"><div class="stat"><div class="stat-val">'+todays.length+'</div><div class="stat-lbl">Retailers</div></div><div class="stat"><div class="stat-val">'+fmt(grand)+'</div><div class="stat-lbl">Grand Total</div></div><div class="stat"><div class="stat-val">'+fmt(collected)+'</div><div class="stat-lbl">Collected</div></div><div class="stat"><div class="stat-val">'+fmt(grand-collected)+'</div><div class="stat-lbl">Pending</div></div></div>';
+  var grp=groupByRoute(todays,function(c){ return c.routeName; });
+  var tableHead='<thead><tr><th>Retailer</th><th>Bill 1</th><th>Bill 2</th><th>Bill 3</th><th>Bill 4</th><th>Bill 5</th><th>Total</th><th>Grand Total</th><th>Collected</th><th>Mode</th><th>Action</th></tr></thead>';
+  grp.order.forEach(function(routeName){
+    var items=grp.map[routeName];
+    var rId=items[0]?items[0].routeId:'';
+    var rGrand=items.reduce(function(s,c){ return s+(c.grandTotal||0); },0), rColl=items.reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
+    if(grp.multi){
+      html+='<div class="route-group-hdr" style="flex-wrap:wrap;gap:6px">'+
+        '<div>&#128506; '+(routeName||'No Route')+'<span style="font-weight:400;font-size:.8rem;margin-left:8px">'+items.length+' retailers &nbsp;|&nbsp; Total: '+fmt(rGrand)+' &nbsp;|&nbsp; Collected: '+fmt(rColl)+'</span></div>'+
+        '<button class="btn btn-primary" style="padding:6px 12px;font-size:.78rem" onclick="openPhysicalCashModal(\''+esc(rId)+'\',\''+esc(routeName||'No Route')+'\')">&#128181; Physical Cash</button>'+
+        '</div>';
+    }
+    html+='<div style="overflow-x:auto"><table>'+tableHead+'<tbody>';
+    items.forEach(function(c){
+      var bills=c.bills&&c.bills.length===5?c.bills:[0,0,0,0,0];
+      html+='<tr><td><b>'+esc(c.retailerName)+'</b></td>'+bills.map(function(b){ return '<td>'+fmt(b)+'</td>'; }).join('')+'<td><b>'+fmt(c.total)+'</b></td><td><b style="color:#2b6cb0">'+fmt(c.grandTotal)+'</b></td><td><input type="number" id="coll-amt-'+c.id+'" value="'+(c.collectedAmount||0)+'" min="0" style="width:90px;padding:6px 8px"/></td><td><select id="coll-mode-'+c.id+'" style="width:100px;padding:6px 8px">'+['Cash','Gpay','Cheque'].map(function(m){ return '<option value="'+m+'"'+((c.mode||'Cash')===m?' selected':'')+'>'+m+'</option>'; }).join('')+'</select></td><td><button class="btn btn-save" onclick="updateCollection(\''+c.id+'\')">Update</button></td></tr>';
+    });
+    html+='</tbody></table></div>';
+    if(!grp.multi){
+      html+='<div style="display:flex;justify-content:flex-end;margin-top:12px">'+
+        '<button class="btn btn-primary" onclick="openPhysicalCashModal(\''+esc(rId)+'\',\''+(routeName?esc(routeName):'')+'\')">&#128181; Physical Cash</button>'+
+        '</div>';
+    }
   });
-  html+='</tbody></table></div>';
   wrap.innerHTML=html;
 }
 window.toggleCollectionHistory=function(){
@@ -1503,7 +1577,7 @@ window.toggleCollectionHistory=function(){
 function renderCollectionHistory(){
   var wrap=document.getElementById('collection-history-list'); if(!wrap) return;
   var today=getISTDateStr();
-  var archived=collectionsData.filter(function(c){ return c.archived||(c.date&&c.date<today); }), archivedCash=physicalCashData.filter(function(p){ return p.archived||(p.date&&p.date<today); });
+  var archived=collectionsData.filter(function(c){ return c.archived; }), archivedCash=physicalCashData.filter(function(p){ return p.archived; });
   if(!archived.length&&!archivedCash.length){ wrap.innerHTML='<div class="empty">No collection history yet.</div>'; return; }
   var byDate={};
   archived.forEach(function(c){ if(!byDate[c.date]) byDate[c.date]={items:[],cash:null}; byDate[c.date].items.push(c); });
@@ -1529,8 +1603,13 @@ function renderCollectionHistory(){
 }
 
 // PHYSICAL CASH MODAL
-window.openPhysicalCashModal=function(){
-  var rows=document.getElementById('denom-rows'), today=getISTDateStr(), ex=physicalCashData.find(function(p){ return p.date===today&&!p.archived; });
+window.openPhysicalCashModal=function(routeId,routeName){
+  currentCashRouteId=routeId!==undefined?routeId:null;
+  currentCashRouteName=routeName||'';
+  var title=document.getElementById('cash-modal-title');
+  if(title) title.textContent='Physical Cash'+(currentCashRouteName?' \u2014 '+currentCashRouteName:'');
+  var rows=document.getElementById('denom-rows');
+  var ex=physicalCashData.find(function(p){ return !p.archived&&(currentCashRouteId!==null?p.routeId===currentCashRouteId:true); });
   rows.innerHTML=DENOMS.map(function(d){ var count=ex&&ex.denominations&&ex.denominations[d]||0; return '<div class="denom-row"><label>&#8377;'+d+'</label> &times; <input type="number" id="denom-'+d+'" min="0" value="'+count+'" oninput="calcPhysicalCash()"/><span class="denom-total" id="denom-'+d+'-total">'+fmt(d*count)+'</span></div>'; }).join('');
   document.getElementById('cash-modal-overlay').style.display='flex'; calcPhysicalCash();
 };
@@ -1539,19 +1618,26 @@ window.calcPhysicalCash=function(){
   var total=0;
   DENOMS.forEach(function(d){ var c=parseFloat((document.getElementById('denom-'+d)||{}).value)||0, sub=d*c; total+=sub; var el=document.getElementById('denom-'+d+'-total'); if(el) el.textContent=fmt(sub); });
   document.getElementById('phys-cash-total').textContent=fmt(total);
-  var today=getISTDateStr(), cc=collectionsData.filter(function(c){ return c.date===today&&!c.archived&&(c.mode||'Cash')==='Cash'; }).reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
+  var cc=collectionsData.filter(function(c){ return !c.archived&&(c.mode||'Cash')==='Cash'&&(currentCashRouteId!==null?c.routeId===currentCashRouteId:true); }).reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
   document.getElementById('cash-collected-total').textContent=fmt(cc);
   var diff=total-cc, de=document.getElementById('cash-diff'); de.textContent=fmt(diff); de.style.color=diff===0?'#38a169':(diff>0?'#3182ce':'#e53e3e');
 };
 window.savePhysicalCash=async function(){
   var denoms={}, total=0;
   DENOMS.forEach(function(d){ var c=parseFloat((document.getElementById('denom-'+d)||{}).value)||0; denoms[d]=c; total+=d*c; });
-  var today=getISTDateStr(), cc=collectionsData.filter(function(c){ return c.date===today&&!c.archived&&(c.mode||'Cash')==='Cash'; }).reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
-  var diff=total-cc, ex=physicalCashData.find(function(p){ return p.date===today&&!p.archived; });
+  var today=getISTDateStr();
+  var cc=collectionsData.filter(function(c){ return !c.archived&&(c.mode||'Cash')==='Cash'&&(currentCashRouteId!==null?c.routeId===currentCashRouteId:true); }).reduce(function(s,c){ return s+(c.collectedAmount||0); },0);
+  var diff=total-cc;
+  var ex=physicalCashData.find(function(p){ return !p.archived&&(currentCashRouteId!==null?p.routeId===currentCashRouteId:true); });
   try{
-    if(ex) await updateDoc(tdoc('physicalCash',ex.id),{denominations:denoms,total:total,cashCollected:cc,difference:diff,updatedAt:new Date().toISOString()});
-    else await addDoc(tcol('physicalCash'),{date:today,denominations:denoms,total:total,cashCollected:cc,difference:diff,archived:false,createdAt:new Date().toISOString()});
-    toast('Physical cash updated'); closePhysicalCashModal();
+    var cashId;
+    if(ex){ await updateDoc(tdoc('physicalCash',ex.id),{denominations:denoms,total:total,cashCollected:cc,difference:diff,routeId:currentCashRouteId||'',routeName:currentCashRouteName||'',updatedAt:new Date().toISOString()}); cashId=ex.id; }
+    else{ var ref=await addDoc(tcol('physicalCash'),{routeId:currentCashRouteId||'',routeName:currentCashRouteName||'',date:today,denominations:denoms,total:total,cashCollected:cc,difference:diff,archived:false,createdAt:new Date().toISOString()}); cashId=ref.id; }
+    var toArchive=collectionsData.filter(function(c){ return !c.archived&&(currentCashRouteId!==null?c.routeId===currentCashRouteId:true); });
+    for(var i=0;i<toArchive.length;i++){ try{ await updateDoc(tdoc('collections',toArchive[i].id),{archived:true,archivedAt:new Date().toISOString()}); }catch(e){} }
+    if(cashId) try{ await updateDoc(tdoc('physicalCash',cashId),{archived:true,archivedAt:new Date().toISOString()}); }catch(e){}
+    toast('Route closed \u2014 data moved to history');
+    closePhysicalCashModal();
   }catch(e){ toast('Error: '+e.message); }
 };
 
@@ -1564,7 +1650,7 @@ function renderSummaryTab(){
 }
 function renderDailySummary(){
   var today=getISTDateStr();
-  var todayPacking=packingDocs.filter(function(p){ return p.date===today&&!p.archived&&p.confirmed; });
+  var todayPacking=packingDocs.filter(function(p){ return !p.archived&&p.confirmed; });
   var totalOutlets=[...new Set([...orders.map(function(o){ return o.retailerId; }),...noOrders.map(function(o){ return o.retailerId; })])].length;
   var orderedVal=orders.reduce(function(s,o){ return s+o.total; },0);
   var packedVal=todayPacking.reduce(function(s,p){ return s+p.items.filter(function(i){ return i.packed; }).reduce(function(ss,i){ return ss+(i.packedQty*i.price); },0); },0);
@@ -1788,8 +1874,9 @@ function exportOrdersPDF(list,title,filename){
   pdfFtr(d,pw); d.save(filename+'.pdf'); toast('PDF downloaded');
 }
 function exportAllPDF(){
-  if(!orders.length){ toast('No orders'); return; }
-  exportOrdersPDF(orders,'ALL ORDERS \u2014 '+getISTDateStr(),'All_Orders_'+getISTDateStr());
+  var today=getISTDateStr(), todayOrders=orders.filter(function(o){ return o.date===today; });
+  if(!todayOrders.length){ toast('No orders today'); return; }
+  exportOrdersPDF(todayOrders,'ALL ORDERS \u2014 '+today,'All_Orders_'+today);
 }
 function exportArchivePDF(){
   if(!archivesDate){ toast('Select a date'); return; }
@@ -1804,8 +1891,8 @@ function exportFinalBillPDF(confirmed){
   confirmed.forEach(function(p,idx){
     var pi=p.items.filter(function(i){ return i.packed; }), ot=pi.reduce(function(s,i){ return s+(i.packedQty*i.price); },0);
     if(y>262){ d.addPage(); y=14; } d.setFillColor(240,255,244); d.rect(m,y-4,pw-2*m,8,'F'); d.setFont('helvetica','bold'); d.setFontSize(8.5); d.setTextColor(39,103,73); d.text((idx+1)+'. '+String(p.retailerName||'')+(p.routeName?' ['+p.routeName+']':''),m+1,y); d.setFont('helvetica','normal'); d.setFontSize(6.5); d.setTextColor(120,120,120); d.text(fmt(ot),pw-m,y,{align:'right'}); y+=9;
-    d.setFillColor(240,244,248); d.rect(m,y-4,pw-2*m,7,'F'); d.setFont('helvetica','bold'); d.setFontSize(7); d.setTextColor(80,80,80); [m,55,130,155,178].forEach(function(x,i){ d.text(['SKU','Product','Packed Qty','Price','Amount'][i],x,y); }); y+=6; d.setFont('helvetica','normal'); d.setFontSize(6.5);
-    pi.forEach(function(item,i){ if(y>278){ d.addPage(); y=14; } if(i%2===0){ d.setFillColor(251,255,252); d.rect(m,y-3,pw-2*m,7,'F'); } d.setTextColor(44,62,80); d.text(String(item.skuCode||''),m,y); d.text(d.splitTextToSize(String(item.skuName||''),68),55,y); d.text(String(item.packedQty),130,y); d.text(fmt(item.price),155,y); d.text(fmt(item.packedQty*item.price),178,y); y+=7; });
+    d.setFillColor(240,244,248); d.rect(m,y-4,pw-2*m,7,'F'); d.setFont('helvetica','bold'); d.setFontSize(7); d.setTextColor(80,80,80); [m,50,118,138,158,178].forEach(function(x,i){ d.text(['SKU','Product','Ordered','Packed','Price','Amount'][i],x,y); }); y+=6; d.setFont('helvetica','normal'); d.setFontSize(6.5);
+    pi.forEach(function(item,i){ if(y>278){ d.addPage(); y=14; } if(i%2===0){ d.setFillColor(251,255,252); d.rect(m,y-3,pw-2*m,7,'F'); } d.setTextColor(44,62,80); d.text(String(item.skuCode||''),m,y); d.text(d.splitTextToSize(String(item.skuName||''),62),50,y); d.text(String(item.orderedQty||'—'),118,y); d.text(String(item.packedQty),138,y); d.text(fmt(item.price),158,y); d.text(fmt(item.packedQty*item.price),178,y); y+=7; });
     d.setFont('helvetica','bold'); d.setFontSize(8); d.setTextColor(39,103,73); d.text('Outlet Total: '+fmt(ot),pw-m,y,{align:'right'}); y+=8;
     if(idx<confirmed.length-1){ d.setDrawColor(220,220,220); d.line(m,y,pw-m,y); y+=5; }
   });
@@ -1824,6 +1911,7 @@ function startCompanyApp(){
   window.addSkuLine();
   applyLockUI(); applySkuLockUI();
   initListeners();
+  scheduleMidnightArchive(); scheduleLockReset();
   if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function(){});
 }
 window.enterCompany=function(id,name){
