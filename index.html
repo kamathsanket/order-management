@@ -388,29 +388,28 @@ window.toggleAllReviewChecks=function(checked){document.querySelectorAll('.revie
 window.onReviewCheckChange=function(){var all=document.querySelectorAll('.review-card-check'),checked=document.querySelectorAll('.review-card-check:checked');var ca=document.getElementById('review-check-all');if(ca)ca.checked=all.length>0&&checked.length===all.length;};
 window.confirmSelectedReview=async function(){var checked=[...document.querySelectorAll('.review-card-check:checked')].map(function(cb){return cb.dataset.id;});if(!checked.length){toast('Select at least one order');return;}var done=0,skipped=0;for(var i=0;i<checked.length;i++){var oid=checked[i];var o=orders.find(function(x){return x.id===oid;});if(!o)continue;recalcReview(oid);var lines=getReviewLines(oid);if(!lines.length){skipped++;continue;}try{await updateDoc(tdoc('orders',oid),{lines:lines,total:reviewTotal(oid),status:'packing'});delete reviewEdits[oid];openReviewCards.delete(oid);done++;}catch(e){toast('Error: '+e.message);}}var msg=done+' order(s) sent to Packing';if(skipped)msg+=' ('+skipped+' skipped — no SKUs)';toast(msg);};
 
-// PACKING - FIXED getMergedByRetailer
+// PACKING - FIXED: Only TODAY's packing orders
 window.toggleAllPackChecks=function(checked){document.querySelectorAll('.pack-card-check').forEach(function(cb){cb.checked=checked;});};
 window.onPackCheckChange=function(){var all=document.querySelectorAll('.pack-card-check'),checked=document.querySelectorAll('.pack-card-check:checked');var ca=document.getElementById('pack-check-all');if(ca)ca.checked=all.length>0&&checked.length===all.length;};
 function allSkusResolvedForOutlet(rid){var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});if(!outlet||!outlet.skus.length)return false;return outlet.skus.every(function(sku){var ticked=(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false;var qty=parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0;return ticked||qty===0;});}
 window.confirmSelectedPacking=async function(){var checked=[...document.querySelectorAll('.pack-card-check:checked')].map(function(cb){return cb.dataset.id;});if(!checked.length){toast('Select at least one outlet');return;}var unresolved=[];checked.forEach(function(rid){if(!allSkusResolvedForOutlet(rid)){var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});unresolved.push(outlet?outlet.retailerName:rid);}});if(unresolved.length){toast('Unresolved SKUs in: '+unresolved.join(', ')+'. Tick all SKUs or set qty to 0 for unavailable items.');return;}var done=0;var merged=getMergedByRetailer();for(var i=0;i<checked.length;i++){var rid=checked[i];var outlet=merged.find(function(o){return o.retailerId===rid;});if(!outlet)continue;var items=outlet.skus.map(function(sku){var ticked=(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false;var pQty=parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0;return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,orderedQty:sku.orderedQty,packed:ticked||pQty===0,packedQty:ticked?pQty:0};});var today=getISTDateStr(),existing=getPackingDoc(rid);try{if(existing)await updateDoc(tdoc('packing',existing.id),{items:items,confirmed:true,confirmedAt:new Date().toISOString(),packingDate:today});else await addDoc(tcol('packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:true,archived:false,packingDate:today,createdAt:new Date().toISOString()});openOutlets.delete(rid);done++;}catch(e){toast('Error: '+e.message);}}toast(done+' outlet(s) confirmed');};
 
-// FIXED: Only checks ACTIVE packing docs, allows new orders for previously-packed retailers
+// FIXED: Only shows TODAY's packing orders
 function getMergedByRetailer(){
   var map={};
   var today=getISTDateStr();
   
-  orders.filter(function(o){ return (o.status||'packing')==='packing'; }).forEach(function(o){
+  // ONLY show orders with status 'packing' that are from TODAY
+  orders.filter(function(o){ 
+    return (o.status||'packing')==='packing' && o.date===today; 
+  }).forEach(function(o){
     var pDoc = getPackingDoc(o.retailerId);
     
-    // Only skip if there's an ACTIVE confirmed packing doc from a previous day
-    // This means the retailer was packed today and day has changed - hide it
+    // Skip if there's an ACTIVE confirmed packing doc from a previous day
     if(pDoc && pDoc.confirmed){
       var packDate = pDoc.packingDate || pDoc.date || '';
       if(today > packDate) return;
     }
-    // IMPORTANT: If pDoc is null (no active packing doc), this is a NEW order
-    // Even if there's an archived doc from yesterday, we still show it
-    // because this is a fresh order sent to packing
     
     if(!map[o.retailerId]) map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};
     (o.lines||[]).forEach(function(l){
