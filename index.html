@@ -476,50 +476,10 @@ function getMergedByRetailer(){var map={};var today=getISTDateStr();orders.filte
 function getPackingDoc(retailerId){return packingDocs.find(function(p){return p.retailerId===retailerId&&!p.archived;})||null;}
 function getPackingDocForArchived(retailerId){return packingDocs.find(function(p){return p.retailerId===retailerId&&p.archived;})||null;}
 
+
 function renderPacking(){var wrap=document.getElementById('packing-list');if(!wrap)return;var merged=getMergedByRetailer();if(!merged.length){wrap.innerHTML='<div class="card"><div class="empty"><div class="empty-icon">&#128230;</div>No orders ready for packing</div></div>';return;}wrap.innerHTML='';var grp=groupByRoute(merged,function(o){return o.routeName;});grp.order.forEach(function(routeName){if(grp.multi)makeRouteHdr(wrap,routeName,grp.map[routeName].length);grp.map[routeName].forEach(function(outlet){var pDoc=getPackingDoc(outlet.retailerId),confirmed=pDoc&&pDoc.confirmed||false,isOpen=openOutlets.has(outlet.retailerId);var card=document.createElement('div');card.className='outlet-card';var allResolved=!confirmed&&allSkusResolvedForOutlet(outlet.retailerId);card.innerHTML='<div class="outlet-header'+(confirmed?' confirmed':'')+'" onclick="toggleOutletBody(\'pack-body-'+outlet.retailerId+'\')"><div style="display:flex;align-items:center;gap:8px"><input type="checkbox" class="pack-card-check" data-id="'+outlet.retailerId+'" onclick="event.stopPropagation()" onchange="onPackCheckChange();updateConfirmBtn(\''+outlet.retailerId+'\')"><div><b>'+esc(outlet.retailerName)+'</b>'+(confirmed?'<span class="badge badge-green">Packed</span>':'<span class="badge badge-orange">Pending</span>')+(outlet.routeName&&!grp.multi?'<span class="badge badge-purple">'+esc(outlet.routeName)+'</span>':'')+'<div class="order-meta">'+outlet.skus.length+' SKUs</div></div></div><span style="color:var(--text-secondary)">&#9660;</span></div><div class="outlet-body'+(isOpen?' open':'')+'" id="pack-body-'+outlet.retailerId+'"><div id="pack-items-'+outlet.retailerId+'"></div>'+(confirmed?'<div style="text-align:center;color:var(--success);font-weight:600;padding:8px">&#10003; Packing Confirmed</div>':'<div><div class="pack-unticked-warn" id="warn-'+outlet.retailerId+'" style="display:'+(allResolved?'none':'block')+'">&#9888; Some SKUs not resolved. Tick or set qty=0.</div><button class="btn-confirm" id="confirm-btn-'+outlet.retailerId+'" onclick="confirmPacking(\''+outlet.retailerId+'\',\''+esc(outlet.retailerName)+'\')" '+(allResolved?'':'disabled')+'>Confirm Packing</button></div>')+'</div>';wrap.appendChild(card);renderPackItems(outlet,pDoc,confirmed);});});}
-function renderPackItems(outlet,pDoc,confirmed){
-  var wrap=document.getElementById('pack-items-'+outlet.retailerId);if(!wrap)return;wrap.innerHTML='';
-  outlet.skus.forEach(function(sku){
-    var si=pDoc&&pDoc.items&&pDoc.items.find(function(i){return i.skuId===sku.skuId;});
-    var isTicked=si&&si.packed||false,pQty=si&&si.packedQty!=null?si.packedQty:sku.orderedQty;
-    var div=document.createElement('div');div.className='pack-item';
-    
-    // Create checkbox as DOM element for proper visual state
-    var cb=document.createElement('input');
-    cb.type='checkbox';
-    cb.className='pack-checkbox';
-    cb.id='chk-'+outlet.retailerId+'-'+sku.skuId;
-    cb.checked=isTicked;
-    if(confirmed) cb.disabled=true;
-    cb.addEventListener('change',function(){
-      onPackTick(outlet.retailerId);
-      updateConfirmBtn(outlet.retailerId);
-    });
-    
-    // Create qty input as DOM element
-    var qtyInput=document.createElement('input');
-    qtyInput.type='number';
-    qtyInput.className='pack-qty-input';
-    qtyInput.id='qty-'+outlet.retailerId+'-'+sku.skuId;
-    qtyInput.value=pQty;
-    qtyInput.min='0';
-    if(confirmed) qtyInput.disabled=true;
-    qtyInput.addEventListener('change',function(){
-      onPackQtyChange(outlet.retailerId);
-      updateConfirmBtn(outlet.retailerId);
-    });
-    
-    var infoDiv=document.createElement('div');
-    infoDiv.style.cssText='flex:1';
-    infoDiv.innerHTML='<div class="pack-sku-name'+(!isTicked&&confirmed?' unavailable':'')+'">'+esc(sku.skuCode)+' — '+esc(sku.skuName)+'</div><div class="pack-ordered">Ordered: '+sku.orderedQty+' | Price: '+fmt(sku.price)+'</div>';
-    
-    div.appendChild(cb);
-    div.appendChild(infoDiv);
-    div.appendChild(qtyInput);
-    wrap.appendChild(div);
-  });
-}
-window.updateConfirmBtn=function(rid){var btn=document.getElementById('confirm-btn-'+rid);var warn=document.getElementById('warn-'+rid);if(!btn)return;var allOk=allSkusResolvedForOutlet(rid);btn.disabled=!allOk;if(warn)warn.style.display=allOk?'none':'block';};
+function renderPackItems(outlet,pDoc,confirmed){var wrap=document.getElementById('pack-items-'+outlet.retailerId);if(!wrap)return;wrap.innerHTML='';outlet.skus.forEach(function(sku){var si=pDoc&&pDoc.items&&pDoc.items.find(function(i){return i.skuId===sku.skuId;});var isTicked=si&&si.packed||false,pQty=si&&si.packedQty!=null?si.packedQty:sku.orderedQty;var div=document.createElement('div');div.className='pack-item';var cb=document.createElement('input');cb.type='checkbox';cb.className='pack-checkbox';cb.id='chk-'+outlet.retailerId+'-'+sku.skuId;cb.checked=isTicked;if(confirmed)cb.disabled=true;cb.addEventListener('change',function(){onPackTick(outlet.retailerId);updateConfirmBtn(outlet.retailerId);});var qtyInput=document.createElement('input');qtyInput.type='number';qtyInput.className='pack-qty-input';qtyInput.id='qty-'+outlet.retailerId+'-'+sku.skuId;qtyInput.value=pQty;qtyInput.min='0';if(confirmed)qtyInput.disabled=true;qtyInput.addEventListener('change',function(){onPackQtyChange(outlet.retailerId);updateConfirmBtn(outlet.retailerId);});var infoDiv=document.createElement('div');infoDiv.style.cssText='flex:1';infoDiv.innerHTML='<div class="pack-sku-name'+(!isTicked&&confirmed?' unavailable':'')+'">'+esc(sku.skuCode)+' — '+esc(sku.skuName)+'</div><div class="pack-ordered">Ordered: '+sku.orderedQty+' | Price: '+fmt(sku.price)+'</div>';div.appendChild(cb);div.appendChild(infoDiv);div.appendChild(qtyInput);wrap.appendChild(div);});}
+  window.updateConfirmBtn=function(rid){var btn=document.getElementById('confirm-btn-'+rid);var warn=document.getElementById('warn-'+rid);if(!btn)return;var allOk=allSkusResolvedForOutlet(rid);btn.disabled=!allOk;if(warn)warn.style.display=allOk?'none':'block';};
 window.toggleOutletBody=function(id){var body=document.getElementById(id);if(!body)return;var rid=id.replace('pack-body-','').replace('bill-body-','').replace('archive-bill-body-','');if(body.classList.contains('open')){body.classList.remove('open');openOutlets.delete(rid);}else{body.classList.add('open');openOutlets.add(rid);}};
 window.onPackTick=async function(rid){await autoSavePacking(rid);};
 window.onPackQtyChange=async function(rid){await autoSavePacking(rid);};
