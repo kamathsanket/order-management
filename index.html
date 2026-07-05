@@ -12,101 +12,71 @@
 <meta name="apple-mobile-web-app-title" content="Order Mgmt"/>
 <style>
 :root{
-  --primary:#1a56db;
-  --primary-light:#3b82f6;
-  --success:#059669;
-  --success-light:#10b981;
-  --danger:#dc2626;
-  --warning:#d97706;
-  --purple:#7c3aed;
-  --bg:#f1f5f9;
-  --card:#ffffff;
-  --text:#1e293b;
-  --text-secondary:#64748b;
-  --border:#e2e8f0;
+  --primary:#1a56db;--primary-light:#3b82f6;--success:#059669;--success-light:#10b981;
+  --danger:#dc2626;--warning:#d97706;--purple:#7c3aed;--bg:#f1f5f9;--card:#ffffff;
+  --text:#1e293b;--text-secondary:#64748b;--border:#e2e8f0;
   --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.06);
-  --shadow-lg:0 10px 25px rgba(0,0,0,.1);
-  --radius:14px;
-  --radius-sm:10px;
-  --safe-bottom:env(safe-area-inset-bottom,16px);
+  --shadow-lg:0 10px 25px rgba(0,0,0,.1);--radius:14px;--radius-sm:10px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{font-size:16px;-webkit-text-size-adjust:100%;overflow-x:hidden}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:100dvh;overflow-x:hidden;padding-bottom:80px}
-
-/* Top Bar */
-.topbar{position:sticky;top:0;z-index:100;background:var(--primary);backdrop-filter:blur(10px)}
+.topbar{position:sticky;top:0;z-index:100;background:var(--primary)}
 .topbar header{display:flex;align-items:center;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top));gap:12px;color:#fff}
-.topbar header h1{font-size:1.05rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar header h1{font-size:1.05rem;font-weight:700}
 .topbar header .company-badge{background:rgba(255,255,255,.2);border:none;color:#fff;padding:6px 12px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:4px}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:#4ade80;margin-left:auto;box-shadow:0 0 8px #4ade80;animation:pulse 2s infinite;flex-shrink:0}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* Bottom Navigation */
 .bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;overflow-x:auto;z-index:100;padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch;scrollbar-width:none;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
 .bottom-nav::-webkit-scrollbar{display:none}
-.nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 10px;min-width:56px;border-radius:12px;cursor:pointer;transition:.15s;color:var(--text-secondary);font-size:.65rem;font-weight:500;gap:3px;position:relative}
+.nav-item{flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 8px;min-width:50px;border-radius:12px;cursor:pointer;transition:.15s;color:var(--text-secondary);font-size:.62rem;font-weight:500;gap:3px;position:relative}
 .nav-item.active{color:var(--primary);background:#eff6ff}
-.nav-item .nav-icon{font-size:1.3rem;line-height:1}
-.nav-item .nav-badge{position:absolute;top:2px;right:2px;background:var(--danger);color:#fff;border-radius:10px;padding:1px 5px;font-size:.6rem;font-weight:700;min-width:16px;text-align:center}
-
-/* Content */
+.nav-item .nav-icon{font-size:1.25rem;line-height:1}
+.nav-item .nav-badge{position:absolute;top:1px;right:1px;background:var(--danger);color:#fff;border-radius:10px;padding:1px 5px;font-size:.58rem;font-weight:700;min-width:16px;text-align:center}
+.more-menu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:150;display:none;align-items:flex-end;justify-content:center}
+.more-menu-overlay.open{display:flex}
+.more-menu{background:var(--card);border-radius:var(--radius) var(--radius) 0 0;width:100%;max-width:500px;padding:8px 12px calc(16px + env(safe-area-inset-bottom));animation:slideUp .25s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.more-menu-header{display:flex;justify-content:space-between;align-items:center;padding:8px 4px 12px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.more-menu-header h3{font-size:1rem;color:var(--text)}
+.more-menu-close{width:36px;height:36px;border-radius:50%;border:none;background:var(--bg);color:var(--text);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.more-menu-item{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:var(--radius-sm);cursor:pointer;transition:.15s;border:none;background:none;width:100%;text-align:left;font-size:.92rem;font-weight:500;color:var(--text)}
+.more-menu-item:active{background:#eff6ff}
+.more-menu-item .more-icon{font-size:1.4rem;width:36px;text-align:center}
+.more-menu-item .more-arrow{color:var(--text-secondary);margin-left:auto}
 .content{padding:12px;max-width:800px;margin:0 auto}
-
-/* Cards */
 .card{background:var(--card);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px;border:1px solid var(--border)}
 .card-header{display:flex;align-items:center;gap:8px;margin-bottom:12px}
 .card-header h2{font-size:.95rem;font-weight:700;color:var(--text)}
 .card-header .icon{font-size:1.3rem}
-
-/* Form Elements */
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-bottom:10px}
 .fg{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
 .fg label{font-size:.68rem;font-weight:700;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.5px}
 input,select{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:1rem;background:var(--card);outline:none;transition:.2s;color:var(--text);-webkit-appearance:none;appearance:none}
 input:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(26,86,219,.1)}
-input[type=number]{font-variant-numeric:tabular-nums}
 select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
-
-/* Buttons */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:12px 18px;border:none;border-radius:var(--radius-sm);cursor:pointer;font-weight:600;font-size:.88rem;transition:.2s;white-space:nowrap;min-height:44px}
 .btn:active{transform:scale(.97)}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:active{background:#1e40af}
-.btn-success{background:var(--success);color:#fff}
-.btn-success:active{background:#047857}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-danger:active{background:#b91c1c}
-.btn-outline{background:var(--card);border:2px solid var(--border);color:var(--text)}
-.btn-outline:active{background:var(--bg)}
+.btn-primary{background:var(--primary);color:#fff}.btn-primary:active{background:#1e40af}
+.btn-success{background:var(--success);color:#fff}.btn-success:active{background:#047857}
+.btn-danger{background:var(--danger);color:#fff}.btn-danger:active{background:#b91c1c}
+.btn-outline{background:var(--card);border:2px solid var(--border);color:var(--text)}.btn-outline:active{background:var(--bg)}
 .btn-pdf{background:var(--purple);color:#fff}
 .btn-edit{background:var(--warning);color:#fff}
 .btn-save{background:var(--success);color:#fff;padding:8px 14px;font-size:.8rem;min-height:36px}
 .btn-cancel{background:var(--border);color:var(--text);padding:8px 14px;font-size:.8rem;min-height:36px}
 .btn-confirm{background:var(--success);color:#fff;width:100%;padding:14px;font-size:.95rem;font-weight:700;border-radius:var(--radius-sm);border:none;cursor:pointer;min-height:48px;margin-top:8px}
 .btn-confirm:disabled{background:#94a3b8;cursor:not-allowed}
-.btn-full{width:100%}
-.btn-sm{padding:8px 12px;font-size:.78rem;min-height:36px}
-
-/* Tags / Badges */
+.btn-full{width:100%}.btn-sm{padding:8px 12px;font-size:.78rem;min-height:36px}
 .badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:.7rem;font-weight:700;gap:3px}
-.badge-blue{background:#eff6ff;color:var(--primary)}
-.badge-green{background:#ecfdf5;color:var(--success)}
-.badge-orange{background:#fffbeb;color:var(--warning)}
-.badge-purple{background:#f5f3ff;color:var(--purple)}
-.badge-teal{background:#f0fdfa;color:#0d9488}
-.badge-red{background:#fef2f2;color:var(--danger)}
-.badge-gray{background:#f8fafc;color:var(--text-secondary)}
-
-/* Tables */
+.badge-blue{background:#eff6ff;color:var(--primary)}.badge-green{background:#ecfdf5;color:var(--success)}
+.badge-orange{background:#fffbeb;color:var(--warning)}.badge-purple{background:#f5f3ff;color:var(--purple)}
+.badge-teal{background:#f0fdfa;color:#0d9488}.badge-red{background:#fef2f2;color:var(--danger)}.badge-gray{background:#f8fafc;color:var(--text-secondary)}
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -4px;padding:0 4px}
 table{width:100%;border-collapse:collapse;font-size:.82rem;min-width:500px}
 th{background:#f8fafc;padding:10px 12px;text-align:left;font-weight:700;color:var(--text-secondary);border-bottom:2px solid var(--border);font-size:.72rem;text-transform:uppercase;letter-spacing:.5px}
 td{padding:10px 12px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
-tr:last-child td{border-bottom:none}
-tr:active{background:#f8fafc}
-
-/* Searchable Dropdown */
+tr:last-child td{border-bottom:none}tr:active{background:#f8fafc}
 .searchable-wrap{position:relative;width:100%}
 .searchable-dropdown{position:absolute;top:calc(100% + 4px);left:0;right:0;background:var(--card);border:2px solid var(--primary);border-radius:var(--radius-sm);z-index:500;max-height:260px;overflow-y:auto;box-shadow:var(--shadow-lg);display:none}
 .searchable-dropdown.open{display:block}
@@ -118,24 +88,15 @@ tr:active{background:#f8fafc}
 .sd-empty{padding:14px;color:var(--text-secondary);font-size:.85rem;text-align:center}
 .sd-trigger{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:var(--radius-sm);font-size:.92rem;background:var(--card);cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;color:var(--text);gap:8px;min-height:44px}
 .sd-trigger.placeholder-style{color:var(--text-secondary)}
-
-/* Lock Bars */
 .route-lock-bar,.sku-lock-bar{background:#eff6ff;border:2px solid #bfdbfe;border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;font-size:.85rem}
 .route-lock-bar label,.sku-lock-bar label{display:flex;align-items:center;gap:8px;cursor:pointer;font-weight:600;color:var(--primary)}
 .lock-info{font-size:.78rem;color:#60a5fa;flex:1}
-.sku-lock-bar{background:#ecfdf5;border-color:#a7f3d0}
-.sku-lock-bar label{color:var(--success)}
-
-/* Outlet Cards */
+.sku-lock-bar{background:#ecfdf5;border-color:#a7f3d0}.sku-lock-bar label{color:var(--success)}
 .outlet-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;border:1px solid var(--border);overflow:hidden}
 .outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;transition:.15s;gap:10px}
 .outlet-header:active{background:#f8fafc}
 .outlet-header.confirmed{background:#f0fdf4;border-left:4px solid var(--success)}
-.outlet-header.confirmed:active{background:#dcfce7}
-.outlet-body{padding:0 16px 14px;display:none}
-.outlet-body.open{display:block}
-
-/* Packing Items */
+.outlet-body{padding:0 16px 14px;display:none}.outlet-body.open{display:block}
 .pack-item{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #f1f5f9;flex-wrap:wrap}
 .pack-item:last-child{border-bottom:none}
 .pack-checkbox{width:22px;height:22px;accent-color:var(--success);cursor:pointer;flex-shrink:0}
@@ -143,66 +104,37 @@ tr:active{background:#f8fafc}
 .pack-sku-name{flex:1;font-size:.9rem;font-weight:500}
 .pack-sku-name.unavailable{text-decoration:line-through;color:#94a3b8}
 .pack-qty-input{width:68px;padding:8px;border:2px solid var(--border);border-radius:8px;font-size:.9rem;text-align:center}
-.pack-qty-input:focus{border-color:var(--success)}
-.pack-qty-input:disabled{background:#f8fafc;color:#94a3b8}
-.pack-ordered{font-size:.75rem;color:var(--text-secondary)}
+.pack-qty-input:focus{border-color:var(--success)}.pack-ordered{font-size:.75rem;color:var(--text-secondary)}
 .pack-unticked-warn{font-size:.75rem;color:var(--danger);padding:6px 0;display:none;font-weight:500}
-
-/* Bill Outlet Cards */
 .bill-outlet-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
 .bill-outlet-header{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;cursor:pointer;background:#f0fdf4;border-left:4px solid var(--success);gap:10px}
 .bill-outlet-header:active{background:#dcfce7}
-.bill-outlet-body{padding:0 16px 14px;display:none}
-.bill-outlet-body.open{display:block}
-
-/* Route Group Header */
+.bill-outlet-body{padding:0 16px 14px;display:none}.bill-outlet-body.open{display:block}
 .route-group-hdr{background:linear-gradient(135deg,#7c3aed,#a855f7);color:#fff;padding:10px 14px;border-radius:var(--radius-sm);margin:12px 0 8px;font-weight:700;font-size:.82rem;display:flex;align-items:center;justify-content:space-between;gap:8px}
 .route-group-hdr:first-child{margin-top:0}
-
-/* Summary Stats */
 .summary-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:14px}
 .stat{background:var(--card);border-radius:var(--radius-sm);padding:14px 12px;box-shadow:var(--shadow);text-align:center;border:1px solid var(--border)}
 .stat-val{font-size:1.5rem;font-weight:800;color:var(--primary)}
 .stat-lbl{font-size:.7rem;color:var(--text-secondary);margin-top:2px;text-transform:uppercase;letter-spacing:.5px}
-
-/* Toast */
 #toast{position:fixed;bottom:100px;left:16px;right:16px;background:#1e293b;color:#fff;padding:14px 18px;border-radius:var(--radius-sm);font-size:.88rem;opacity:0;transition:.3s;pointer-events:none;z-index:9999;text-align:center;box-shadow:var(--shadow-lg)}
 #toast.show{opacity:1}
-
-/* Loader */
 #global-loader{position:fixed;inset:0;background:rgba(241,245,249,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px}
 .spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 #loader-msg{color:var(--text-secondary);font-weight:600;font-size:.9rem}
-
-/* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;z-index:2000}
 .modal-box{background:var(--card);border-radius:var(--radius) var(--radius) 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:500px;max-height:85vh;max-height:85dvh;overflow-y:auto}
-
-/* Empty State */
 .empty{text-align:center;padding:40px 20px;color:var(--text-secondary);font-size:.9rem}
 .empty .empty-icon{font-size:3rem;margin-bottom:12px;opacity:.5}
-
-/* Section Title */
 .section-title{font-size:.9rem;font-weight:700;color:var(--primary);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-
-/* Total */
-.total{font-weight:700;color:var(--text);font-size:1rem}
-
-/* Order Meta */
-.order-meta{font-size:.72rem;color:var(--text-secondary);margin-top:2px}
-
-/* SKU Line */
+.total{font-weight:700;color:var(--text);font-size:1rem}.order-meta{font-size:.72rem;color:var(--text-secondary);margin-top:2px}
 .sku-line{display:flex;gap:8px;align-items:flex-end;background:#f8fafc;border-radius:var(--radius-sm);padding:12px;margin-bottom:8px;flex-wrap:wrap;border:1px solid var(--border)}
-
-/* Archive */
 .archive-month-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;margin-top:8px}
 .archive-month-cell{text-align:center;padding:14px 6px;border-radius:var(--radius-sm);background:var(--card);border:2px solid var(--border);font-weight:600;font-size:.8rem;color:var(--text-secondary);transition:.15s;position:relative}
 .archive-month-cell.has-data{color:var(--primary);border-color:#bfdbfe;cursor:pointer}
 .archive-month-cell.has-data:active{background:#eff6ff}
 .archive-month-cell.active{background:var(--primary);color:#fff;border-color:var(--primary)}
 .archive-month-badge{position:absolute;top:-6px;right:-6px;background:var(--danger);color:#fff;border-radius:50%;width:18px;height:18px;font-size:.6rem;display:flex;align-items:center;justify-content:center;font-weight:700}
-
 .archive-day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px}
 .archive-day-head{text-align:center;font-size:.65rem;font-weight:700;color:var(--text-secondary);padding:4px 0}
 .archive-day-cell{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;background:var(--card);border:2px solid var(--border);font-size:.75rem;color:#cbd5e1}
@@ -210,66 +142,38 @@ tr:active{background:#f8fafc}
 .archive-day-cell.has-data:active{background:#bfdbfe}
 .archive-day-cell.selected{background:var(--primary);color:#fff;border-color:var(--primary)}
 .archive-day-count{font-size:.55rem;background:var(--danger);color:#fff;border-radius:8px;padding:0 4px;margin-top:2px;line-height:1.4}
-
-/* Archive Search Results */
 .archive-search-result{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden;border:1px solid var(--border)}
 .archive-search-result-header{background:#f8fafc;padding:12px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
 .archive-search-result-body{padding:14px;overflow-x:auto}
-
-/* Company Gateway */
 #gateway-screen{min-height:100vh;min-height:100dvh;background:var(--bg)}
 .gateway-wrap{max-width:500px;margin:0 auto;padding:32px 16px;padding-bottom:calc(32px + env(safe-area-inset-bottom))}
 .gateway-hero{text-align:center;margin-bottom:24px}
 .gateway-hero span{font-size:3rem;display:block;margin-bottom:8px}
-.gateway-hero h1{font-size:1.4rem;color:var(--text)}
-.gateway-hero p{color:var(--text-secondary);font-size:.85rem;margin-top:4px}
+.gateway-hero h1{font-size:1.4rem;color:var(--text)}.gateway-hero p{color:var(--text-secondary);font-size:.85rem;margin-top:4px}
 .company-card{display:flex;justify-content:space-between;align-items:center;padding:16px;border:2px solid var(--border);border-radius:var(--radius-sm);margin-bottom:10px;cursor:pointer;transition:.15s;background:var(--card)}
 .company-card:active{border-color:var(--primary);background:#f8fafc}
-
-/* Review items mobile grid */
-.ri-name{flex:2;min-width:120px;font-size:.88rem}
-.ri-qty,.ri-price{display:contents}
-.ri-qty label,.ri-price label{display:none}
-
-/* Touch-friendly number inputs */
-input[type=number]{-moz-appearance:textfield}
-input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
-
-/* Checkbox styling */
-input[type=checkbox]{width:20px;height:20px;accent-color:var(--primary);cursor:pointer}
-
-/* Quick action floating button */
-.fab{position:fixed;bottom:100px;right:16px;width:56px;height:56px;border-radius:50%;background:var(--primary);color:#fff;border:none;font-size:1.5rem;cursor:pointer;box-shadow:var(--shadow-lg);z-index:50;display:flex;align-items:center;justify-content:center;transition:.2s}
-.fab:active{transform:scale(.9);background:#1e40af}
-
-/* Denom rows */
+.ri-name{flex:2;min-width:120px;font-size:.88rem}.ri-qty,.ri-price{display:contents}.ri-qty label,.ri-price label{display:none}
 .denom-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .denom-row label{flex:0 0 55px;font-weight:700;color:var(--text-secondary);font-size:.85rem}
-.denom-row input{width:80px}
-.denom-row .denom-total{flex:1;text-align:right;color:var(--success);font-weight:600;font-size:.85rem}
+.denom-row input{width:80px}.denom-row .denom-total{flex:1;text-align:right;color:var(--success);font-weight:600;font-size:.85rem}
 .cash-summary{margin-top:14px;border-top:1px solid var(--border);padding-top:10px}
 .cash-summary-row{display:flex;justify-content:space-between;padding:6px 0;font-size:.9rem}
+input[type=number]{-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=checkbox]{width:20px;height:20px;accent-color:var(--primary);cursor:pointer}
+.route-ret-item{display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:grab;margin-bottom:4px}
+.seq-badge{background:var(--primary);color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:.68rem;font-weight:700;flex-shrink:0}
+.edit-input{padding:6px 8px;border:2px solid var(--primary);border-radius:6px;font-size:.85rem;width:100%}
 
-/* Desktop adjustments */
 @media(min-width:768px){
-  .bottom-nav{display:none}
-  body{padding-bottom:0}
+  .bottom-nav{display:none}body{padding-bottom:0}
   .content{padding:20px 24px;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
-  .topbar header{padding:14px 24px}
-  .row{gap:12px}
-  .btn{padding:10px 20px;min-height:40px}
-  .sd-trigger{min-height:40px;padding:10px 14px}
+  .topbar header{padding:14px 24px}.row{gap:12px}
+  .btn{padding:10px 20px;min-height:40px}.sd-trigger{min-height:40px;padding:10px 14px}
   input,select{padding:10px 14px}
   #toast{bottom:24px;left:50%;right:auto;transform:translateX(-50%);min-width:300px}
-  .fab{display:none}
   .summary-row{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
-  .sku-line{gap:12px}
-  .modal-box{border-radius:var(--radius);margin-bottom:auto;margin-top:10vh}
-}
-
-/* Tablet */
-@media(min-width:768px)and(max-width:1024px){
-  .content{max-width:960px}
+  .sku-line{gap:12px}.modal-box{border-radius:var(--radius);margin-bottom:auto;margin-top:10vh}
 }
 </style>
 </head>
@@ -293,9 +197,7 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--primary);cursor:p
 </div>
 
 <div class="topbar" style="display:none">
-<header>
-  <span style="font-size:1.4rem">&#128230;</span>
-  <h1>Order Management</h1>
+<header><span style="font-size:1.4rem">&#128230;</span><h1>Order Management</h1>
   <button class="company-badge" id="switch-company-btn" onclick="exitToGateway()">&#127970; <span id="current-company-name"></span></button>
   <div class="sync-dot"></div>
 </header>
@@ -308,227 +210,54 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--primary);cursor:p
   <div class="nav-item" data-tab="finalbill" onclick="switchTab('finalbill')"><span class="nav-icon">&#129534;</span><span>Bill</span></div>
   <div class="nav-item" data-tab="collection" onclick="switchTab('collection')"><span class="nav-icon">&#128176;</span><span>Collect</span></div>
   <div class="nav-item" data-tab="history" onclick="switchTab('history')"><span class="nav-icon">&#128203;</span><span>History</span></div>
-  <div class="nav-item" data-tab="archives" onclick="switchTab('archives')"><span class="nav-icon">&#128451;</span><span>Archive</span></div>
+  <div class="nav-item" data-tab="more" onclick="openMoreMenu()"><span class="nav-icon">&#8942;</span><span>More</span></div>
+</div>
+
+<div class="more-menu-overlay" id="more-menu-overlay" onclick="if(event.target===this)closeMoreMenu()">
+  <div class="more-menu">
+    <div class="more-menu-header"><h3>More Options</h3><button class="more-menu-close" onclick="closeMoreMenu()">&#10005;</button></div>
+    <button class="more-menu-item" onclick="closeMoreMenu();switchTab('summary')"><span class="more-icon">&#128202;</span> Daily Summary<span class="more-arrow">&#8250;</span></button>
+    <button class="more-menu-item" onclick="closeMoreMenu();switchTab('archives')"><span class="more-icon">&#128451;</span> Archives<span class="more-arrow">&#8250;</span></button>
+    <button class="more-menu-item" onclick="closeMoreMenu();switchTab('routes')"><span class="more-icon">&#128506;</span> Routes<span class="more-arrow">&#8250;</span></button>
+    <button class="more-menu-item" onclick="closeMoreMenu();switchTab('skus')"><span class="more-icon">&#127991;</span> SKUs<span class="more-arrow">&#8250;</span></button>
+    <button class="more-menu-item" onclick="closeMoreMenu();switchTab('retailers')"><span class="more-icon">&#127978;</span> Retailers<span class="more-arrow">&#8250;</span></button>
+  </div>
 </div>
 
 <div class="content" style="display:none" id="main-content">
-  <!-- ORDER TAB -->
   <div id="tab-orders">
-    <div class="card">
-      <div class="card-header"><span class="icon">&#128722;</span><h2>Create New Order</h2></div>
-      <div class="route-lock-bar">
-        <label><input type="checkbox" id="route-lock-chk" onchange="onRouteLockChange()"/> Lock Route</label>
-        <span class="lock-info" id="route-lock-info">Select route, then lock for today</span>
-      </div>
+    <div class="card"><div class="card-header"><span class="icon">&#128722;</span><h2>Create New Order</h2></div>
+      <div class="route-lock-bar"><label><input type="checkbox" id="route-lock-chk" onchange="onRouteLockChange()"/> Lock Route</label><span class="lock-info" id="route-lock-info">Select route, then lock for today</span></div>
       <div class="row">
-        <div class="fg" style="min-width:150px"><label>Route</label>
-          <div class="searchable-wrap" id="sd-wrap-order-route"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-route" onclick="toggleSD('order-route')">-- Select Route -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-order-route"><div class="sd-search"><input placeholder="Search route..." oninput="filterSD('order-route',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-order-route"></div></div></div>
-          <input type="hidden" id="val-order-route" value=""/><div id="route-outlet-info" style="display:none;margin-top:4px"></div>
-        </div>
-        <div class="fg" style="min-width:150px"><label>Retailer</label>
-          <div class="searchable-wrap" id="sd-wrap-order-retailer"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-retailer" onclick="toggleSD('order-retailer')">-- Select Retailer -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-order-retailer"><div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('order-retailer',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-order-retailer"></div></div></div>
-          <input type="hidden" id="val-order-retailer" value=""/><div id="retailer-balance-note" style="display:none;margin-top:4px"></div>
-        </div>
+        <div class="fg" style="min-width:150px"><label>Route</label><div class="searchable-wrap" id="sd-wrap-order-route"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-route" onclick="toggleSD('order-route')">-- Select Route -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-order-route"><div class="sd-search"><input placeholder="Search route..." oninput="filterSD('order-route',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-order-route"></div></div></div><input type="hidden" id="val-order-route" value=""/><div id="route-outlet-info" style="display:none;margin-top:4px"></div></div>
+        <div class="fg" style="min-width:150px"><label>Retailer</label><div class="searchable-wrap" id="sd-wrap-order-retailer"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-order-retailer" onclick="toggleSD('order-retailer')">-- Select Retailer -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-order-retailer"><div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('order-retailer',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-order-retailer"></div></div></div><input type="hidden" id="val-order-retailer" value=""/><div id="retailer-balance-note" style="display:none;margin-top:4px"></div></div>
         <div class="fg" style="min-width:120px"><label>Order Date</label><input type="date" id="order-date"/></div>
       </div>
     </div>
-    <div class="card" id="inline-collection-card" style="display:none;border-left:4px solid var(--warning)">
-      <div class="card-header"><span class="icon">&#128176;</span><h2 style="color:var(--warning)">Quick Collection</h2></div>
-      <div id="inline-collection-info" style="margin-bottom:8px"></div>
-      <div class="row">
-        <div class="fg" style="min-width:90px"><label>Amount (&#8377;)</label><input type="number" id="inline-coll-amt" placeholder="0.00" min="0"/></div>
-        <div class="fg" style="min-width:100px"><label>Mode</label><select id="inline-coll-mode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Cheque">Cheque</option></select></div>
-        <div><button class="btn btn-success" onclick="submitInlineCollection()" style="margin-top:4px">Submit</button></div>
-      </div>
-      <div id="inline-coll-result" style="display:none;margin-top:10px;padding:10px;border-radius:var(--radius-sm)"></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="icon">&#128196;</span><h2>Add SKU Lines</h2></div>
-      <div id="sku-lines"></div>
-      <button class="btn btn-outline btn-full" onclick="addSkuLine()">+ Add SKU Line</button>
-    </div>
-    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
-      <div class="total" id="running-total">Order Total: &#8377;0.00</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="saveNoOrder()" style="background:var(--text-secondary);color:#fff">&#10007; No Order</button>
-        <button class="btn btn-success" onclick="saveOrder()">&#10003; Save Order</button>
-      </div>
-    </div>
+    <div class="card" id="inline-collection-card" style="display:none;border-left:4px solid var(--warning)"><div class="card-header"><span class="icon">&#128176;</span><h2 style="color:var(--warning)">Quick Collection</h2></div><div id="inline-collection-info" style="margin-bottom:8px"></div><div class="row"><div class="fg" style="min-width:90px"><label>Amount</label><input type="number" id="inline-coll-amt" placeholder="0.00" min="0"/></div><div class="fg" style="min-width:100px"><label>Mode</label><select id="inline-coll-mode"><option value="Cash">Cash</option><option value="Gpay">Gpay</option><option value="Cheque">Cheque</option></select></div><div><button class="btn btn-success" onclick="submitInlineCollection()">Submit</button></div></div><div id="inline-coll-result" style="display:none;margin-top:10px;padding:10px;border-radius:var(--radius-sm)"></div></div>
+    <div class="card"><div class="card-header"><span class="icon">&#128196;</span><h2>Add SKU Lines</h2></div><div id="sku-lines"></div><button class="btn btn-outline btn-full" onclick="addSkuLine()">+ Add SKU Line</button></div>
+    <div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="total" id="running-total">Order Total: &#8377;0.00</div><div style="display:flex;gap:8px"><button class="btn" onclick="saveNoOrder()" style="background:var(--text-secondary);color:#fff">&#10007; No Order</button><button class="btn btn-success" onclick="saveOrder()">&#10003; Save Order</button></div></div>
   </div>
-
-  <!-- REVIEW TAB -->
-  <div id="tab-review" style="display:none">
-    <div class="card" style="border-left:4px solid var(--primary);background:linear-gradient(135deg,#eff6ff,#fff)">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div><b style="color:var(--primary);font-size:.95rem">&#128221; Review Orders</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Edit or approve before packing</p></div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.78rem;font-weight:600"><input type="checkbox" id="review-check-all" onchange="toggleAllReviewChecks(this.checked)"> All</label>
-          <button class="btn btn-success btn-sm" onclick="confirmSelectedReview()">&#10003; Approve &amp; Pack</button>
-        </div>
-      </div>
-    </div>
-    <div id="review-list"></div>
-  </div>
-
-  <!-- PACKING TAB -->
-  <div id="tab-packing" style="display:none">
-    <div class="card" style="border-left:4px solid var(--warning);background:linear-gradient(135deg,#fffbeb,#fff)">
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-        <div><b style="color:var(--warning);font-size:.95rem">&#128230; Packing</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Tick all or set qty=0 to confirm</p></div>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-          <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.78rem;font-weight:600"><input type="checkbox" id="pack-check-all" onchange="toggleAllPackChecks(this.checked)"> All</label>
-          <button class="btn btn-success btn-sm" onclick="confirmSelectedPacking()">&#10003; Confirm</button>
-        </div>
-      </div>
-    </div>
-    <div id="packing-list"></div>
-  </div>
-
-  <!-- FINAL BILL TAB -->
-  <div id="tab-finalbill" style="display:none">
-    <div class="card" style="border-left:4px solid var(--success);background:linear-gradient(135deg,#ecfdf5,#fff)">
-      <b style="color:var(--success);font-size:.95rem">&#129534; Final Bill</b>
-      <p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Today's confirmed packing</p>
-    </div>
-    <div class="summary-row" id="bill-stats"></div>
-    <div id="finalbill-list"></div>
-  </div>
-
-  <!-- COLLECTION TAB -->
-  <div id="tab-collection" style="display:none">
-    <div class="card" style="border-left:4px solid var(--warning)">
-      <b style="color:var(--warning);font-size:.95rem">&#128176; Collection</b>
-      <p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Download sheet, fill &amp; import back</p>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="icon">&#11015;</span><h2>Download / Import</h2></div>
-      <div class="row">
-        <div class="fg" style="min-width:150px"><label>Route</label>
-          <div class="searchable-wrap" id="sd-wrap-collection-route"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-collection-route" onclick="toggleSD('collection-route')">-- Select Route -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-collection-route"><div class="sd-search"><input placeholder="Search route..." oninput="filterSD('collection-route',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-collection-route"></div></div></div>
-          <input type="hidden" id="val-collection-route" value=""/>
-        </div>
-        <div><button class="btn btn-primary" onclick="downloadCollectionExcel()">&#11015; Download</button></div>
-      </div>
-      <div class="row" style="margin-top:4px">
-        <div class="fg" style="min-width:180px"><label>Import Filled Excel</label><input type="file" id="collection-file-input" accept=".xlsx,.xls"/></div>
-        <div><button class="btn btn-success" onclick="confirmImportCollection()">&#10003; Import</button></div>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="icon">&#128176;</span><h2>Today's Collection</h2><button class="btn btn-outline btn-sm" onclick="toggleCollectionHistory()" style="margin-left:auto">&#128193; History</button></div>
-      <div id="collection-list"></div>
-    </div>
-    <div class="card" id="collection-history-card" style="display:none">
-      <div class="card-header"><span class="icon">&#128193;</span><h2>Collection History</h2></div>
-      <div id="collection-history-list"></div>
-    </div>
-  </div>
-
-  <!-- SUMMARY TAB -->
-  <div id="tab-summary" style="display:none">
-    <div class="card" style="border-left:4px solid var(--primary);background:linear-gradient(135deg,#eff6ff,#fff)">
-      <b style="color:var(--primary);font-size:.95rem">&#128202; Daily Summary</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Today's data only</p>
-    </div>
-    <div class="summary-row" id="daily-stat-row"></div>
-    <div class="card"><div class="card-header"><span class="icon">&#127978;</span><h2>Outlet Orders — Today</h2></div><div class="table-wrap"><div id="daily-outlet-table"></div></div></div>
-    <div class="card"><div class="card-header"><span class="icon">&#127991;</span><h2>SKU Summary — Today</h2></div><div class="table-wrap"><div id="daily-sku-table"></div></div></div>
-    <div class="card" style="border-left:4px solid var(--purple);background:linear-gradient(135deg,#f5f3ff,#fff);margin-top:8px">
-      <b style="color:var(--purple);font-size:.95rem">&#128200; Overall Report</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Generate detailed reports</p>
-    </div>
-    <div class="card">
-      <div class="card-header"><span class="icon">&#128197;</span><h2>Date Range</h2></div>
-      <div class="row">
-        <div class="fg" style="min-width:120px"><label>From</label><input type="date" id="report-from"/></div>
-        <div class="fg" style="min-width:120px"><label>To</label><input type="date" id="report-to"/></div>
-        <div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="generateReports()">Generate</button><button class="btn btn-pdf btn-sm" onclick="exportReportPDF()">&#128196; PDF</button></div>
-      </div>
-    </div>
-    <div class="card" id="rpt-outlet-card" style="display:none"><div class="card-header"><span class="icon">&#127978;</span><h2>Outlet-wise Sales</h2></div><div class="table-wrap"><div id="rpt-outlet-table"></div></div></div>
-    <div class="card" id="rpt-sku-card" style="display:none"><div class="card-header"><span class="icon">&#127991;</span><h2>SKU-wise Sales</h2></div><div class="table-wrap"><div id="rpt-sku-table"></div></div></div>
-    <div class="card" id="rpt-route-card" style="display:none"><div class="card-header"><span class="icon">&#128506;</span><h2>Route-wise Sales</h2></div><div class="table-wrap"><div id="rpt-route-table"></div></div></div>
-    <div class="card" id="rpt-collection-card" style="display:none"><div class="card-header"><span class="icon">&#128176;</span><h2>Collection Summary</h2></div><div class="table-wrap"><div id="rpt-collection-table"></div></div></div>
-  </div>
-
-  <!-- HISTORY TAB -->
+  <div id="tab-review" style="display:none"><div class="card" style="border-left:4px solid var(--primary);background:linear-gradient(135deg,#eff6ff,#fff)"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><b style="color:var(--primary)">&#128221; Review Orders</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Edit or approve before packing</p></div><div style="display:flex;gap:8px;align-items:center"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.78rem;font-weight:600"><input type="checkbox" id="review-check-all" onchange="toggleAllReviewChecks(this.checked)"> All</label><button class="btn btn-success btn-sm" onclick="confirmSelectedReview()">&#10003; Approve</button></div></div></div><div id="review-list"></div></div>
+  <div id="tab-packing" style="display:none"><div class="card" style="border-left:4px solid var(--warning);background:linear-gradient(135deg,#fffbeb,#fff)"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><div><b style="color:var(--warning)">&#128230; Packing</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Tick all or set qty=0 to confirm</p></div><div style="display:flex;gap:8px;align-items:center"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:.78rem;font-weight:600"><input type="checkbox" id="pack-check-all" onchange="toggleAllPackChecks(this.checked)"> All</label><button class="btn btn-success btn-sm" onclick="confirmSelectedPacking()">&#10003; Confirm</button></div></div></div><div id="packing-list"></div></div>
+  <div id="tab-finalbill" style="display:none"><div class="card" style="border-left:4px solid var(--success);background:linear-gradient(135deg,#ecfdf5,#fff)"><b style="color:var(--success)">&#129534; Final Bill</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Today's confirmed packing</p></div><div class="summary-row" id="bill-stats"></div><div id="finalbill-list"></div></div>
+  <div id="tab-collection" style="display:none"><div class="card" style="border-left:4px solid var(--warning)"><b style="color:var(--warning)">&#128176; Collection</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Download sheet, fill &amp; import back</p></div><div class="card"><div class="card-header"><span class="icon">&#11015;</span><h2>Download / Import</h2></div><div class="row"><div class="fg" style="min-width:150px"><label>Route</label><div class="searchable-wrap" id="sd-wrap-collection-route"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-collection-route" onclick="toggleSD('collection-route')">-- Select Route -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-collection-route"><div class="sd-search"><input placeholder="Search route..." oninput="filterSD('collection-route',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-collection-route"></div></div></div><input type="hidden" id="val-collection-route" value=""/></div><div><button class="btn btn-primary" onclick="downloadCollectionExcel()">&#11015; Download</button></div></div><div class="row" style="margin-top:4px"><div class="fg" style="min-width:180px"><label>Import Filled Excel</label><input type="file" id="collection-file-input" accept=".xlsx,.xls"/></div><div><button class="btn btn-success" onclick="confirmImportCollection()">&#10003; Import</button></div></div></div><div class="card"><div class="card-header"><span class="icon">&#128176;</span><h2>Today's Collection</h2><button class="btn btn-outline btn-sm" onclick="toggleCollectionHistory()" style="margin-left:auto">&#128193; History</button></div><div id="collection-list"></div></div><div class="card" id="collection-history-card" style="display:none"><div class="card-header"><span class="icon">&#128193;</span><h2>Collection History</h2></div><div id="collection-history-list"></div></div></div>
   <div id="tab-history" style="display:none"><div class="summary-row" id="summary-stats"></div><div id="orders-list"></div></div>
-
-  <!-- ARCHIVES TAB -->
+  <div id="tab-summary" style="display:none"><div class="card" style="border-left:4px solid var(--primary);background:linear-gradient(135deg,#eff6ff,#fff)"><b style="color:var(--primary)">&#128202; Daily Summary</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Today's data only</p></div><div class="summary-row" id="daily-stat-row"></div><div class="card"><div class="card-header"><span class="icon">&#127978;</span><h2>Outlet Orders — Today</h2></div><div class="table-wrap"><div id="daily-outlet-table"></div></div></div><div class="card"><div class="card-header"><span class="icon">&#127991;</span><h2>SKU Summary — Today</h2></div><div class="table-wrap"><div id="daily-sku-table"></div></div></div><div class="card" style="border-left:4px solid var(--purple);background:linear-gradient(135deg,#f5f3ff,#fff);margin-top:8px"><b style="color:var(--purple)">&#128200; Overall Report</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Generate detailed reports</p></div><div class="card"><div class="card-header"><span class="icon">&#128197;</span><h2>Date Range</h2></div><div class="row"><div class="fg" style="min-width:120px"><label>From</label><input type="date" id="report-from"/></div><div class="fg" style="min-width:120px"><label>To</label><input type="date" id="report-to"/></div><div style="display:flex;gap:8px"><button class="btn btn-primary btn-sm" onclick="generateReports()">Generate</button><button class="btn btn-pdf btn-sm" onclick="exportReportPDF()">&#128196; PDF</button></div></div></div><div class="card" id="rpt-outlet-card" style="display:none"><div class="card-header"><span class="icon">&#127978;</span><h2>Outlet-wise Sales</h2></div><div class="table-wrap"><div id="rpt-outlet-table"></div></div></div><div class="card" id="rpt-sku-card" style="display:none"><div class="card-header"><span class="icon">&#127991;</span><h2>SKU-wise Sales</h2></div><div class="table-wrap"><div id="rpt-sku-table"></div></div></div><div class="card" id="rpt-route-card" style="display:none"><div class="card-header"><span class="icon">&#128506;</span><h2>Route-wise Sales</h2></div><div class="table-wrap"><div id="rpt-route-table"></div></div></div><div class="card" id="rpt-collection-card" style="display:none"><div class="card-header"><span class="icon">&#128176;</span><h2>Collection Summary</h2></div><div class="table-wrap"><div id="rpt-collection-table"></div></div></div></div>
   <div id="tab-archives" style="display:none">
-    <div class="card" style="border-left:4px solid var(--primary);background:linear-gradient(135deg,#eff6ff,#fff)">
-      <b style="color:var(--primary);font-size:.95rem">&#128269; Search Retailer Orders</b>
-      <p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Select retailer &amp; date range</p>
-      <div class="row" style="margin-top:10px">
-        <div class="fg" style="min-width:150px"><label>Retailer</label>
-          <div class="searchable-wrap" id="sd-wrap-archive-retailer"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-archive-retailer" onclick="toggleSD('archive-retailer')">-- Select Retailer -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-archive-retailer"><div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('archive-retailer',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-archive-retailer"></div></div></div>
-          <input type="hidden" id="val-archive-retailer" value=""/>
-        </div>
-        <div class="fg" style="min-width:110px"><label>From</label><input type="date" id="archive-search-from"/></div>
-        <div class="fg" style="min-width:110px"><label>To</label><input type="date" id="archive-search-to"/></div>
-        <div><button class="btn btn-primary" onclick="searchArchiveOrders()" style="margin-top:4px">&#128269; Search</button></div>
-      </div>
-    </div>
+    <div class="card" style="border-left:4px solid var(--primary);background:linear-gradient(135deg,#eff6ff,#fff)"><b style="color:var(--primary)">&#128269; Search Retailer Orders</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Select retailer &amp; date range</p><div class="row" style="margin-top:10px"><div class="fg" style="min-width:150px"><label>Retailer</label><div class="searchable-wrap" id="sd-wrap-archive-retailer"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-archive-retailer" onclick="toggleSD('archive-retailer')">-- Select Retailer -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-archive-retailer"><div class="sd-search"><input placeholder="Search retailer..." oninput="filterSD('archive-retailer',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-archive-retailer"></div></div></div><input type="hidden" id="val-archive-retailer" value=""/></div><div class="fg" style="min-width:110px"><label>From</label><input type="date" id="archive-search-from"/></div><div class="fg" style="min-width:110px"><label>To</label><input type="date" id="archive-search-to"/></div><div><button class="btn btn-primary" onclick="searchArchiveOrders()">&#128269; Search</button></div></div></div>
     <div id="archive-search-results"></div>
-    <div class="card" style="border-left:4px solid var(--purple);background:linear-gradient(135deg,#f5f3ff,#fff)">
-      <b style="color:var(--purple);font-size:.95rem">&#128451; Browse by Date</b>
-      <p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Pick year, month &amp; date</p>
-    </div>
-    <div class="card">
-      <div class="row"><div class="fg" style="min-width:120px"><label>Year</label><select id="archive-year-select" onchange="onArchiveYearChange()"></select></div></div>
-      <div id="archive-calendar"></div>
-    </div>
+    <div class="card" style="border-left:4px solid var(--purple);background:linear-gradient(135deg,#f5f3ff,#fff)"><b style="color:var(--purple)">&#128451; Browse by Date</b><p style="font-size:.78rem;color:var(--text-secondary);margin-top:2px">Pick year, month &amp; date</p></div>
+    <div class="card"><div class="row"><div class="fg" style="min-width:120px"><label>Year</label><select id="archive-year-select" onchange="onArchiveYearChange()"></select></div></div><div id="archive-calendar"></div></div>
     <div id="archives-list"></div>
   </div>
-
-  <!-- ROUTES / SKUs / RETAILERS - Accessible from bottom nav overflow or hamburger -->
-  <div id="tab-routes" style="display:none">
-    <div class="card"><div class="card-header"><span class="icon">&#128506;</span><h2>Create Route</h2></div><div class="row"><div class="fg"><label>Name</label><input id="route-name" placeholder="e.g. North Zone"/></div><div><button class="btn btn-primary" onclick="addRoute()">Create</button></div></div></div>
-    <div id="routes-list"></div>
-  </div>
-  <div id="tab-skus" style="display:none">
-    <div class="card"><div class="card-header"><span class="icon">&#127991;</span><h2>Add SKU Group</h2></div><div class="row"><div class="fg"><label>Code</label><input id="grp-code" placeholder="e.g. AMUL"/></div><div class="fg" style="flex:2"><label>Name</label><input id="grp-name" placeholder="e.g. Amul Products"/></div><div><button class="btn btn-primary" onclick="addGroup()">Add</button></div></div></div>
-    <div class="card"><div class="card-header"><span class="icon">&#128196;</span><h2>SKU Groups</h2></div><div id="groups-list"></div></div>
-    <div class="card"><div class="card-header"><span class="icon">&#10133;</span><h2>Add SKU</h2></div>
-      <div class="sku-lock-bar"><label><input type="checkbox" id="sku-lock-chk" onchange="onSkuLockChange()"/> Lock Group</label><span class="lock-info" id="sku-lock-info">Select group, lock for today</span></div>
-      <div class="row">
-        <div class="fg"><label>Code</label><input id="sku-code" placeholder="A-001"/></div>
-        <div class="fg" style="flex:2"><label>Name</label><input id="sku-name" placeholder="Amul Butter 500g"/></div>
-        <div class="fg"><label>Price</label><input id="sku-price" type="number" placeholder="0.00"/></div>
-        <div class="fg"><label>MRP</label><input id="sku-mrp" type="number" placeholder="0.00"/></div>
-        <div class="fg"><label>EA/Box</label><input id="sku-units-per-box" type="number" min="1" placeholder="1"/></div>
-        <div class="fg" style="min-width:130px"><label>Group</label>
-          <div class="searchable-wrap" id="sd-wrap-sku-group"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-sku-group" onclick="toggleSD('sku-group')">-- Select Group -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-sku-group"><div class="sd-search"><input placeholder="Search..." oninput="filterSD('sku-group',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-sku-group"></div></div></div>
-          <input type="hidden" id="val-sku-group" value=""/>
-        </div>
-        <div><button class="btn btn-primary" onclick="addSku()">Add SKU</button></div>
-      </div>
-    </div>
-    <div class="card"><div class="card-header"><span class="icon">&#128269;</span><h2>All SKUs</h2></div>
-      <div class="row"><div class="fg"><label>Search</label><input id="sku-search" placeholder="Search by code or name..." oninput="renderSkuTable()"/></div></div>
-      <div class="table-wrap"><div id="sku-table-wrap"></div></div>
-    </div>
-  </div>
-  <div id="tab-retailers" style="display:none">
-    <div class="card"><div class="card-header"><span class="icon">&#127978;</span><h2>Add Retailer</h2></div><div class="row"><div class="fg" style="flex:2"><label>Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div><div class="fg" style="flex:2"><label>Contact</label><input id="ret-contact" placeholder="e.g. Mumbai"/></div><div><button class="btn btn-primary" onclick="addRetailer()">Add</button></div></div></div>
-    <div class="card"><div class="card-header"><span class="icon">&#127978;</span><h2>Retailer List</h2></div><div class="table-wrap"><div id="ret-table-wrap"></div></div></div>
-  </div>
+  <div id="tab-routes" style="display:none"><div class="card"><div class="card-header"><span class="icon">&#128506;</span><h2>Create Route</h2></div><div class="row"><div class="fg"><label>Name</label><input id="route-name" placeholder="e.g. North Zone"/></div><div><button class="btn btn-primary" onclick="addRoute()">Create</button></div></div></div><div id="routes-list"></div></div>
+  <div id="tab-skus" style="display:none"><div class="card"><div class="card-header"><span class="icon">&#127991;</span><h2>Add SKU Group</h2></div><div class="row"><div class="fg"><label>Code</label><input id="grp-code" placeholder="e.g. AMUL"/></div><div class="fg" style="flex:2"><label>Name</label><input id="grp-name" placeholder="e.g. Amul Products"/></div><div><button class="btn btn-primary" onclick="addGroup()">Add</button></div></div></div><div class="card"><div class="card-header"><span class="icon">&#128196;</span><h2>SKU Groups</h2></div><div id="groups-list"></div></div><div class="card"><div class="card-header"><span class="icon">&#10133;</span><h2>Add SKU</h2></div><div class="sku-lock-bar"><label><input type="checkbox" id="sku-lock-chk" onchange="onSkuLockChange()"/> Lock Group</label><span class="lock-info" id="sku-lock-info">Select group, lock for today</span></div><div class="row"><div class="fg"><label>Code</label><input id="sku-code" placeholder="A-001"/></div><div class="fg" style="flex:2"><label>Name</label><input id="sku-name" placeholder="Amul Butter 500g"/></div><div class="fg"><label>Price</label><input id="sku-price" type="number" placeholder="0.00"/></div><div class="fg"><label>MRP</label><input id="sku-mrp" type="number" placeholder="0.00"/></div><div class="fg"><label>EA/Box</label><input id="sku-units-per-box" type="number" min="1" placeholder="1"/></div><div class="fg" style="min-width:130px"><label>Group</label><div class="searchable-wrap" id="sd-wrap-sku-group"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-sku-group" onclick="toggleSD('sku-group')">-- Select Group -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-sku-group"><div class="sd-search"><input placeholder="Search..." oninput="filterSD('sku-group',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-sku-group"></div></div></div><input type="hidden" id="val-sku-group" value=""/></div><div><button class="btn btn-primary" onclick="addSku()">Add SKU</button></div></div></div><div class="card"><div class="card-header"><span class="icon">&#128269;</span><h2>All SKUs</h2></div><div class="row"><div class="fg"><label>Search</label><input id="sku-search" placeholder="Search..." oninput="renderSkuTable()"/></div></div><div class="table-wrap"><div id="sku-table-wrap"></div></div></div></div>
+  <div id="tab-retailers" style="display:none"><div class="card"><div class="card-header"><span class="icon">&#127978;</span><h2>Add Retailer</h2></div><div class="row"><div class="fg" style="flex:2"><label>Name</label><input id="ret-name" placeholder="e.g. SuperMart"/></div><div class="fg" style="flex:2"><label>Contact</label><input id="ret-contact" placeholder="e.g. Mumbai"/></div><div><button class="btn btn-primary" onclick="addRetailer()">Add</button></div></div></div><div class="card"><div class="card-header"><span class="icon">&#127978;</span><h2>Retailer List</h2></div><div class="table-wrap"><div id="ret-table-wrap"></div></div></div></div>
 </div>
 
 <div id="toast"></div>
-<div class="modal-overlay" id="cash-modal-overlay" style="display:none" onclick="if(event.target===this)closePhysicalCashModal()">
-  <div class="modal-box">
-    <h2 id="cash-modal-title" style="margin-bottom:14px;font-size:1.1rem">Physical Cash</h2>
-    <div id="denom-rows"></div>
-    <div class="cash-summary">
-      <div class="cash-summary-row"><span>Total Physical Cash</span><b id="phys-cash-total">&#8377;0.00</b></div>
-      <div class="cash-summary-row"><span>Cash Collected</span><b id="cash-collected-total">&#8377;0.00</b></div>
-      <div class="cash-summary-row"><span>Difference</span><b id="cash-diff">&#8377;0.00</b></div>
-    </div>
-    <div style="display:flex;gap:8px;margin-top:14px">
-      <button class="btn btn-success" style="flex:1" onclick="savePhysicalCash()">&#10003; Confirm &amp; Close</button>
-      <button class="btn btn-cancel" style="flex:1" onclick="closePhysicalCashModal()">Cancel</button>
-    </div>
-  </div>
-</div>
+<div class="modal-overlay" id="cash-modal-overlay" style="display:none" onclick="if(event.target===this)closePhysicalCashModal()"><div class="modal-box"><h2 id="cash-modal-title" style="margin-bottom:14px;font-size:1.1rem">Physical Cash</h2><div id="denom-rows"></div><div class="cash-summary"><div class="cash-summary-row"><span>Total Physical Cash</span><b id="phys-cash-total">&#8377;0.00</b></div><div class="cash-summary-row"><span>Cash Collected</span><b id="cash-collected-total">&#8377;0.00</b></div><div class="cash-summary-row"><span>Difference</span><b id="cash-diff">&#8377;0.00</b></div></div><div style="display:flex;gap:8px;margin-top:14px"><button class="btn btn-success" style="flex:1" onclick="savePhysicalCash()">&#10003; Confirm &amp; Close</button><button class="btn btn-cancel" style="flex:1" onclick="closePhysicalCashModal()">Cancel</button></div></div></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -560,7 +289,9 @@ function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.c
 function showLoader(m){document.getElementById('loader-msg').textContent=m;document.getElementById('global-loader').style.display='flex';}
 function hideLoader(){document.getElementById('global-loader').style.display='none';}
 
-// Update bottom nav badges
+window.openMoreMenu=function(){document.getElementById('more-menu-overlay').classList.add('open');};
+window.closeMoreMenu=function(){document.getElementById('more-menu-overlay').classList.remove('open');};
+
 function updateNavBadges(){
   var reviewCount=getReviewOrders().length;
   var packingCount=getMergedByRetailer().filter(function(o){return!getPackingDoc(o.retailerId)||!getPackingDoc(o.retailerId).confirmed;}).length;
@@ -583,13 +314,41 @@ function msToMidnight(){var n=new Date(),i=new Date(n.toLocaleString('en-US',{ti
 function getYesterdayISTStr(){var d=new Date();d.setTime(d.getTime()-msToMidnight()-1000);return new Date(d.toLocaleString('en-US',{timeZone:'Asia/Kolkata'})).toLocaleDateString('en-CA');}
 function resetOrderTab(){document.getElementById('val-order-retailer').value='';var rb=document.getElementById('sd-btn-order-retailer');if(rb){rb.innerHTML='-- Select Retailer -- &#9660;';rb.classList.add('placeholder-style');}document.getElementById('retailer-balance-note').style.display='none';document.getElementById('inline-collection-card').style.display='none';document.getElementById('sku-lines').innerHTML='';lineCount=0;updateTotal();document.getElementById('order-date').value=getISTDateStr();document.getElementById('val-order-route').value='';var rbtn=document.getElementById('sd-btn-order-route');if(rbtn){rbtn.innerHTML='-- Select Route -- &#9660;';rbtn.classList.add('placeholder-style');}document.getElementById('route-outlet-info').style.display='none';clearLock();applyLockUI();clearSkuLock();applySkuLockUI();buildRouteOpts();buildRetailerOpts('');}
 function scheduleLockReset(){setTimeout(function(){clearLock();clearSkuLock();applyLockUI();applySkuLockUI();resetOrderTab();scheduleLockReset();},msToMidnight());}
-function scheduleMidnightArchive(){setTimeout(async function(){var yesterday=getYesterdayISTStr(),now=new Date().toISOString();var toArchive=orders.filter(function(o){return o.date===yesterday&&o.status!=='review'&&o.status!=='packing';});var noToArchive=noOrders.filter(function(o){return o.date===yesterday;});for(var i=0;i<toArchive.length;i++){try{await updateDoc(tdoc('orders',toArchive[i].id),{archived:true,archivedAt:now});}catch(e){}}for(var i=0;i<noToArchive.length;i++){try{await updateDoc(tdoc('orders',noToArchive[i].id),{archived:true,archivedAt:now});}catch(e){}}var confirmedPacks=packingDocs.filter(function(p){return p.confirmed&&!p.archived;});for(var i=0;i<confirmedPacks.length;i++){var p=confirmedPacks[i];try{await updateDoc(tdoc('packing',p.id),{archived:true,archivedAt:now,packingDate:p.confirmedAt||p.updatedAt||p.createdAt});}catch(e){}}resetOrderTab();if(toArchive.length+noToArchive.length+confirmedPacks.length)toast('Day closed — data moved to Archives');scheduleMidnightArchive();},msToMidnight());}
+
+// FIXED: Midnight archive now properly updates the packing doc's date for archive browsing
+function scheduleMidnightArchive(){
+  setTimeout(async function(){
+    var yesterday=getYesterdayISTStr(),now=new Date().toISOString();
+    var toArchive=orders.filter(function(o){return o.date===yesterday&&o.status!=='review'&&o.status!=='packing';});
+    var noToArchive=noOrders.filter(function(o){return o.date===yesterday;});
+    for(var i=0;i<toArchive.length;i++){try{await updateDoc(tdoc('orders',toArchive[i].id),{archived:true,archivedAt:now});}catch(e){}}
+    for(var i=0;i<noToArchive.length;i++){try{await updateDoc(tdoc('orders',noToArchive[i].id),{archived:true,archivedAt:now});}catch(e){}}
+    
+    // Archive confirmed packing docs - UPDATE the date to yesterday so it appears in archives correctly
+    var confirmedPacks=packingDocs.filter(function(p){return p.confirmed&&!p.archived;});
+    for(var i=0;i<confirmedPacks.length;i++){
+      var p=confirmedPacks[i];
+      try{
+        // Update date to yesterday AND set packingDate so it shows up in archives under the correct date
+        await updateDoc(tdoc('packing',p.id),{
+          archived:true,
+          archivedAt:now,
+          date:yesterday,  // Set date to yesterday for archive browsing
+          packingDate:p.packingDate||p.confirmedAt||p.updatedAt||p.createdAt
+        });
+      }catch(e){}
+    }
+    resetOrderTab();
+    if(toArchive.length+noToArchive.length+confirmedPacks.length)toast('Day closed — data moved to Archives');
+    scheduleMidnightArchive();
+  },msToMidnight());
+}
 
 function toggleSD(key){if(key==='order-route'&&getLock())return;if(key==='sku-group'&&getSkuLock())return;var dd=document.getElementById('sd-dd-'+key),isOpen=dd&&dd.classList.contains('open');closeAllSD();if(!isOpen&&dd){dd.classList.add('open');var inp=dd.querySelector('input');if(inp)inp.focus();}}
 function closeAllSD(){document.querySelectorAll('.searchable-dropdown').forEach(function(d){d.classList.remove('open');});}
 function filterSD(key,q){var opts=document.getElementById('sd-opts-'+key);if(!opts)return;opts.querySelectorAll('.sd-option:not(.placeholder-opt)').forEach(function(el){el.style.display=el.dataset.label.toLowerCase().indexOf(q.toLowerCase())>=0?'':'none';});}
 function selectSD(key,value,label,cbName){var btn=document.getElementById('sd-btn-'+key);if(btn){btn.innerHTML=esc(label)+' &#9660;';btn.classList.remove('placeholder-style');}document.getElementById('val-'+key).value=value;closeAllSD();if(cbName&&window[cbName])window[cbName](value);}
-document.addEventListener('click',function(e){if(!e.target.closest('.searchable-wrap'))closeAllSD();});
+document.addEventListener('click',function(e){if(!e.target.closest('.searchable-wrap')&&!e.target.closest('.more-menu'))closeAllSD();});
 window.toggleSD=toggleSD;window.filterSD=filterSD;window.selectSD=selectSD;
 
 function getSkuRankForRetailer(retailerId){var freq={};orders.concat(archivedOrders).forEach(function(o){if(o.retailerId!==retailerId)return;(o.lines||[]).forEach(function(l){freq[l.skuId]=(freq[l.skuId]||0)+1;});});return freq;}
@@ -602,11 +361,9 @@ function buildRouteOpts(){var opts=document.getElementById('sd-opts-order-route'
 function buildRetailerOpts(routeId){var opts=document.getElementById('sd-opts-order-retailer');if(!opts)return;var today=getISTDateStr();var orderedIds=new Set(orders.filter(function(o){return o.date===today;}).map(function(o){return o.retailerId;}));var list=retailers.slice();if(routeId){var route=routes.find(function(r){return r.id===routeId;});var ids=(route&&route.retailers||[]).map(function(r){return r.id;});list=ids.map(function(id){return retailers.find(function(r){return r.id===id;});}).filter(Boolean);var avgPos=getRetailerVisitRankForRoute(routeId);var hasHistory=Object.keys(avgPos).length>0;if(hasHistory){list=list.slice().sort(function(a,b){var pa=avgPos[a.id]!=null?avgPos[a.id]:999,pb=avgPos[b.id]!=null?avgPos[b.id]:999;return pa-pb;});}list=list.filter(function(r){return!orderedIds.has(r.id);});var html='<div class="sd-option placeholder-opt" onclick="selectSD(\'order-retailer\',\'\',\'-- Select Retailer --\',\'onRetailerSelect\')">-- Select Retailer --</div>';if(list.length){list.forEach(function(r,i){var numBadge='<span style="background:#eff6ff;color:var(--primary);border-radius:50%;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;margin-right:6px">'+(i+1)+'</span>';html+='<div class="sd-option" data-label="'+esc(r.name)+'" onclick="selectSD(\'order-retailer\',\''+r.id+'\',\''+esc(r.name)+'\',\'onRetailerSelect\')">'+numBadge+esc(r.name)+(r.contact?' <span style="color:var(--text-secondary);font-size:.75rem">· '+esc(r.contact)+'</span>':'')+'</div>';});}else{html+='<div class="sd-empty">All retailers already have an order today</div>';}opts.innerHTML=html;}else{list=list.filter(function(r){return!orderedIds.has(r.id);});var html='<div class="sd-option placeholder-opt" onclick="selectSD(\'order-retailer\',\'\',\'-- Select Retailer --\',\'onRetailerSelect\')">-- Select Retailer --</div>';if(list.length){list.forEach(function(r){html+='<div class="sd-option" data-label="'+esc(r.name)+'" onclick="selectSD(\'order-retailer\',\''+r.id+'\',\''+esc(r.name)+'\',\'onRetailerSelect\')">'+esc(r.name)+(r.contact?' <span style="color:var(--text-secondary);font-size:.75rem">· '+esc(r.contact)+'</span>':'')+'</div>';});}else{html+='<div class="sd-empty">All retailers already have an order today</div>';}opts.innerHTML=html;}}
 
 function buildArchiveRetailerOpts(){var opts=document.getElementById('sd-opts-archive-retailer');if(!opts)return;var html='<div class="sd-option placeholder-opt" onclick="selectSD(\'archive-retailer\',\'\',\'-- Select Retailer --\',\'\')">-- Select Retailer --</div>';var allRetailerIds=new Set();archivedOrders.forEach(function(o){allRetailerIds.add(o.retailerId);});packingDocs.filter(function(p){return p.archived;}).forEach(function(p){allRetailerIds.add(p.retailerId);});var retailerList=[...allRetailerIds].map(function(id){return retailers.find(function(r){return r.id===id;});}).filter(Boolean).sort(function(a,b){return a.name.localeCompare(b.name);});if(retailerList.length){retailerList.forEach(function(r){var count=archivedOrders.filter(function(o){return o.retailerId===r.id;}).length+packingDocs.filter(function(p){return p.archived&&p.retailerId===r.id;}).length;html+='<div class="sd-option" data-label="'+esc(r.name)+'" onclick="selectSD(\'archive-retailer\',\''+r.id+'\',\''+esc(r.name)+'\',\'\')">'+esc(r.name)+' <span style="color:var(--text-secondary);font-size:.75rem">· '+count+' orders</span></div>';});}else{html+='<div class="sd-empty">No archived orders found</div>';}opts.innerHTML=html;}
-
 function buildCollectionRouteOpts(){var opts=document.getElementById('sd-opts-collection-route');if(!opts)return;var html='';if(routes.length){routes.forEach(function(r){html+='<div class="sd-option" data-label="'+esc(r.name)+'" onclick="selectSD(\'collection-route\',\''+r.id+'\',\''+esc(r.name)+'\',\'\')">'+esc(r.name)+' <span style="color:var(--text-secondary);font-size:.75rem">· '+(r.retailers||[]).length+' retailers</span></div>';});}else{html+='<div class="sd-empty">No routes yet</div>';}opts.innerHTML=html;}
-
-function buildSkuOpts(lineId){var key='sku-'+lineId,opts=document.getElementById('sd-opts-'+key);if(!opts)return;var retailerId=(document.getElementById('val-order-retailer')||{}).value||'';var freq=retailerId?getSkuRankForRetailer(retailerId):{};var hasHistory=Object.keys(freq).length>0;var sorted=skus.slice();if(hasHistory){sorted.sort(function(a,b){var fa=freq[a.id]||0,fb=freq[b.id]||0;if(fb!==fa)return fb-fa;return a.code.localeCompare(b.code);});}var html='<div class="sd-option placeholder-opt" onclick="selectSkuOpt(\''+lineId+'\',\'\',\'-- Select SKU --\')">-- Select SKU --</div>';var passedRanked=false;sorted.forEach(function(s){var rank=freq[s.id]||0;if(hasHistory&&!passedRanked&&rank===0){html+='<div style="border-top:1px dashed var(--border);padding:4px 8px;font-size:.7rem;color:var(--text-secondary)">Other SKUs</div>';passedRanked=true;}var rankBadge=hasHistory&&rank>0?'<span style="background:#eff6ff;color:var(--primary);border-radius:10px;padding:1px 6px;font-size:.65rem;margin-left:4px">x'+rank+'</span>':'';html+='<div class="sd-option" data-label="'+esc(s.code)+' '+esc(s.name)+'" onclick="selectSkuOpt(\''+lineId+'\',\''+s.id+'\',\''+esc(s.code)+' — '+esc(s.name)+'\')"><span class="badge badge-blue">'+esc(s.code)+'</span>'+esc(s.name)+rankBadge+'<span style="margin-left:auto;text-align:right;font-size:.8rem"><span style="color:var(--success)">'+fmt(s.price)+'</span></span></div>';});opts.innerHTML=html;}
-window.selectSkuOpt=function(lineId,skuId,label){if(skuId){var already=false;document.querySelectorAll('.line-sku-val').forEach(function(el){if(el.id!=='val-sku-'+lineId&&el.value===skuId)already=true;});if(already){toast('SKU already added in another line');closeAllSD();return;}}selectSD('sku-'+lineId,skuId,label,'');if(skuId){var sku=skus.find(function(s){return s.id===skuId;});if(sku){var p=document.querySelector('#line-'+lineId+' .line-price');if(p)p.value=sku.price;var u=document.querySelector('#line-'+lineId+' .line-unit');if(u)u.value='ea';var lineEl=document.getElementById('line-'+lineId);if(lineEl)lineEl.dataset.prevUnit='ea';var lbl=document.getElementById('unit-lbl-'+lineId);if(lbl)lbl.textContent=sku.unitsPerBox&&sku.unitsPerBox>1?'Unit (1bx='+sku.unitsPerBox+')':'Unit';updateTotal();}}};
+function buildSkuOpts(lineId){var key='sku-'+lineId,opts=document.getElementById('sd-opts-'+key);if(!opts)return;var retailerId=(document.getElementById('val-order-retailer')||{}).value||'';var freq=retailerId?getSkuRankForRetailer(retailerId):{};var hasHistory=Object.keys(freq).length>0;var sorted=skus.slice();if(hasHistory){sorted.sort(function(a,b){var fa=freq[a.id]||0,fb=freq[b.id]||0;if(fb!==fa)return fb-fa;return a.code.localeCompare(b.code);});}var html='<div class="sd-option placeholder-opt" onclick="selectSkuOpt(\''+lineId+'\',\'\',\'-- Select SKU --\')">-- Select SKU --</div>';var passedRanked=false;sorted.forEach(function(s){var rank=freq[s.id]||0;if(hasHistory&&!passedRanked&&rank===0){html+='<div style="border-top:1px dashed var(--border);padding:4px 8px;font-size:.7rem;color:var(--text-secondary)">Other SKUs</div>';passedRanked=true;}var rankBadge=hasHistory&&rank>0?'<span style="background:#eff6ff;color:var(--primary);border-radius:10px;padding:1px 6px;font-size:.65rem;margin-left:4px">x'+rank+'</span>':'';html+='<div class="sd-option" data-label="'+esc(s.code)+' '+esc(s.name)+'" onclick="selectSkuOpt(\''+lineId+'\',\''+s.id+'\',\''+esc(s.code)+' — '+esc(s.name)+'\')"><span class="badge badge-blue">'+esc(s.code)+'</span>'+esc(s.name)+rankBadge+'<span style="margin-left:auto;font-size:.8rem"><span style="color:var(--success)">'+fmt(s.price)+'</span></span></div>';});opts.innerHTML=html;}
+window.selectSkuOpt=function(lineId,skuId,label){if(skuId){var already=false;document.querySelectorAll('.line-sku-val').forEach(function(el){if(el.id!=='val-sku-'+lineId&&el.value===skuId)already=true;});if(already){toast('SKU already added');closeAllSD();return;}}selectSD('sku-'+lineId,skuId,label,'');if(skuId){var sku=skus.find(function(s){return s.id===skuId;});if(sku){var p=document.querySelector('#line-'+lineId+' .line-price');if(p)p.value=sku.price;var u=document.querySelector('#line-'+lineId+' .line-unit');if(u)u.value='ea';var lineEl=document.getElementById('line-'+lineId);if(lineEl)lineEl.dataset.prevUnit='ea';var lbl=document.getElementById('unit-lbl-'+lineId);if(lbl)lbl.textContent=sku.unitsPerBox>1?'Unit (1bx='+sku.unitsPerBox+')':'Unit';updateTotal();}}};
 window.onUnitChange=function(lineId){var line=document.getElementById('line-'+lineId);if(!line)return;var sel=line.querySelector('.line-unit'),priceInput=line.querySelector('.line-price');var newUnit=sel.value,prevUnit=line.dataset.prevUnit||'ea';var skuId=(line.querySelector('.line-sku-val')||{}).value,sku=skus.find(function(s){return s.id===skuId;});var upb=sku&&sku.unitsPerBox>1?sku.unitsPerBox:1;var p=parseFloat(priceInput.value)||0;if(newUnit!==prevUnit&&upb>1){priceInput.value=newUnit==='box'?Math.ceil(p*upb):Math.ceil(p/upb);}line.dataset.prevUnit=newUnit;updateTotal();};
 
 function buildRouteRetailerPicker(routeId){var opts=document.getElementById('rrp-opts-'+routeId);if(!opts)return;var route=routes.find(function(r){return r.id===routeId;});var used=new Set((route&&route.retailers||[]).map(function(r){return r.id;}));var avail=retailers.filter(function(r){return!used.has(r.id);});var html=avail.length?avail.map(function(r){return'<div class="sd-option" data-label="'+esc(r.name)+'" onclick="addRetailerToRoute(\''+routeId+'\',\''+r.id+'\',\''+esc(r.name)+'\')">'+esc(r.name)+(r.contact?' <span style="color:var(--text-secondary);font-size:.75rem">· '+esc(r.contact)+'</span>':'')+'</div>';}).join(''):'<div class="sd-empty">All retailers added</div>';opts.innerHTML=html;}
@@ -614,11 +371,13 @@ window.openRouteRetailerPicker=function(routeId){var dd=document.getElementById(
 window.filterRouteRetailerPicker=function(routeId,q){var opts=document.getElementById('rrp-opts-'+routeId);if(!opts)return;opts.querySelectorAll('.sd-option').forEach(function(el){el.style.display=(el.dataset.label||'').toLowerCase().indexOf(q.toLowerCase())>=0?'':'none';});};
 
 window.onRouteSelect=function(routeId){buildRetailerOpts(routeId);document.getElementById('val-order-retailer').value='';var rb=document.getElementById('sd-btn-order-retailer');if(rb){rb.innerHTML='-- Select Retailer -- &#9660;';rb.classList.add('placeholder-style');}document.getElementById('retailer-balance-note').style.display='none';document.getElementById('inline-collection-card').style.display='none';updateRouteOutletInfo();};
-window.onRetailerSelect=function(retId){document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(function(el){if(!el.id.includes('group'))buildSkuOpts(el.id.replace('sd-opts-sku-',''));});var note=document.getElementById('retailer-balance-note'),collCard=document.getElementById('inline-collection-card'),collInfo=document.getElementById('inline-collection-info'),collResult=document.getElementById('inline-coll-result'),collAmt=document.getElementById('inline-coll-amt');if(!retId){note.style.display='none';collCard.style.display='none';return;}var today=getISTDateStr();var c=collectionsData.find(function(x){return x.retailerId===retId&&!x.archived;});if(c){var pending=(c.grandTotal||0)-(c.collectedAmount||0);note.style.display='block';note.innerHTML='<span class="badge badge-orange">Grand Total: '+fmt(c.grandTotal)+' | Pending: '+fmt(pending)+'</span>';collCard.style.display='block';collInfo.innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem"><span><b>Total:</b> <span style="color:var(--primary)">'+fmt(c.grandTotal)+'</span></span><span><b>Collected:</b> <span style="color:var(--success)">'+fmt(c.collectedAmount||0)+'</span></span><span><b>Pending:</b> <span style="color:var(--danger)">'+fmt(pending)+'</span></span></div>';if(collAmt)collAmt.value=pending>0?pending:'';if(collResult)collResult.style.display='none';}else{note.style.display='none';collCard.style.display='none';}};
-window.submitInlineCollection=async function(){var retId=document.getElementById('val-order-retailer').value;if(!retId){toast('Select a retailer first');return;}var amt=parseFloat(document.getElementById('inline-coll-amt').value)||0,mode=document.getElementById('inline-coll-mode').value;if(amt<=0){toast('Enter a valid amount');return;}var today=getISTDateStr();var existing=collectionsData.find(function(c){return c.retailerId===retId&&!c.archived;});if(!existing){toast('No collection record found');return;}try{await updateDoc(tdoc('collections',existing.id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()});var pending=(existing.grandTotal||0)-amt;var r=document.getElementById('inline-coll-result');r.style.display='block';r.style.background=pending<=0?'#ecfdf5':'#fffbeb';r.style.border='2px solid '+(pending<=0?'#a7f3d0':'#fcd34d');r.style.borderRadius='var(--radius-sm)';r.style.padding='10px';r.innerHTML=pending<=0?'&#10003; Collection complete! '+fmt(amt)+' via '+mode:'Collected <b>'+fmt(amt)+'</b> via <b>'+mode+'</b>. Balance: <b style="color:var(--danger)">'+fmt(pending)+'</b>';document.getElementById('inline-collection-info').innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem"><span><b>Total:</b> '+fmt(existing.grandTotal)+'</span><span><b>Collected:</b> <span style="color:var(--success)">'+fmt(amt)+'</span></span><span><b>Pending:</b> <span style="color:'+(pending<=0?'var(--success)':'var(--danger)')+'">'+fmt(Math.max(0,pending))+'</span></span></div>';toast('Collection updated');}catch(e){toast('Error: '+e.message);}};
+window.onRetailerSelect=function(retId){document.querySelectorAll('[id^="sd-opts-sku-"]').forEach(function(el){if(!el.id.includes('group'))buildSkuOpts(el.id.replace('sd-opts-sku-',''));});var note=document.getElementById('retailer-balance-note'),collCard=document.getElementById('inline-collection-card'),collInfo=document.getElementById('inline-collection-info'),collResult=document.getElementById('inline-coll-result'),collAmt=document.getElementById('inline-coll-amt');if(!retId){note.style.display='none';collCard.style.display='none';return;}var c=collectionsData.find(function(x){return x.retailerId===retId&&!x.archived;});if(c){var pending=(c.grandTotal||0)-(c.collectedAmount||0);note.style.display='block';note.innerHTML='<span class="badge badge-orange">Grand Total: '+fmt(c.grandTotal)+' | Pending: '+fmt(pending)+'</span>';collCard.style.display='block';collInfo.innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem"><span><b>Total:</b> '+fmt(c.grandTotal)+'</span><span><b>Collected:</b> <span style="color:var(--success)">'+fmt(c.collectedAmount||0)+'</span></span><span><b>Pending:</b> <span style="color:var(--danger)">'+fmt(pending)+'</span></span></div>';if(collAmt)collAmt.value=pending>0?pending:'';if(collResult)collResult.style.display='none';}else{note.style.display='none';collCard.style.display='none';}};
+window.submitInlineCollection=async function(){var retId=document.getElementById('val-order-retailer').value;if(!retId){toast('Select a retailer first');return;}var amt=parseFloat(document.getElementById('inline-coll-amt').value)||0,mode=document.getElementById('inline-coll-mode').value;if(amt<=0){toast('Enter a valid amount');return;}var existing=collectionsData.find(function(c){return c.retailerId===retId&&!c.archived;});if(!existing){toast('No collection record found');return;}try{await updateDoc(tdoc('collections',existing.id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()});var pending=(existing.grandTotal||0)-amt;var r=document.getElementById('inline-coll-result');r.style.display='block';r.style.background=pending<=0?'#ecfdf5':'#fffbeb';r.style.border='2px solid '+(pending<=0?'#a7f3d0':'#fcd34d');r.style.padding='10px';r.innerHTML=pending<=0?'&#10003; Collection complete! '+fmt(amt)+' via '+mode:'Collected <b>'+fmt(amt)+'</b> via <b>'+mode+'</b>. Balance: <b style="color:var(--danger)">'+fmt(pending)+'</b>';document.getElementById('inline-collection-info').innerHTML='<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:.82rem"><span><b>Total:</b> '+fmt(existing.grandTotal)+'</span><span><b>Collected:</b> <span style="color:var(--success)">'+fmt(amt)+'</span></span><span><b>Pending:</b> <span style="color:'+(pending<=0?'var(--success)':'var(--danger)')+'">'+fmt(Math.max(0,pending))+'</span></span></div>';toast('Collection updated');}catch(e){toast('Error: '+e.message);}};
 
 var TABS=['orders','review','packing','finalbill','collection','summary','history','archives','routes','skus','retailers'];
 window.switchTab=function(t){
+  if(t==='more'){openMoreMenu();return;}
+  closeMoreMenu();
   TABS.forEach(function(x,i){document.getElementById('tab-'+x).style.display=x===t?'block':'none';});
   document.querySelectorAll('.bottom-nav .nav-item').forEach(function(el){el.classList.toggle('active',el.dataset.tab===t);});
   if(t==='review')renderReview();
@@ -652,7 +411,7 @@ window.deleteGroup=async function(id){if(!confirm('Delete group?'))return;for(va
 window.editGroupRow=function(id){var g=groups.find(function(x){return x.id===id;});if(!g)return;var row=document.getElementById('grp-row-'+id);if(!row)return;row.innerHTML='<td><input class="edit-input" id="eg-code-'+id+'" value="'+esc(g.code)+'" style="width:80px"/></td><td colspan="2"><input class="edit-input" id="eg-name-'+id+'" value="'+esc(g.name)+'"/></td><td><button class="btn btn-save" onclick="saveGroupEdit(\''+id+'\')">Save</button> <button class="btn btn-cancel" onclick="renderGroupsList()">Cancel</button></td>';};
 window.saveGroupEdit=async function(id){var code=document.getElementById('eg-code-'+id).value.trim().toUpperCase(),name=document.getElementById('eg-name-'+id).value.trim();if(!code||!name){toast('Required');return;}try{await updateDoc(tdoc('skuGroups',id),{code:code,name:name});for(var i=0;i<skus.length;i++){if(skus[i].groupId===id)try{await updateDoc(tdoc('skus',skus[i].id),{groupCode:code,groupName:name});}catch(e){}}toast('Updated');}catch(e){toast('Error: '+e.message);}};
 window.toggleGroup=function(id){if(openGroups.has(id))openGroups.delete(id);else openGroups.add(id);var body=document.getElementById('grp-body-'+id);if(body)body.classList.toggle('open',openGroups.has(id));};
-function renderGroupsList(){var wrap=document.getElementById('groups-list');if(!wrap)return;if(!groups.length){wrap.innerHTML='<div class="empty">No groups yet.</div>';return;}wrap.innerHTML='';groups.forEach(function(g){var gs=skus.filter(function(s){return s.groupId===g.id;}),isOpen=openGroups.has(g.id);var card=document.createElement('div');card.style.cssText='background:var(--card);border-radius:var(--radius-sm);box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden;border:1px solid var(--border)';var rows=gs.map(function(s){return'<tr><td><span class="badge badge-blue">'+esc(s.code)+'</span></td><td>'+esc(s.name)+'</td><td>'+fmt(s.price)+'</td><td>'+(s.unitsPerBox||1)+'</td><td style="display:flex;gap:4px"><button class="btn btn-edit btn-sm" onclick="editSkuRow(\''+s.id+'\',\'g\')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteSku(\''+s.id+'\')">Del</button></td></tr>';}).join('');card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:#f8fafc" onclick="toggleGroup(\''+g.id+'\')"><div style="display:flex;align-items:center;gap:8px"><span class="badge badge-teal">'+esc(g.code)+'</span><b style="font-size:.88rem">'+esc(g.name)+'</b><span class="badge badge-blue">'+gs.length+'</span></div><div style="display:flex;gap:6px" onclick="event.stopPropagation()"><button class="btn btn-edit btn-sm" onclick="editGroupRow(\''+g.id+'\')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteGroup(\''+g.id+'\')">Del</button></div></div><div style="padding:0 14px 12px;display:'+(isOpen?'block':'none')+'" id="grp-body-'+g.id+'">'+(gs.length?'<div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>EA/Box</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div style="color:var(--text-secondary);padding:8px 0">No SKUs.</div>')+'</div>';wrap.appendChild(card);});}
+function renderGroupsList(){var wrap=document.getElementById('groups-list');if(!wrap)return;if(!groups.length){wrap.innerHTML='<div class="empty">No groups yet.</div>';return;}wrap.innerHTML='';groups.forEach(function(g){var gs=skus.filter(function(s){return s.groupId===g.id;}),isOpen=openGroups.has(g.id);var card=document.createElement('div');card.style.cssText='background:var(--card);border-radius:var(--radius-sm);box-shadow:var(--shadow);margin-bottom:8px;overflow:hidden;border:1px solid var(--border)';var rows=gs.map(function(s){return'<tr><td><span class="badge badge-blue">'+esc(s.code)+'</span></td><td>'+esc(s.name)+'</td><td>'+fmt(s.price)+'</td><td>'+(s.unitsPerBox||1)+'</td><td style="display:flex;gap:4px"><button class="btn btn-edit btn-sm" onclick="editSkuRow(\''+s.id+'\',\'g\')">Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteSku(\''+s.id+'\')">Del</button></td></tr>';}).join('');card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;background:#f8fafc" onclick="toggleGroup(\''+g.id+'\')"><div style="display:flex;align-items:center;gap:8px"><span class="badge badge-teal">'+esc(g.code)+'</span><b>'+esc(g.name)+'</b><span class="badge badge-blue">'+gs.length+'</span></div><div style="display:flex;gap:6px" onclick="event.stopPropagation()"><button class="btn btn-edit btn-sm" onclick="editGroupRow(\''+g.id+'\')">Edit</button><button class="btn btn-danger btn-sm" onclick="deleteGroup(\''+g.id+'\')">Del</button></div></div><div style="padding:0 14px 12px;display:'+(isOpen?'block':'none')+'" id="grp-body-'+g.id+'">'+(gs.length?'<div class="table-wrap"><table><thead><tr><th>Code</th><th>Name</th><th>Price</th><th>EA/Box</th><th>Actions</th></tr></thead><tbody>'+rows+'</tbody></table></div>':'<div style="color:var(--text-secondary);padding:8px 0">No SKUs.</div>')+'</div>';wrap.appendChild(card);});}
 
 // SKU MANAGEMENT
 window.addSku=async function(){var code=document.getElementById('sku-code').value.trim(),name=document.getElementById('sku-name').value.trim();var price=parseFloat(document.getElementById('sku-price').value)||0,mrp=parseFloat(document.getElementById('sku-mrp').value)||0;var unitsPerBox=parseInt(document.getElementById('sku-units-per-box').value,10)||1;var groupId=document.getElementById('val-sku-group').value;if(!code||!name){toast('Enter code and name');return;}var group=groups.find(function(g){return g.id===groupId;});try{await addDoc(tcol('skus'),{code:code,name:name,price:price,mrp:mrp,unitsPerBox:unitsPerBox,groupId:groupId||'',groupCode:group?group.code:'',groupName:group?group.name:''});['sku-code','sku-name','sku-price','sku-mrp','sku-units-per-box'].forEach(function(id){document.getElementById(id).value='';});if(!getSkuLock()){document.getElementById('val-sku-group').value='';var btn=document.getElementById('sd-btn-sku-group');if(btn){btn.innerHTML='-- Select Group -- &#9660;';btn.classList.add('placeholder-style');}}toast('SKU saved');}catch(e){toast('Error: '+e.message);}};
@@ -677,7 +436,7 @@ window.removeRetailerFromRoute=async function(routeId,retId){var route=routes.fi
 window.onDragStart=function(e,routeId,idx){dragSrc={routeId:routeId,idx:idx};e.dataTransfer.effectAllowed='move';};
 window.onDragOver=function(e){e.preventDefault();};
 window.onDrop=async function(e,routeId,dropIdx){e.preventDefault();if(!dragSrc||dragSrc.routeId!==routeId||dragSrc.idx===dropIdx)return;var route=routes.find(function(r){return r.id===routeId;}),list=(route&&route.retailers||[]).slice();var moved=list.splice(dragSrc.idx,1)[0];list.splice(dropIdx,0,moved);dragSrc=null;try{await updateDoc(tdoc('routes',routeId),{retailers:list});}catch(e){toast('Error');}};
-function renderRoutesTab(){var wrap=document.getElementById('routes-list');if(!wrap)return;if(!routes.length){wrap.innerHTML='<div class="card"><div class="empty">No routes yet.</div></div>';return;}wrap.innerHTML='';routes.forEach(function(route){var retList=route.retailers||[],card=document.createElement('div');card.className='card';var retItems=retList.length?retList.map(function(r,i){return'<div class="route-ret-item" draggable="true" ondragstart="onDragStart(event,\''+route.id+'\','+i+')" ondragover="onDragOver(event)" ondrop="onDrop(event,\''+route.id+'\','+i+')" style="display:flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:grab;margin-bottom:4px"><span style="color:var(--text-secondary)">&#8943;</span><span class="badge badge-blue">'+(i+1)+'</span><span style="flex:1;font-weight:500">'+esc(r.name)+'</span><button class="btn btn-danger btn-sm" onclick="removeRetailerFromRoute(\''+route.id+'\',\''+r.id+'\')">&#10005;</button></div>';}).join(''):'<div style="color:var(--text-secondary);font-size:.82rem;padding:6px 0">No retailers yet.</div>';card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div><b>'+esc(route.name)+'</b> <span class="badge badge-blue">'+retList.length+' retailers</span></div><div style="display:flex;gap:6px"><div class="searchable-wrap" style="width:170px"><button type="button" class="sd-trigger placeholder-style" style="font-size:.78rem;padding:8px 10px;min-height:36px" onclick="openRouteRetailerPicker(\''+route.id+'\')">+ Retailer &#9660;</button><div class="searchable-dropdown" id="rrp-dd-'+route.id+'"><div class="sd-search"><input placeholder="Search..." oninput="filterRouteRetailerPicker(\''+route.id+'\',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="rrp-opts-'+route.id+'"></div></div></div><button class="btn btn-danger btn-sm" onclick="deleteRoute(\''+route.id+'\')">Delete</button></div></div>'+retItems;wrap.appendChild(card);});}
+function renderRoutesTab(){var wrap=document.getElementById('routes-list');if(!wrap)return;if(!routes.length){wrap.innerHTML='<div class="card"><div class="empty">No routes yet.</div></div>';return;}wrap.innerHTML='';routes.forEach(function(route){var retList=route.retailers||[],card=document.createElement('div');card.className='card';var retItems=retList.length?retList.map(function(r,i){return'<div class="route-ret-item" draggable="true" ondragstart="onDragStart(event,\''+route.id+'\','+i+')" ondragover="onDragOver(event)" ondrop="onDrop(event,\''+route.id+'\','+i+')"><span style="color:var(--text-secondary)">&#8943;</span><span class="seq-badge">'+(i+1)+'</span><span style="flex:1;font-weight:500">'+esc(r.name)+'</span><button class="btn btn-danger btn-sm" onclick="removeRetailerFromRoute(\''+route.id+'\',\''+r.id+'\')">&#10005;</button></div>';}).join(''):'<div style="color:var(--text-secondary);font-size:.82rem;padding:6px 0">No retailers yet.</div>';card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div><b>'+esc(route.name)+'</b> <span class="badge badge-blue">'+retList.length+' retailers</span></div><div style="display:flex;gap:6px"><div class="searchable-wrap" style="width:170px"><button type="button" class="sd-trigger placeholder-style" style="font-size:.78rem;padding:8px 10px;min-height:36px" onclick="openRouteRetailerPicker(\''+route.id+'\')">+ Retailer &#9660;</button><div class="searchable-dropdown" id="rrp-dd-'+route.id+'"><div class="sd-search"><input placeholder="Search..." oninput="filterRouteRetailerPicker(\''+route.id+'\',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="rrp-opts-'+route.id+'"></div></div></div><button class="btn btn-danger btn-sm" onclick="deleteRoute(\''+route.id+'\')">Delete</button></div></div>'+retItems;wrap.appendChild(card);});}
 
 // ORDER LINES
 window.addSkuLine=function(){lineCount++;var lineId=''+lineCount,key='sku-'+lineId;var div=document.createElement('div');div.className='sku-line';div.id='line-'+lineId;div.dataset.prevUnit='ea';div.innerHTML='<div class="fg" style="flex:3;min-width:160px"><label>SKU</label><div class="searchable-wrap" id="sd-wrap-'+key+'"><button type="button" class="sd-trigger placeholder-style" id="sd-btn-'+key+'" onclick="toggleSD(\''+key+'\')">-- Select SKU -- &#9660;</button><div class="searchable-dropdown" id="sd-dd-'+key+'"><div class="sd-search"><input placeholder="Search SKU..." oninput="filterSD(\''+key+'\',this.value)" onclick="event.stopPropagation()"/></div><div class="sd-options" id="sd-opts-'+key+'"></div></div></div><input type="hidden" id="val-'+key+'" class="line-sku-val" value=""/></div><div class="fg" style="flex:1;min-width:55px"><label>Qty</label><input type="number" class="line-qty" min="1" value="1" oninput="updateTotal()"/></div><div class="fg" style="flex:1;min-width:70px"><label id="unit-lbl-'+lineId+'">Unit</label><select class="line-unit" onchange="onUnitChange(\''+lineId+'\')"><option value="ea">EA</option><option value="box">Box</option></select></div><div class="fg" style="flex:1;min-width:80px"><label>Price</label><input type="number" class="line-price" min="0" placeholder="0.00" oninput="updateTotal()"/></div><div class="fg" style="flex:2;min-width:110px"><label>Notes</label><input type="text" class="line-notes" placeholder="Optional"/></div><div><button class="btn btn-danger btn-sm" onclick="removeLine(\''+lineId+'\')">&#10005;</button></div>';document.getElementById('sku-lines').appendChild(div);buildSkuOpts(lineId);updateTotal();};
@@ -724,13 +483,13 @@ window.toggleOutletBody=function(id){var body=document.getElementById(id);if(!bo
 window.onPackTick=async function(rid){await autoSavePacking(rid);};
 window.onPackQtyChange=async function(rid){await autoSavePacking(rid);};
 async function autoSavePacking(rid){var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});if(!outlet)return;var items=outlet.skus.map(function(sku){return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,orderedQty:sku.orderedQty,packed:(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false,packedQty:parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0};});var today=getISTDateStr(),existing=getPackingDoc(rid);try{if(existing)await updateDoc(tdoc('packing',existing.id),{items:items,updatedAt:new Date().toISOString()});else await addDoc(tcol('packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:false,archived:false,createdAt:new Date().toISOString()});}catch(e){console.error(e);}}
-window.confirmPacking=async function(rid,retailerName){if(!allSkusResolvedForOutlet(rid)){toast('All SKUs must be resolved before confirming');return;}var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});if(!outlet)return;var items=outlet.skus.map(function(sku){var ticked=(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false;var pQty=parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0;return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,orderedQty:sku.orderedQty,packed:ticked||pQty===0,packedQty:ticked?pQty:0};});var today=getISTDateStr(),existing=getPackingDoc(rid);try{if(existing)await updateDoc(tdoc('packing',existing.id),{items:items,confirmed:true,confirmedAt:new Date().toISOString(),packingDate:today});else await addDoc(tcol('packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:true,archived:false,packingDate:today,createdAt:new Date().toISOString()});openOutlets.delete(rid);toast('Packing confirmed for '+retailerName);setTimeout(function(){renderPacking();},300);}catch(e){toast('Error: '+e.message);}};
+window.confirmPacking=async function(rid,retailerName){if(!allSkusResolvedForOutlet(rid)){toast('All SKUs must be resolved');return;}var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});if(!outlet)return;var items=outlet.skus.map(function(sku){var ticked=(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false;var pQty=parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0;return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,orderedQty:sku.orderedQty,packed:ticked||pQty===0,packedQty:ticked?pQty:0};});var today=getISTDateStr(),existing=getPackingDoc(rid);try{if(existing)await updateDoc(tdoc('packing',existing.id),{items:items,confirmed:true,confirmedAt:new Date().toISOString(),packingDate:today});else await addDoc(tcol('packing'),{retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:true,archived:false,packingDate:today,createdAt:new Date().toISOString()});openOutlets.delete(rid);toast('Packing confirmed for '+retailerName);setTimeout(function(){renderPacking();},300);}catch(e){toast('Error: '+e.message);}};
 
 // FINAL BILL
 function renderFinalBill(){var wrap=document.getElementById('finalbill-list'),stats=document.getElementById('bill-stats');if(!wrap)return;var today=getISTDateStr();var confirmed=packingDocs.filter(function(p){return p.confirmed&&!p.archived&&p.packingDate===today;});if(!confirmed.length){wrap.innerHTML='<div class="card"><div class="empty"><div class="empty-icon">&#129534;</div>No confirmed packing for today</div></div>';stats.innerHTML='';return;}var grand=confirmed.reduce(function(s,p){return s+p.items.filter(function(i){return i.packed;}).reduce(function(ss,i){return ss+(i.packedQty*i.price);},0);},0);stats.innerHTML='<div class="stat"><div class="stat-val">'+confirmed.length+'</div><div class="stat-lbl">Outlets</div></div><div class="stat"><div class="stat-val">'+fmt(grand)+'</div><div class="stat-lbl">Grand Total</div></div>';wrap.innerHTML='';var bd=document.createElement('div');bd.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px';bd.innerHTML='<button class="btn btn-pdf btn-sm" id="bill-pdf-btn">&#128196; Export PDF</button>';wrap.appendChild(bd);document.getElementById('bill-pdf-btn').addEventListener('click',function(){exportFinalBillPDF(confirmed);});var grp=groupByRoute(confirmed,function(p){return p.routeName;});grp.order.forEach(function(routeName){if(grp.multi)makeRouteHdr(wrap,routeName,grp.map[routeName].length);grp.map[routeName].forEach(function(p){var pi=p.items.filter(function(i){return i.packed;}),ot=pi.reduce(function(s,i){return s+(i.packedQty*i.price);},0);var card=document.createElement('div');card.className='bill-outlet-card';card.innerHTML='<div class="bill-outlet-header" onclick="toggleBillBody(\'bill-body-'+p.retailerId+'\')"><div><b>'+esc(p.retailerName)+'</b>'+(p.routeName&&!grp.multi?'<span class="badge badge-purple">'+esc(p.routeName)+'</span>':'')+'<div class="order-meta">'+pi.length+' SKUs packed</div></div><div style="display:flex;align-items:center;gap:8px"><b style="color:var(--success)">'+fmt(ot)+'</b><span style="color:var(--text-secondary)">&#9660;</span></div></div><div class="bill-outlet-body" id="bill-body-'+p.retailerId+'"><div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th>Ord</th><th>Pkd</th><th>Price</th><th>Amount</th></tr></thead><tbody>'+pi.map(function(i){var isZero=i.packedQty===0;return'<tr><td><span class="badge '+(isZero?'badge-red':'badge-blue')+'">'+esc(i.skuCode)+'</span></td><td>'+esc(i.skuName)+(isZero?' <span class="badge badge-red">NA</span>':'')+'</td><td>'+i.orderedQty+'</td><td><b style="color:'+(isZero?'var(--danger)':'var(--success)')+'">'+i.packedQty+'</b></td><td>'+fmt(i.price)+'</td><td><b>'+fmt(i.packedQty*i.price)+'</b></td></tr>';}).join('')+'</tbody></table></div><div style="text-align:right;margin-top:10px;font-weight:700;color:var(--success)">Outlet Total: '+fmt(ot)+'</div></div>';wrap.appendChild(card);});});var gt=document.createElement('div');gt.style.cssText='background:var(--success);color:#fff;border-radius:var(--radius-sm);padding:14px 18px;display:flex;justify-content:space-between;font-weight:700;font-size:1rem;margin-top:8px';gt.innerHTML='<span>GRAND TOTAL</span><span>'+fmt(grand)+'</span>';wrap.appendChild(gt);}
 window.toggleBillBody=function(id){var body=document.getElementById(id);if(body)body.classList.toggle('open');};
 
-// COLLECTION (existing functions remain the same but with updated styling)
+// COLLECTION
 window.downloadCollectionExcel=function(){var routeId=document.getElementById('val-collection-route').value;if(!routeId){toast('Select a route');return;}var route=routes.find(function(r){return r.id===routeId;});var retList=(route&&route.retailers||[]).map(function(r){return retailers.find(function(x){return x.id===r.id;});}).filter(Boolean);if(!retList.length){toast('No retailers in route');return;}var ws=XLSX.utils.json_to_sheet(retList.map(function(r){return{'Retailer Name':r.name,'Bill 1':0,'Bill 2':0,'Bill 3':0,'Bill 4':0,'Bill 5':0,'Total':0,'Grand Total':0};}));ws['!cols']=[{wch:24},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12}];var wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Collection');XLSX.writeFile(wb,'Collection_'+route.name.replace(/\s+/g,'_')+'_'+getISTDateStr()+'.xlsx');toast('Excel downloaded');};
 window.confirmImportCollection=async function(){var fi=document.getElementById('collection-file-input'),file=fi.files[0];if(!file){toast('Choose a file');return;}var routeId=document.getElementById('val-collection-route').value,route=routes.find(function(r){return r.id===routeId;});try{var buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array'}),ws=wb.Sheets[wb.SheetNames[0]];var rows=XLSX.utils.sheet_to_json(ws,{defval:0}),today=getISTDateStr(),count=0;for(var i=0;i<rows.length;i++){var row=rows[i],name=String(row['Retailer Name']||'').trim();if(!name)continue;var retailer=retailers.find(function(r){return r.name.toLowerCase()===name.toLowerCase();});if(!retailer)continue;var bills=[1,2,3,4,5].map(function(n){return parseFloat(row['Bill '+n])||0;});var total=parseFloat(row['Total'])||bills.reduce(function(a,b){return a+b;},0);var grandTotal=parseFloat(row['Grand Total'])||total;var existing=collectionsData.find(function(c){return c.retailerId===retailer.id&&!c.archived;});if(existing)await updateDoc(tdoc('collections',existing.id),{bills:bills,total:total,grandTotal:grandTotal,routeId:routeId||'',routeName:route?route.name:''});else await addDoc(tcol('collections'),{retailerId:retailer.id,retailerName:retailer.name,routeId:routeId||'',routeName:route?route.name:'',date:today,bills:bills,total:total,grandTotal:grandTotal,collectedAmount:0,mode:'Cash',archived:false,createdAt:new Date().toISOString()});count++;}fi.value='';toast('Imported '+count+' retailer(s)');}catch(e){toast('Import error: '+e.message);}};
 window.updateCollection=async function(id){var amt=parseFloat(document.getElementById('coll-amt-'+id).value)||0,mode=document.getElementById('coll-mode-'+id).value;try{await updateDoc(tdoc('collections',id),{collectedAmount:amt,mode:mode,updatedAt:new Date().toISOString()});toast('Updated');}catch(e){toast('Error: '+e.message);}};
@@ -762,6 +521,7 @@ function renderArchiveCalendar(){var wrap=document.getElementById('archive-calen
 function buildDayGrid(){var year=parseInt(archivesYear,10),month=archivesMonth,fd=new Date(year,month,1).getDay(),dim=new Date(year,month+1,0).getDate();var dc={};archivedOrders.forEach(function(o){var parts=o.date&&o.date.split('-');if(parts&&parseInt(parts[0],10)===year&&parseInt(parts[1],10)-1===month)dc[parseInt(parts[2],10)]=(dc[parseInt(parts[2],10)]||0)+1;});packingDocs.filter(function(p){return p.archived;}).forEach(function(p){var parts=p.date&&p.date.split('-');if(parts&&parseInt(parts[0],10)===year&&parseInt(parts[1],10)-1===month)dc[parseInt(parts[2],10)]=(dc[parseInt(parts[2],10)]||0)+1;});var html='<div class="archive-day-grid">';['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(function(d){html+='<div class="archive-day-head">'+d+'</div>';});for(var i=0;i<fd;i++)html+='<div class="archive-day-cell empty-cell"></div>';for(var day=1;day<=dim;day++){var ds=year+'-'+String(month+1).padStart(2,'0')+'-'+String(day).padStart(2,'0'),count=dc[day]||0;html+='<div class="archive-day-cell'+(count>0?' has-data':'')+(archivesDate===ds?' selected':'')+'"'+(count>0?' onclick="selectArchiveDate(\''+ds+'\')"':'')+'><div>'+day+'</div>'+(count>0?'<div class="archive-day-count">'+count+'</div>':'')+'</div>';}return html+'</div>';}
 window.selectArchiveMonth=function(idx){archivesMonth=archivesMonth===idx?null:idx;archivesDate=null;renderArchiveCalendar();renderArchivesContent();};
 window.selectArchiveDate=function(ds){archivesDate=archivesDate===ds?null:ds;renderArchiveCalendar();renderArchivesContent();};
+// FIXED: Now properly shows archived packing docs by their date
 function renderArchivesContent(){var wrap=document.getElementById('archives-list');if(!wrap)return;var dayOrders=archivedOrders.filter(function(o){return o.date===archivesDate;});var dayPacking=packingDocs.filter(function(p){return p.archived&&p.date===archivesDate;});if(!dayOrders.length&&!dayPacking.length){if(!archivesDate){wrap.innerHTML='<div class="card"><div class="empty">Select a date above</div></div>';}else{wrap.innerHTML='<div class="card"><div class="empty">No orders for this date</div></div>';}return;}var dayTotal=dayOrders.reduce(function(s,o){return s+o.total;},0);wrap.innerHTML='';var hdr=document.createElement('div');hdr.className='section-title';hdr.innerHTML=archivesDate+' <span class="badge badge-blue">'+dayOrders.length+' orders</span>';if(dayPacking.length)hdr.innerHTML+=' <span class="badge badge-green">'+dayPacking.length+' packed</span>';wrap.appendChild(hdr);var ed=document.createElement('div');ed.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px';ed.innerHTML='<button class="btn btn-pdf btn-sm" id="export-archive-btn">&#128196; Export PDF</button>';wrap.appendChild(ed);document.getElementById('export-archive-btn').addEventListener('click',exportArchivePDF);if(dayPacking.length){var packSec=document.createElement('div');packSec.innerHTML='<div style="font-weight:700;color:var(--success);margin:12px 0 8px;font-size:.88rem">&#128230; Packed Bills</div>';dayPacking.forEach(function(p){var pi=p.items.filter(function(i){return i.packed;}),ot=pi.reduce(function(s,i){return s+(i.packedQty*i.price);},0);var packTime=p.packingDate||p.confirmedAt||p.createdAt;var packDateStr=packTime?new Date(packTime).toLocaleString('en-IN',{timeZone:'Asia/Kolkata'}):'Unknown';var card=document.createElement('div');card.className='bill-outlet-card';card.innerHTML='<div class="bill-outlet-header" onclick="toggleBillBody(\'archive-bill-body-'+p.retailerId+'\')"><div><b>'+esc(p.retailerName)+'</b><span class="badge badge-green">Packed</span><div class="order-meta">'+packDateStr+' | '+pi.length+' SKUs</div></div><b style="color:var(--success)">'+fmt(ot)+'</b></div><div class="bill-outlet-body" id="archive-bill-body-'+p.retailerId+'"><div class="table-wrap"><table><thead><tr><th>SKU</th><th>Product</th><th>Ord</th><th>Pkd</th><th>Price</th><th>Amount</th></tr></thead><tbody>'+pi.map(function(i){var isZero=i.packedQty===0;return'<tr><td><span class="badge '+(isZero?'badge-red':'badge-blue')+'">'+esc(i.skuCode)+'</span></td><td>'+esc(i.skuName)+(isZero?' <span class="badge badge-red">NA</span>':'')+'</td><td>'+i.orderedQty+'</td><td><b>'+i.packedQty+'</b></td><td>'+fmt(i.price)+'</td><td><b>'+fmt(i.packedQty*i.price)+'</b></td></tr>';}).join('')+'</tbody></table></div><div style="text-align:right;margin-top:8px;font-weight:700;color:var(--success)">Outlet Total: '+fmt(ot)+'</div></div>';packSec.appendChild(card);});wrap.appendChild(packSec);}var grouped={};dayOrders.forEach(function(o){var k=o.retailerId||o.retailerName;if(!grouped[k])grouped[k]=[];grouped[k].push(o);});if(Object.keys(grouped).length){Object.keys(grouped).forEach(function(k){var rOrders=grouped[k],rName=rOrders[0].retailerName||'Unknown Retailer';var sec=document.createElement('div');sec.style.cssText='margin-bottom:10px';sec.innerHTML='<div class="section-title">'+esc(rName)+'</div>';rOrders.forEach(function(o){var pDoc=getPackingDocForArchived(o.retailerId);sec.appendChild(buildOrderCard(o,true,pDoc));});wrap.appendChild(sec);});}}
 
 // SEARCH ARCHIVE ORDERS
@@ -787,20 +547,7 @@ function exportFinalBillPDF(confirmed){var jsPDF=window.jspdf.jsPDF,d=new jsPDF(
 function renderHistory(){var wrap=document.getElementById('orders-list'),stats=document.getElementById('summary-stats');var today=getISTDateStr();var todayOrders=orders.filter(function(o){return o.date===today;});var todayNoOrders=noOrders.filter(function(o){return o.date===today;});if(!todayOrders.length&&!todayNoOrders.length){wrap.innerHTML='<div class="card"><div class="empty"><div class="empty-icon">&#128203;</div>No orders today</div></div>';stats.innerHTML='';return;}var totalAmt=todayOrders.reduce(function(s,o){return s+orderDisplayTotal(o,getPackingDoc(o.retailerId));},0);var allTodayRetailers=[...new Set([...todayOrders.map(function(o){return o.retailerId;}),...todayNoOrders.map(function(o){return o.retailerId;})])];stats.innerHTML='<div class="stat"><div class="stat-val">'+(todayOrders.length+todayNoOrders.length)+'</div><div class="stat-lbl">Orders</div></div><div class="stat"><div class="stat-val">'+allTodayRetailers.length+'</div><div class="stat-lbl">Retailers</div></div><div class="stat"><div class="stat-val">'+fmt(totalAmt)+'</div><div class="stat-lbl">Total</div></div>';wrap.innerHTML='';var ed=document.createElement('div');ed.style.cssText='display:flex;justify-content:flex-end;margin-bottom:10px';ed.innerHTML='<button class="btn btn-pdf btn-sm" id="export-all-btn">&#128196; Export PDF</button>';wrap.appendChild(ed);document.getElementById('export-all-btn').addEventListener('click',exportAllPDF);var grouped={};todayOrders.slice().sort(function(a,b){return(a.createdAt||'').localeCompare(b.createdAt||'');}).forEach(function(o){if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);});todayNoOrders.forEach(function(o){if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);});Object.entries(grouped).forEach(function(e){var rName=e[0],rOrders=e[1],sec=document.createElement('div');sec.style.cssText='margin-bottom:10px';sec.innerHTML='<div class="section-title">'+esc(rName)+' <span class="badge badge-blue">'+rOrders.length+'</span></div>';rOrders.forEach(function(o){if(o.noOrder){var card=document.createElement('div');card.className='card';card.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center"><div><b>'+esc(o.retailerName)+'</b> <span class="badge badge-gray">No Order</span>'+(o.routeName?'<span class="badge badge-purple">'+esc(o.routeName)+'</span>':'')+'<div class="order-meta">'+o.date+'</div></div></div>';sec.appendChild(card);}else{sec.appendChild(buildOrderCard(o,false,getPackingDoc(o.retailerId)));}});wrap.appendChild(sec);});}
 
 // COMPANY GATEWAY
-function startCompanyApp(){
-  document.querySelector('.topbar').style.display='';
-  document.querySelector('.content').style.display='';
-  document.getElementById('bottom-nav').style.display='flex';
-  document.getElementById('gateway-screen').style.display='none';
-  document.getElementById('current-company-name').textContent=COMPANY_NAME;
-  showLoader('Connecting to cloud...');
-  document.getElementById('order-date').value=getISTDateStr();
-  window.addSkuLine();
-  applyLockUI();applySkuLockUI();
-  initListeners();
-  scheduleMidnightArchive();scheduleLockReset();
-  if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});
-}
+function startCompanyApp(){document.querySelector('.topbar').style.display='';document.querySelector('.content').style.display='';document.getElementById('bottom-nav').style.display='flex';document.getElementById('gateway-screen').style.display='none';document.getElementById('current-company-name').textContent=COMPANY_NAME;showLoader('Connecting to cloud...');document.getElementById('order-date').value=getISTDateStr();window.addSkuLine();applyLockUI();applySkuLockUI();initListeners();scheduleMidnightArchive();scheduleLockReset();if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js').catch(function(){});}
 window.enterCompany=function(id,name){COMPANY_ID=id;COMPANY_NAME=name||'';setStoredCompanyId(id);var u=new URL(location.href);u.searchParams.set('company',id);history.replaceState(null,'',u);startCompanyApp();};
 window.exitToGateway=function(){COMPANY_ID=null;try{localStorage.removeItem('lastCompanyId');}catch(e){}var u=new URL(location.href);u.searchParams.delete('company');history.replaceState(null,'',u);location.reload();};
 window.createCompany=async function(){var name=document.getElementById('new-company-name').value.trim();if(!name){toast('Enter a company name');return;}var btn=document.getElementById('create-company-btn');btn.disabled=true;try{var ref=await addDoc(collection(db,'companies'),{name:name,createdAt:new Date().toISOString()});toast('Company created');enterCompany(ref.id,name);}catch(e){toast('Error: '+e.message);btn.disabled=false;}};
