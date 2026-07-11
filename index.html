@@ -276,11 +276,11 @@ input[type=checkbox]{width:20px;height:20px;accent-color:var(--primary);cursor:p
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore,collection,doc,addDoc,setDoc,getDoc,getDocs,updateDoc,deleteDoc,onSnapshot,query,orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { initializeFirestore,collection,doc,addDoc,setDoc,getDoc,getDocs,updateDoc,deleteDoc,onSnapshot,query,orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FB={apiKey:"AIzaSyCg5jegmaB8-DVY5i2HYCNpk7oBs-8fjWc",authDomain:"order-management-eebd4.firebaseapp.com",projectId:"order-management-eebd4",storageBucket:"order-management-eebd4.firebasestorage.app",messagingSenderId:"427212874906",appId:"1:427212874906:web:f4959bc51d11ecb2e4ab23"};
-const app=initializeApp(FB);const db=getFirestore(app);const auth=getAuth(app);
+const app=initializeApp(FB);const db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true,useFetchStreams:false});const auth=getAuth(app);
 
 var COMPANY_ID=null,COMPANY_NAME='';
 function tcol(name){return collection(db,'companies/'+COMPANY_ID+'/'+name);}
