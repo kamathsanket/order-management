@@ -662,12 +662,20 @@ window.searchHistoryByDate=function(){
   document.getElementById('orders-list').style.display='none';
   document.getElementById('summary-stats').style.display='none';
   if(!matches.length){results.innerHTML='<div class="card"><div class="empty"><div class="empty-icon">&#128203;</div>No orders found for this '+(type==='order'?'order date':'pack date')+'</div></div>';return;}
-  matches.sort(function(a,b){return(a.createdAt||'').localeCompare(b.createdAt||'');});
+  matches.sort(function(a,b){return(a.retailerName||'').localeCompare(b.retailerName||'')||(a.createdAt||'').localeCompare(b.createdAt||'');});
   var totalAmt=matches.reduce(function(s,o){var pDoc=getPackingDoc(o.retailerId)||getPackingDocForArchived(o.retailerId,date);return s+orderDisplayTotal(o,pDoc);},0);
   results.innerHTML='<div class="section-title">'+matches.length+' order(s) found <span class="badge badge-green">'+fmt(totalAmt)+'</span></div>';
-  matches.forEach(function(o){
-    var pDoc=getPackingDoc(o.retailerId)||getPackingDocForArchived(o.retailerId,date);
-    results.appendChild(buildOrderCard(o,true,pDoc));
+  var grouped={};
+  matches.forEach(function(o){if(!grouped[o.retailerName])grouped[o.retailerName]=[];grouped[o.retailerName].push(o);});
+  Object.entries(grouped).forEach(function(e){
+    var rName=e[0],rOrders=e[1],sec=document.createElement('div');
+    sec.style.cssText='margin-bottom:10px';
+    sec.innerHTML='<div class="section-title">'+esc(rName)+' <span class="badge badge-blue">'+rOrders.length+'</span></div>';
+    rOrders.forEach(function(o){
+      var pDoc=getPackingDoc(o.retailerId)||getPackingDocForArchived(o.retailerId,date);
+      sec.appendChild(buildOrderCard(o,true,pDoc));
+    });
+    results.appendChild(sec);
   });
 };
 window.clearHistorySearch=function(){
