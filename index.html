@@ -327,15 +327,60 @@ window.doLogin=async function(){var email=document.getElementById('login-email')
 window.doLogout=async function(){if(!confirm('Sign out?'))return;try{await signOut(auth);}catch(e){toast('Error: '+e.message);}};
 // One-time cleanup for duplicate packing docs created by an old race-condition bug.
 // Run once from the browser console: cleanupDuplicatePackingDocs()
+window.archiveOrdersForConfirmedPacking=async function(){
+  if(!confirm('Scan for orders whose packing was already confirmed but never archived, and archive them now?'))return;
+  var ordersSnap=await getDocs(query(tcol('orders')));
+  var packingSnap=await getDocs(query(tcol('packing')));
+  var latestConfirmedDate={};
+  packingSnap.forEach(function(d){
+    var data=d.data();
+    if(!data.confirmed||!data.retailerId)return;
+    var pd=data.packingDate||data.date||'';
+    if(!latestConfirmedDate[data.retailerId]||pd>latestConfirmedDate[data.retailerId])latestConfirmedDate[data.retailerId]=pd;
+  });
+  var now=new Date().toISOString(),fixed=0;
+  for(var i=0;i<ordersSnap.docs.length;i++){
+    var d=ordersSnap.docs[i],data=d.data();
+    if(data.archived||data.noOrder)continue;
+    if((data.status||'packing')!=='packing')continue;
+    var pd=latestConfirmedDate[data.retailerId];
+    // Only archive if this order predates (or matches) the retailer's most recent
+    // confirmed pack — genuinely newer orders placed after that pack stay untouched.
+    if(pd&&data.date<=pd){
+      try{await updateDoc(tdoc('orders',d.id),{archived:true,archivedAt:now,status:'packed'});fixed++;}catch(e){console.error(e);}
+    }
+  }
+  toast(fixed+' order(s) archived (packing was already confirmed on/after order date)');
+};
+window.diagnosePackingState=async function(rname){
+  var ordersSnap=await getDocs(query(tcol('orders')));
+  var packingSnap=await getDocs(query(tcol('packing')));
+  var rows=[];
+  ordersSnap.forEach(function(d){var o=d.data();if(o.noOrder)return;if(rname&&(o.retailerName||'').toLowerCase().indexOf(rname.toLowerCase())<0)return;rows.push({type:'ORDER',id:d.id,retailer:o.retailerName,date:o.date,status:o.status,archived:o.archived});});
+  packingSnap.forEach(function(d){var p=d.data();if(rname&&(p.retailerName||'').toLowerCase().indexOf(rname.toLowerCase())<0)return;rows.push({type:'PACKING',id:d.id,retailer:p.retailerName,date:p.date,packingDate:p.packingDate,confirmed:p.confirmed,archived:p.archived});});
+  rows.sort(function(a,b){return(a.retailer||'').localeCompare(b.retailer||'')||(a.date||'').localeCompare(b.date||'');});
+  console.table(rows);
+  toast(rows.length+' record(s) — open DevTools Console to see the table');
+  return rows;
+};
 window.cleanupDuplicatePackingDocs=async function(){
-  if(!confirm('Scan for duplicate packing records per retailer and archive all but the correct one?'))return;
+  if(!confirm('Scan for duplicate/stale packing records and archive them correctly?'))return;
   var snap=await getDocs(query(tcol('packing')));
   var byRetailer={};
   snap.forEach(function(d){var data=d.data();if(data.archived)return;var rid=data.retailerId;if(!rid)return;if(!byRetailer[rid])byRetailer[rid]=[];byRetailer[rid].push({id:d.id,data:data});});
-  var today=getISTDateStr(),cleaned=0,groups=0;
+  var today=getISTDateStr(),cleaned=0,groups=0,staleFixed=0;
   for(var rid in byRetailer){
     var docsArr=byRetailer[rid];
-    if(docsArr.length<=1)continue;
+    if(docsArr.length===1){
+      // Single unarchived doc: if it's confirmed and not today's, it's a stale leftover
+      // (from before orders were archived immediately on confirm) that's still blocking
+      // this retailer — fix it directly.
+      var only=docsArr[0];
+      if(only.data.confirmed&&only.id!==rid+'_'+today){
+        try{await updateDoc(tdoc('packing',only.id),{archived:true,archivedAt:new Date().toISOString(),archivedReason:'stale_confirmed_cleanup'});staleFixed++;}catch(e){console.error(e);}
+      }
+      continue;
+    }
     groups++;
     var preferredId=rid+'_'+today;
     var keep=docsArr.find(function(x){return x.id===preferredId;});
@@ -345,7 +390,7 @@ window.cleanupDuplicatePackingDocs=async function(){
       try{await updateDoc(tdoc('packing',docsArr[i].id),{archived:true,archivedAt:new Date().toISOString(),archivedReason:'duplicate_cleanup'});cleaned++;}catch(e){console.error(e);}
     }
   }
-  toast(groups+' retailer(s) had duplicates, '+cleaned+' old record(s) archived');
+  toast(groups+' retailer(s) had duplicates ('+cleaned+' archived), '+staleFixed+' stale record(s) fixed');
 };
 
 window.openMoreMenu=function(){document.getElementById('more-menu-overlay').classList.add('open');};
@@ -521,7 +566,7 @@ window.onPackCheckChange=function(){var all=document.querySelectorAll('.pack-car
 function allSkusResolvedForOutlet(rid){var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});if(!outlet||!outlet.skus.length)return false;return outlet.skus.every(function(sku){var ticked=(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false;var qty=parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0;return ticked||qty===0;});}
 window.confirmSelectedPacking=async function(){var checked=[...document.querySelectorAll('.pack-card-check:checked')].map(function(cb){return cb.dataset.id;});if(!checked.length){toast('Select at least one outlet');return;}var unresolved=[];checked.forEach(function(rid){if(!allSkusResolvedForOutlet(rid)){var outlet=getMergedByRetailer().find(function(o){return o.retailerId===rid;});unresolved.push(outlet?outlet.retailerName:rid);}});if(unresolved.length){toast('Unresolved SKUs in: '+unresolved.join(', '));return;}var done=0;var merged=getMergedByRetailer();var today=getISTDateStr();for(var i=0;i<checked.length;i++){var rid=checked[i];if(packSaveTimers[rid]){clearTimeout(packSaveTimers[rid]);delete packSaveTimers[rid];}var outlet=merged.find(function(o){return o.retailerId===rid;});if(!outlet)continue;var items=outlet.skus.map(function(sku){var ticked=(document.getElementById('chk-'+rid+'-'+sku.skuId)||{}).checked||false;var pQty=parseFloat((document.getElementById('qty-'+rid+'-'+sku.skuId)||{}).value)||0;return{skuId:sku.skuId,skuCode:sku.skuCode,skuName:sku.skuName,price:sku.price,orderedQty:sku.orderedQty,packed:ticked||pQty===0,packedQty:ticked?pQty:0};});var existing=getPackingDoc(rid);var payload={retailerId:rid,retailerName:outlet.retailerName,routeName:outlet.routeName||'',date:today,items:items,confirmed:true,archived:true,confirmedAt:new Date().toISOString(),packingDate:today};if(!existing)payload.createdAt=new Date().toISOString();try{await setDoc(tdoc('packing',rid+'_'+today),payload,{merge:true});await archiveRetailerOrders(rid);openOutlets.delete(rid);done++;}catch(e){toast('Error: '+e.message);}}toast(done+' outlet(s) confirmed');};
 
-function getMergedByRetailer(){var map={};var today=getISTDateStr();orders.filter(function(o){return(o.status||'packing')==='packing';}).forEach(function(o){var pDoc=getPackingDoc(o.retailerId);if(pDoc&&pDoc.confirmed){var packDate=pDoc.packingDate||pDoc.date||'';if(today>packDate)return;}if(!map[o.retailerId])map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};(o.lines||[]).forEach(function(l){if(!map[o.retailerId].skus[l.skuId])map[o.retailerId].skus[l.skuId]={skuId:l.skuId,skuCode:l.skuCode,skuName:l.skuName,price:l.price,orderedQty:0};map[o.retailerId].skus[l.skuId].orderedQty+=l.qty;});});return Object.values(map).map(function(r){return Object.assign({},r,{skus:Object.values(r.skus)});});}
+function getMergedByRetailer(){var map={};var packedByRetailer={};packingDocs.forEach(function(p){if(!p.confirmed||!p.retailerId)return;var pd=p.packingDate||p.date||'';if(!packedByRetailer[p.retailerId]||pd>packedByRetailer[p.retailerId])packedByRetailer[p.retailerId]=pd;});orders.filter(function(o){return(o.status||'packing')==='packing';}).forEach(function(o){var pd=packedByRetailer[o.retailerId];if(pd&&o.date<=pd)return;if(!map[o.retailerId])map[o.retailerId]={retailerId:o.retailerId,retailerName:o.retailerName,routeName:o.routeName||'',skus:{}};(o.lines||[]).forEach(function(l){if(!map[o.retailerId].skus[l.skuId])map[o.retailerId].skus[l.skuId]={skuId:l.skuId,skuCode:l.skuCode,skuName:l.skuName,price:l.price,orderedQty:0};map[o.retailerId].skus[l.skuId].orderedQty+=l.qty;});});return Object.values(map).map(function(r){return Object.assign({},r,{skus:Object.values(r.skus)});});}
 function getPackingDoc(retailerId){var matches=packingDocs.filter(function(p){return p.retailerId===retailerId&&!p.archived;});if(!matches.length)return null;if(matches.length===1)return matches[0];var today=getISTDateStr();var preferred=matches.find(function(p){return p.id===retailerId+'_'+today;});if(preferred)return preferred;return matches.reduce(function(a,b){var at=new Date(a.updatedAt||a.confirmedAt||a.createdAt||0).getTime();var bt=new Date(b.updatedAt||b.confirmedAt||b.createdAt||0).getTime();return bt>at?b:a;});}
 function getPackingDocForArchived(retailerId,date){var matches=packingDocs.filter(function(p){return p.retailerId===retailerId&&p.archived;});if(!matches.length)return null;if(date){var m=matches.find(function(p){return p.date===date;});if(m)return m;}return matches.reduce(function(a,b){var at=new Date(a.confirmedAt||a.updatedAt||a.createdAt||0).getTime();var bt=new Date(b.confirmedAt||b.updatedAt||b.createdAt||0).getTime();return bt>at?b:a;});}
 async function archiveRetailerOrders(rid){var toArchive=orders.filter(function(o){return o.retailerId===rid&&!o.archived&&(o.status||'packing')==='packing';});var now=new Date().toISOString(),failed=0;for(var i=0;i<toArchive.length;i++){try{await updateDoc(tdoc('orders',toArchive[i].id),{archived:true,archivedAt:now,status:'packed'});}catch(e){console.error('Archive failed for order',toArchive[i].id,e);failed++;}}if(failed)toast(failed+' order(s) failed to archive — check console');}
